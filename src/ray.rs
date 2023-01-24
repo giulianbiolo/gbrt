@@ -11,6 +11,7 @@ pub struct Ray {
 
 impl Ray {
     pub fn new(origin: Point3, direction: Vec3) -> Ray { Ray { origin, direction } }
+    pub fn empty() -> Ray { Ray { origin: Point3::new(0.0, 0.0, 0.0), direction: Vec3::new(0.0, 0.0, 0.0) } }
     pub fn origin(&self) -> Point3 { self.origin }
     pub fn direction(&self) -> Vec3 { self.direction }
     pub fn at(&self, t: f32) -> Point3 { self.origin + t * self.direction }

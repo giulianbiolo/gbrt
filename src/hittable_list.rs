@@ -3,6 +3,9 @@
 // Description: This file implements the HittableList struct
 use crate::hittable::{Hittable, HitRecord};
 use crate::ray::Ray;
+use crate::vec3::{Point3, Color};
+use crate::sphere::Sphere;
+use crate::material::Lambertian;
 
 pub struct HittableList {
     objects: Vec<Box<dyn Hittable>>,
@@ -24,6 +27,7 @@ impl Hittable for HittableList {
                 hit_anything = true;
                 // Here we update the closest_so_far value.
                 // This triggered the borrow checker error without implementing the Copy trait to HitRecord.
+                let temp_rec = temp_rec.clone();
                 closest_so_far = temp_rec.t;
                 *rec = temp_rec;
             }
@@ -43,8 +47,8 @@ mod tests {
     #[test]
     fn test_hit() {
         let mut world: HittableList = HittableList::new();
-        world.add(Box::new(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5)));
-        world.add(Box::new(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0)));
+        world.add(Box::new(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5, Box::new(Lambertian::new(Color::new(0.1, 0.2, 0.5))))));
+        world.add(Box::new(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0, Box::new(Lambertian::new(Color::new(0.8, 0.8, 0.0))))));
         let r: Ray = Ray::new(Point3::new(0.0, 0.0, 0.0), Point3::new(0.0, 0.0, -1.0));
         let mut rec: HitRecord = HitRecord::empty();
         assert!(world.hit(&r, 0.0, 100.0, &mut rec));

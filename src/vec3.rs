@@ -2,6 +2,8 @@
 // Date: 24/01/2023
 // Description: This file implements the Vec3 struct, a backbone of various other structs throughout the project
 use std::ops;
+use crate::utility;
+
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Vec3 {
     x: f32,
@@ -12,9 +14,26 @@ impl Vec3 {
     pub fn new(x: f32, y: f32, z: f32) -> Vec3 { Vec3 { x, y, z } }
     pub fn new_init() -> Vec3 { Vec3 { x: 0.0, y: 0.0, z: 0.0 } }
     pub fn new_from(v: &Vec3) -> Vec3 { Vec3 { x: v.x, y: v.y, z: v.z } }
+    pub fn random() -> Vec3 { Vec3::new(utility::random_f32(), utility::random_f32(), utility::random_f32()) }
+    pub fn random_range(min: f32, max: f32) -> Vec3 { Vec3::new(utility::random_f32_range(min, max), utility::random_f32_range(min, max), utility::random_f32_range(min, max)) }
+    pub fn random_in_unit_sphere() -> Vec3 {
+        loop {
+            let p: Vec3 = Vec3::random_range(-1.0, 1.0);
+            if p.length_squared() < 1.0 { return p; }
+        }
+    }
+    pub fn random_unit_vector() -> Vec3 { Vec3::random_in_unit_sphere().unit_vector() }
+    pub fn random_in_hemisphere(normal: Vec3) -> Vec3 {
+        let in_unit_sphere: Vec3 = Vec3::random_in_unit_sphere();
+        if in_unit_sphere.dot(&normal) > 0.0 { in_unit_sphere } else { -in_unit_sphere }
+    }
     pub fn x(&self) -> f32 { self.x }
     pub fn y(&self) -> f32 { self.y }
     pub fn z(&self) -> f32 { self.z }
+    pub fn near_zero(&self) -> bool {
+        const S: f32 = 1e-8;
+        (self.x.abs() < S) && (self.y.abs() < S) && (self.z.abs() < S)
+    }
     pub fn length_squared(&self) -> f32 { self.x * self.x + self.y * self.y + self.z * self.z }
     pub fn length(&self) -> f32 { self.length_squared().sqrt() }
     pub fn dot(&self, other: &Vec3) -> f32 { self.x * other.x + self.y * other.y + self.z * other.z }
@@ -29,6 +48,7 @@ impl Vec3 {
         let k: f32 = 1.0 / self.length();
         Vec3::new(self.x * k, self.y * k, self.z * k)
     }
+    pub fn reflect(&self, normal: &Vec3) -> Vec3 { *self - *normal * self.dot(normal) * 2.0 }
 }
 impl ops::Add for Vec3 {
     type Output = Vec3;
@@ -188,6 +208,46 @@ mod tests {
         assert_eq!(v.x(), 1.0);
         assert_eq!(v.y(), 2.0);
         assert_eq!(v.z(), 3.0);
+        Ok(())
+    }
+    #[test]
+    fn test_near_zero() -> Result<(), std::fmt::Error> {
+        let v = Vec3::new(1e-9, 1e-9, 1e-9);
+        assert!(v.near_zero());
+        Ok(())
+    }
+    #[test]
+    fn test_random() -> Result<(), std::fmt::Error> {
+        let v = Vec3::random();
+        assert!(v.x() >= 0.0 && v.x() < 1.0);
+        assert!(v.y() >= 0.0 && v.y() < 1.0);
+        assert!(v.z() >= 0.0 && v.z() < 1.0);
+        Ok(())
+    }
+    #[test]
+    fn test_random_range() -> Result<(), std::fmt::Error> {
+        let v = Vec3::random_range(1.0, 2.0);
+        assert!(v.x() >= 1.0 && v.x() < 2.0);
+        assert!(v.y() >= 1.0 && v.y() < 2.0);
+        assert!(v.z() >= 1.0 && v.z() < 2.0);
+        Ok(())
+    }
+    #[test]
+    fn test_random_in_unit_sphere() -> Result<(), std::fmt::Error> {
+        let v = Vec3::random_in_unit_sphere();
+        assert!(v.length() < 1.0);
+        Ok(())
+    }
+    #[test]
+    fn test_random_unit_vector() -> Result<(), std::fmt::Error> {
+        let v = Vec3::random_unit_vector();
+        assert!(v.length() - 1.0 < 0.00001);
+        Ok(())
+    }
+    #[test]
+    fn test_random_in_hemisphere() -> Result<(), std::fmt::Error> {
+        let v = Vec3::random_in_hemisphere(Vec3::new(1.0, 0.0, 0.0));
+        assert!(v.length() - 1.0 < 0.00001);
         Ok(())
     }
     #[test]

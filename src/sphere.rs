@@ -4,14 +4,16 @@
 use crate::vec3::{Point3, Vec3};
 use crate::ray::Ray;
 use crate::hittable::{Hittable, HitRecord};
+use crate::material::Material;
 
 pub struct Sphere {
     center: Point3,
     radius: f32,
+    material: Box<dyn Material>,
 }
 
 impl Sphere {
-    pub fn new(center: Point3, radius: f32) -> Sphere { Sphere { center, radius } }
+    pub fn new(center: Point3, radius: f32, material: Box<dyn Material>) -> Sphere { Sphere { center, radius, material } }
 }
 
 impl Hittable for Sphere {
@@ -37,6 +39,7 @@ impl Hittable for Sphere {
         let outward_normal: Vec3 = (rec.p - self.center) / self.radius;
         // This function is used to determine whether the ray is inside or outside the object.
         rec.set_face_normal(ray, &outward_normal);
+        rec.mat_ptr = self.material.clone();
         true
     }
 }

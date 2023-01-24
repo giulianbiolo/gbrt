@@ -7,7 +7,8 @@ use rand::prelude::*;
 pub const ASPECT_RATIO: f32 = 16.0 / 9.0;
 pub const WIDTH: u32 = 800;
 pub const HEIGHT: u32 = ((WIDTH as f32) / ASPECT_RATIO) as u32;
-pub const SAMPLES_PER_PIXEL: u32 = 16; // Antialiasing samples per pixel
+pub const SAMPLES_PER_PIXEL: u32 = 32; // Antialiasing samples per pixel
+pub const MAX_DEPTH: u32 = 50; // Maximum ray bounces
 
 // Camera constants
 pub const VIEWPORT_HEIGHT: f32 = 2.0;
