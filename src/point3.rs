@@ -1,3 +1,6 @@
+// Author: Giulian Biolo, github.com/giulianbiolo
+// Date: 24/01/2023
+// Description: This file implements the Point3 struct
 use crate::vec3;
 
 impl vec3::Point3 {

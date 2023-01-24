@@ -1,3 +1,6 @@
+// Author: Giulian Biolo, github.com/giulianbiolo
+// Date: 24/01/2023
+// Description: This file implements the main function of the project
 use gbrt::hittable::HitRecord;
 use image::{ImageBuffer, Rgb};
 

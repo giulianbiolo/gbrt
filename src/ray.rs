@@ -1,3 +1,6 @@
+// Author: Giulian Biolo, github.com/giulianbiolo
+// Date: 24/01/2023
+// Description: This file implements the Ray struct
 use crate::vec3::Vec3;
 use crate::vec3::Point3;
 

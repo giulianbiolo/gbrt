@@ -1,3 +1,6 @@
+// Author: Giulian Biolo, github.com/giulianbiolo
+// Date: 24/01/2023
+// Description: This file implements the Vec3 struct, a backbone of various other structs throughout the project
 use std::ops;
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Vec3 {
@@ -46,6 +49,13 @@ impl ops::Sub for Vec3 {
         Vec3::new(self.x - other.x, self.y - other.y, self.z - other.z)
     }
 }
+impl ops::SubAssign for Vec3 {
+    fn sub_assign(&mut self, other: Vec3) {
+        self.x -= other.x;
+        self.y -= other.y;
+        self.z -= other.z;
+    }
+}
 impl ops::Neg for Vec3 {
     type Output = Vec3;
     fn neg(self) -> Vec3 {
@@ -56,6 +66,13 @@ impl ops::Mul for Vec3 {
     type Output = Vec3;
     fn mul(self, other: Vec3) -> Vec3 {
         Vec3::new(self.x * other.x, self.y * other.y, self.z * other.z)
+    }
+}
+impl ops::MulAssign for Vec3 {
+    fn mul_assign(&mut self, other: Vec3) {
+        self.x *= other.x;
+        self.y *= other.y;
+        self.z *= other.z;
     }
 }
 impl ops::Add<f32> for Vec3 {
@@ -70,6 +87,13 @@ impl ops::Add<Vec3> for f32 {
         Vec3::new(self + other.x, self + other.y, self + other.z)
     }
 }
+impl ops::AddAssign<f32> for Vec3 {
+    fn add_assign(&mut self, other: f32) {
+        self.x += other;
+        self.y += other;
+        self.z += other;
+    }
+}
 impl ops::Sub<f32> for Vec3 {
     type Output = Vec3;
     fn sub(self, other: f32) -> Vec3 {
@@ -80,6 +104,13 @@ impl ops::Sub<Vec3> for f32 {
     type Output = Vec3;
     fn sub(self, other: Vec3) -> Vec3 {
         Vec3::new(self - other.x, self - other.y, self - other.z)
+    }
+}
+impl ops::SubAssign<f32> for Vec3 {
+    fn sub_assign(&mut self, other: f32) {
+        self.x -= other;
+        self.y -= other;
+        self.z -= other;
     }
 }
 impl ops::Mul<f32> for Vec3 {
@@ -94,10 +125,24 @@ impl ops::Mul<Vec3> for f32 {
         Vec3::new(self * other.x, self * other.y, self * other.z)
     }
 }
+impl ops::MulAssign<f32> for Vec3 {
+    fn mul_assign(&mut self, other: f32) {
+        self.x *= other;
+        self.y *= other;
+        self.z *= other;
+    }
+}
 impl ops::Div<f32> for Vec3 {
     type Output = Vec3;
     fn div(self, other: f32) -> Vec3 {
         Vec3::new(self.x / other, self.y / other, self.z / other)
+    }
+}
+impl ops::DivAssign<f32> for Vec3 {
+    fn div_assign(&mut self, other: f32) {
+        self.x /= other;
+        self.y /= other;
+        self.z /= other;
     }
 }
 
@@ -223,6 +268,63 @@ mod tests {
         assert_eq!(v2.x(), 0.5);
         assert_eq!(v2.y(), 1.0);
         assert_eq!(v2.z(), 1.5);
+        Ok(())
+    }
+    #[test]
+    fn test_neg() -> Result<(), std::fmt::Error> {
+        let v1 = Vec3::new(1.0, 2.0, 3.0);
+        let v2 = -v1;
+        assert_eq!(v2.x(), -1.0);
+        assert_eq!(v2.y(), -2.0);
+        assert_eq!(v2.z(), -3.0);
+        Ok(())
+    }
+    #[test]
+    fn test_add_assign() -> Result<(), std::fmt::Error> {
+        let mut v1 = Vec3::new(1.0, 2.0, 3.0);
+        let v2 = Vec3::new(4.0, 5.0, 6.0);
+        v1 += v2;
+        assert_eq!(v1.x(), 5.0);
+        assert_eq!(v1.y(), 7.0);
+        assert_eq!(v1.z(), 9.0);
+        Ok(())
+    }
+    #[test]
+    fn test_sub_assign() -> Result<(), std::fmt::Error> {
+        let mut v1 = Vec3::new(1.0, 2.0, 3.0);
+        let v2 = Vec3::new(4.0, 5.0, 6.0);
+        v1 -= v2;
+        assert_eq!(v1.x(), -3.0);
+        assert_eq!(v1.y(), -3.0);
+        assert_eq!(v1.z(), -3.0);
+        Ok(())
+    }
+    #[test]
+    fn test_mul_assign() -> Result<(), std::fmt::Error> {
+        let mut v1 = Vec3::new(1.0, 2.0, 3.0);
+        let v2 = Vec3::new(4.0, 5.0, 6.0);
+        v1 *= v2;
+        assert_eq!(v1.x(), 4.0);
+        assert_eq!(v1.y(), 10.0);
+        assert_eq!(v1.z(), 18.0);
+        Ok(())
+    }
+    #[test]
+    fn test_mul_assign_scalar() -> Result<(), std::fmt::Error> {
+        let mut v1 = Vec3::new(1.0, 2.0, 3.0);
+        v1 *= 2.0;
+        assert_eq!(v1.x(), 2.0);
+        assert_eq!(v1.y(), 4.0);
+        assert_eq!(v1.z(), 6.0);
+        Ok(())
+    }
+    #[test]
+    fn test_div_assign() -> Result<(), std::fmt::Error> {
+        let mut v1 = Vec3::new(1.0, 2.0, 3.0);
+        v1 /= 2.0;
+        assert_eq!(v1.x(), 0.5);
+        assert_eq!(v1.y(), 1.0);
+        assert_eq!(v1.z(), 1.5);
         Ok(())
     }
     #[test]

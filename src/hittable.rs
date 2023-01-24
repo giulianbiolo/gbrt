@@ -1,3 +1,6 @@
+// Author: Giulian Biolo, github.com/giulianbiolo
+// Date: 24/01/2023
+// Description: This file implements the Hittable trait and the HitRecord struct
 use crate::vec3::{Point3, Vec3};
 use crate::ray::Ray;
 
@@ -22,3 +25,5 @@ pub trait Hittable {
     // The hit function returns true if the ray hits the object.
     fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool;
 }
+
+// Unit Tests are to be found in the HittableList struct in src\hittable_list.rs

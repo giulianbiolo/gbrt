@@ -1,3 +1,6 @@
+// Author: Giulian Biolo, github.com/giulianbiolo
+// Date: 24/01/2023
+// Description: This file implements various utility constants and functions used throughout the project
 use rand::prelude::*;
 
 // Image constants

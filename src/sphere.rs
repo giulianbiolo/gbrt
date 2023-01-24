@@ -1,3 +1,6 @@
+// Author: Giulian Biolo, github.com/giulianbiolo
+// Date: 24/01/2023
+// Description: This file implements the Sphere struct
 use crate::vec3::{Point3, Vec3};
 use crate::ray::Ray;
 use crate::hittable::{Hittable, HitRecord};
