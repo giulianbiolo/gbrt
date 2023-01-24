@@ -11,3 +11,4 @@ pub mod hittable_list;
 pub mod utility;
 pub mod camera;
 pub mod material;
+pub mod raytracer;

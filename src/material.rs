@@ -1,3 +1,6 @@
+// Author: Giulian Biolo, github.com/giulianbiolo
+// Date: 24/01/2023
+// Description: This file implements the Material trait and its implementations
 use dyn_clone::DynClone;
 
 use crate::vec3::{Color, Vec3};
