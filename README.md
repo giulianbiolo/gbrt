@@ -1,6 +1,6 @@
 # gbrt
 ----------------
-This is an implementation of the "Ray Tracing in One Weekend" book in Rust. The project aims to provide a simple and efficient implementation of the algorithms described in the book, with a focus on code readability and maintainability.
+This is an implementation of ["Ray Tracing in One Weekend"](https://raytracing.github.io/books/RayTracingInOneWeekend.html#outputanimage) written in Rust. The project aims to provide a simple and efficient implementation of the algorithms described in the website, with a focus on code readability and maintainability.
 
 ## Getting Started
 To get started, clone the repository and run the following command in the root directory:
