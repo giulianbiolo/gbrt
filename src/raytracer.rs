@@ -8,7 +8,7 @@ use crate::ray::Ray;
 use crate::hittable::{Hittable, HitRecord};
 use crate::hittable_list::HittableList;
 use crate::sphere::Sphere;
-use crate::material::{Lambertian, Metal};
+use crate::material::{Lambertian, Metal, Dielectric};
 use crate::camera::Camera;
 use crate::utility;
 
@@ -41,9 +41,11 @@ pub fn ray_color(r: &Ray, world: &HittableList, depth: u32) -> Color {
 pub fn init_scene() -> HittableList {
     // Materials
     let material_ground: Lambertian = Lambertian::new(Color::new(0.8, 0.8, 0.0));
-    let material_center: Lambertian = Lambertian::new(Color::new(0.7, 0.3, 0.3));
-    let material_left: Metal = Metal::new(Color::new(0.8, 0.8, 0.8), 0.3);
-    let material_right: Metal = Metal::new(Color::new(0.8, 0.6, 0.2), 1.0);
+    let material_center: Lambertian = Lambertian::new(Color::new(0.1, 0.2, 0.5));
+    //let material_left: Metal = Metal::new(Color::new(0.8, 0.8, 0.8), 0.3);
+    // let material_center: Dielectric = Dielectric::new(1.5);
+    let material_left: Dielectric = Dielectric::new(1.5);
+    let material_right: Metal = Metal::new(Color::new(0.8, 0.6, 0.2), 0.0);
 
     // World
     let mut world: HittableList = HittableList::new();

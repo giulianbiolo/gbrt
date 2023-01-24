@@ -49,6 +49,12 @@ impl Vec3 {
         Vec3::new(self.x * k, self.y * k, self.z * k)
     }
     pub fn reflect(&self, normal: &Vec3) -> Vec3 { *self - *normal * self.dot(normal) * 2.0 }
+    pub fn refract(&self, normal: &Vec3, etai_over_etat: f32) -> Vec3 {
+        let cos_theta: f32 = (-*self).dot(normal).min(1.0);
+        let r_out_perp: Vec3 = (*self + *normal * cos_theta) * etai_over_etat;
+        let r_out_parallel: Vec3 = *normal * -(1.0 - r_out_perp.length_squared()).abs().sqrt();
+        r_out_perp + r_out_parallel
+    }
 }
 impl ops::Add for Vec3 {
     type Output = Vec3;
@@ -280,6 +286,23 @@ mod tests {
         let v2 = v.unit_vector();
         //Assert equality with a small delta because of floating point error.
         assert!(v2.length() - 1.0 < 0.0000001);
+        Ok(())
+    }
+    #[test]
+    fn test_reflect() -> Result<(), std::fmt::Error> {
+        let v = Vec3::new(1.0, -1.0, 0.0);
+        let n = Vec3::new(0.0, 1.0, 0.0);
+        let r = v.reflect(&n);
+        assert_eq!(r.x(), 1.0);
+        assert_eq!(r.y(), 1.0);
+        assert_eq!(r.z(), 0.0);
+        Ok(())
+    }
+    #[test]
+    fn test_refract() -> Result<(), std::fmt::Error> {
+        let v = Vec3::new(1.0, -1.0, 0.0);
+        let n = Vec3::new(0.0, 1.0, 0.0);
+        v.refract(&n, 0.5);
         Ok(())
     }
     #[test]
