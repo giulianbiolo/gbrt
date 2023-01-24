@@ -3,9 +3,7 @@
 // Description: This file implements the HittableList struct
 use crate::hittable::{Hittable, HitRecord};
 use crate::ray::Ray;
-use crate::vec3::{Point3, Color};
-use crate::sphere::Sphere;
-use crate::material::Lambertian;
+
 
 pub struct HittableList {
     objects: Vec<Box<dyn Hittable>>,
@@ -13,7 +11,6 @@ pub struct HittableList {
 
 impl HittableList {
     pub fn new() -> HittableList { HittableList { objects: Vec::new() } }
-    pub fn clear(&mut self) { self.objects.clear(); }
     pub fn add(&mut self, object: Box<dyn Hittable>) { self.objects.push(object); }
 }
 
@@ -39,10 +36,9 @@ impl Hittable for HittableList {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ray::Ray;
-    use crate::vec3::Point3;
+    use crate::vec3::{Point3, Color};
+    use crate::material::Lambertian;
     use crate::sphere::Sphere;
-    use crate::hittable::Hittable;
 
     #[test]
     fn test_hit() {

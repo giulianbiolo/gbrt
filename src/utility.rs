@@ -1,19 +1,14 @@
 // Author: Giulian Biolo, github.com/giulianbiolo
 // Date: 24/01/2023
 // Description: This file implements various utility constants and functions used throughout the project
-use rand::prelude::*;
+
 
 // Image constants
 pub const ASPECT_RATIO: f32 = 16.0 / 9.0;
-pub const WIDTH: u32 = 800;
+pub const WIDTH: u32 = 400;
 pub const HEIGHT: u32 = ((WIDTH as f32) / ASPECT_RATIO) as u32;
-pub const SAMPLES_PER_PIXEL: u32 = 32; // Antialiasing samples per pixel
+pub const SAMPLES_PER_PIXEL: u32 = 16; // Antialiasing samples per pixel
 pub const MAX_DEPTH: u32 = 50; // Maximum ray bounces
-
-// Camera constants
-pub const VIEWPORT_HEIGHT: f32 = 2.0;
-pub const VIEWPORT_WIDTH: f32 = ASPECT_RATIO as f32 * VIEWPORT_HEIGHT;
-pub const FOCAL_LENGTH: f32 = 1.0;
 
 // Numerical Constants
 pub const INFINITY: f32 = std::f32::INFINITY;

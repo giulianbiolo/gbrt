@@ -24,7 +24,7 @@ impl Lambertian {
     pub fn new(albedo: Color) -> Lambertian { Lambertian { albedo } }
 }
 impl Material for Lambertian {
-    fn scatter(&self, ray_in: &Ray, rec: &HitRecord, attenuation: &mut Color, scattered: &mut Ray) -> bool {
+    fn scatter(&self, _: &Ray, rec: &HitRecord, attenuation: &mut Color, scattered: &mut Ray) -> bool {
         // Scatter direction will be the normal plus a random vector in the unit sphere
         let mut scatter_direction: Vec3 = rec.normal + Vec3::random_unit_vector();
         // If the scatter direction is too close to zero, we set it to the normal
