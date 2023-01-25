@@ -10,10 +10,14 @@ pub struct Camera {
     lower_left_corner: Point3,
     horizontal: Vec3,
     vertical: Vec3,
+    u: Vec3,
+    v: Vec3,
+    //w: Vec3,
+    lens_radius: f32,
 }
 
 impl Camera {
-    pub fn new(lookfrom: &Vec3, lookat: &Vec3, vup: &Vec3, vfov: f32, aspect_ratio: f32) -> Camera {
+    pub fn new(lookfrom: &Vec3, lookat: &Vec3, vup: &Vec3, vfov: f32, aspect_ratio: f32, aperture: f32, focus_dist: f32) -> Camera {
         let theta: f32 = degrees_to_radians(vfov);
         let h: f32 = (theta / 2.0).tan();
         let viewport_height: f32 = 2.0 * h;
@@ -24,19 +28,29 @@ impl Camera {
         let v: Vec3 = w.cross(&u);
 
         let origin: Point3 = *lookfrom;
-        let horizontal: Vec3 = viewport_width * u;
-        let vertical: Vec3 = viewport_height * v;
-        let lower_left_corner: Point3 = origin - horizontal / 2.0 - vertical / 2.0 - w;
+        let horizontal: Vec3 = focus_dist * viewport_width * u;
+        let vertical: Vec3 = focus_dist * viewport_height * v;
+        let lower_left_corner: Point3 = origin - horizontal / 2.0 - vertical / 2.0 - w * focus_dist;
+        let lens_radius: f32 = aperture / 2.0;
 
         Camera {
             origin,
             lower_left_corner,
             horizontal,
             vertical,
+            u,
+            v,
+            //w,
+            lens_radius,
         }
     }
     pub fn get_ray(&self, u: f32, v: f32) -> Ray {
-        Ray::new(self.origin, self.lower_left_corner + u * self.horizontal + v * self.vertical - self.origin)
+        let rd: Vec3 = self.lens_radius * Vec3::random_in_unit_disk();
+        let offset: Vec3 = self.u * rd.x() + self.v * rd.y();
+        Ray::new(
+            self.origin + offset,
+            self.lower_left_corner + u * self.horizontal + v * self.vertical - self.origin - offset
+        )
     }
 }
 
@@ -45,7 +59,15 @@ mod tests {
     use super::*;
     #[test]
     fn test_camera() -> Result<(), std::fmt::Error> {
-        let camera: Camera = Camera::new(&Point3::new(0.0, 0.0, 0.0), &Point3::new(0.0, 0.0, -1.0), &Vec3::new(0.0, 1.0, 0.0), 90.0, 1.0);
+        let camera: Camera = Camera::new(
+            &Point3::new(0.0, 0.0, 0.0),
+            &Point3::new(0.0, 0.0, -1.0),
+            &Vec3::new(0.0, 1.0, 0.0),
+            90.0,
+            1.0,
+            0.0,
+            1.0
+        );
         let ray: Ray = camera.get_ray(0.0, 0.0);
         assert_eq!(camera.origin, Point3::new(0.0, 0.0, 0.0));
         assert_eq!(ray.origin(), Point3::new(0.0, 0.0, 0.0));

@@ -5,9 +5,9 @@
 
 // Image constants
 pub const ASPECT_RATIO: f32 = 16.0 / 9.0;
-pub const WIDTH: u32 = 400;
+pub const WIDTH: u32 = 800;
 pub const HEIGHT: u32 = ((WIDTH as f32) / ASPECT_RATIO) as u32;
-pub const SAMPLES_PER_PIXEL: u32 = 16; // Antialiasing samples per pixel
+pub const SAMPLES_PER_PIXEL: u32 = 64; // Antialiasing samples per pixel
 pub const MAX_DEPTH: u32 = 50; // Maximum ray bounces
 
 // Numerical Constants

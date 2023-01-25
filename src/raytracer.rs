@@ -37,24 +37,6 @@ pub fn ray_color(r: &Ray, world: &HittableList, depth: u32) -> Color {
     (1.0 - t) * Color::new(1.0, 1.0, 1.0) + t * Color::new(0.5, 0.7, 1.0)
 }
 
-// Inits the scene and returns it as a HittableList
-pub fn init_scene() -> HittableList {
-    // Materials
-    let material_ground: Lambertian = Lambertian::new(Color::new(0.8, 0.8, 0.0));
-    let material_center: Lambertian = Lambertian::new(Color::new(0.1, 0.2, 0.5));
-    let material_left: Dielectric = Dielectric::new(1.5);
-    let material_right: Metal = Metal::new(Color::new(0.8, 0.6, 0.2), 0.0);
-
-    // World
-    let mut world: HittableList = HittableList::new();
-    world.add(Box::new(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0, Box::new(material_ground))));
-    world.add(Box::new(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5, Box::new(material_center))));
-    world.add(Box::new(Sphere::new(Point3::new(-1.0, 0.0, -1.0), 0.5, Box::new(material_left.clone()))));
-    world.add(Box::new(Sphere::new(Point3::new(-1.0, 0.0, -1.0), -0.45, Box::new(material_left))));
-    world.add(Box::new(Sphere::new(Point3::new(1.0, 0.0, -1.0), 0.5, Box::new(material_right))));
-    world
-}
-
 // Renders the scene to an image
 pub fn render_to_image(world: &HittableList, cam: &Camera, filename: &str) {
     // Render function
@@ -72,4 +54,62 @@ pub fn render_to_image(world: &HittableList, cam: &Camera, filename: &str) {
 
     // Save the image
     img.save(filename).unwrap();
+}
+
+// Inits the scene and returns it as a HittableList
+#[allow(dead_code)]
+pub fn init_scene() -> HittableList {
+    // Materials
+    let material_ground: Lambertian = Lambertian::new(Color::new(0.8, 0.8, 0.0));
+    let material_center: Lambertian = Lambertian::new(Color::new(0.1, 0.2, 0.5));
+    let material_left: Dielectric = Dielectric::new(1.5);
+    let material_right: Metal = Metal::new(Color::new(0.8, 0.6, 0.2), 0.0);
+
+    // World
+    let mut world: HittableList = HittableList::new();
+    world.add(Box::new(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0, Box::new(material_ground))));
+    world.add(Box::new(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5, Box::new(material_center))));
+    world.add(Box::new(Sphere::new(Point3::new(-1.0, 0.0, -1.0), 0.5, Box::new(material_left.clone()))));
+    world.add(Box::new(Sphere::new(Point3::new(-1.0, 0.0, -1.0), -0.45, Box::new(material_left))));
+    world.add(Box::new(Sphere::new(Point3::new(1.0, 0.0, -1.0), 0.5, Box::new(material_right))));
+    world
+}
+
+#[allow(dead_code)]
+pub fn init_random_scene() -> HittableList {
+    let ground_material: Lambertian = Lambertian::new(Color::new(0.5, 0.5, 0.5));
+    let mut world: HittableList = HittableList::new();
+    world.add(Box::new(Sphere::new(Point3::new(0.0, -1000.0, 0.0), 1000.0, Box::new(ground_material))));
+    for a in -11..11 {
+        for b in -11..11 {
+            let choose_mat: f32 = utility::random_f32();
+            let center: Point3 = Point3::new(a as f32 + 0.9 * utility::random_f32(), 0.2, b as f32 + 0.9 * utility::random_f32());
+            if (center - Point3::new(4.0, 0.2, 0.0)).length() > 0.9 {
+                if choose_mat < 0.8 {
+                    // Diffuse
+                    let albedo: Color = Color::random() * Color::random();
+                    let sphere_material: Lambertian = Lambertian::new(albedo);
+                    world.add(Box::new(Sphere::new(center, 0.2, Box::new(sphere_material))));
+                } else if choose_mat < 0.95 {
+                    // Metal
+                    let albedo: Color = Color::random_range(0.5, 1.0);
+                    let fuzz: f32 = utility::random_f32_range(0.0, 0.5);
+                    let sphere_material: Metal = Metal::new(albedo, fuzz);
+                    world.add(Box::new(Sphere::new(center, 0.2, Box::new(sphere_material))));
+                } else {
+                    // Glass
+                    let sphere_material: Dielectric = Dielectric::new(1.5);
+                    world.add(Box::new(Sphere::new(center, 0.2, Box::new(sphere_material))));
+                }
+            }
+        }
+    }
+    let mat1: Dielectric = Dielectric::new(1.5);
+    world.add(Box::new(Sphere::new(Point3::new(0.0, 1.0, 0.0), 1.0, Box::new(mat1))));
+    let mat2: Lambertian = Lambertian::new(Color::new(0.4, 0.2, 0.1));
+    world.add(Box::new(Sphere::new(Point3::new(-4.0, 1.0, 0.0), 1.0, Box::new(mat2))));
+    let mat3: Metal = Metal::new(Color::new(0.7, 0.6, 0.5), 0.0);
+    world.add(Box::new(Sphere::new(Point3::new(4.0, 1.0, 0.0), 1.0, Box::new(mat3))));
+
+    world
 }

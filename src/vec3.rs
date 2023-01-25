@@ -2,7 +2,7 @@
 // Date: 24/01/2023
 // Description: This file implements the Vec3 struct, a backbone of various other structs throughout the project
 use std::ops;
-use crate::utility;
+use crate::utility::{random_f32, random_f32_range};
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Vec3 {
@@ -14,11 +14,19 @@ impl Vec3 {
     pub fn new(x: f32, y: f32, z: f32) -> Vec3 { Vec3 { x, y, z } }
     pub fn new_init() -> Vec3 { Vec3 { x: 0.0, y: 0.0, z: 0.0 } }
     pub fn new_from(v: &Vec3) -> Vec3 { Vec3 { x: v.x, y: v.y, z: v.z } }
-    pub fn random() -> Vec3 { Vec3::new(utility::random_f32(), utility::random_f32(), utility::random_f32()) }
-    pub fn random_range(min: f32, max: f32) -> Vec3 { Vec3::new(utility::random_f32_range(min, max), utility::random_f32_range(min, max), utility::random_f32_range(min, max)) }
+    pub fn random() -> Vec3 { Vec3::new(random_f32(), random_f32(), random_f32()) }
+    pub fn random_range(min: f32, max: f32) -> Vec3 { Vec3::new(random_f32_range(min, max), random_f32_range(min, max), random_f32_range(min, max)) }
     pub fn random_in_unit_sphere() -> Vec3 {
+        // TODO: Better implementation for faster performance
         loop {
             let p: Vec3 = Vec3::random_range(-1.0, 1.0);
+            if p.length_squared() < 1.0 { return p; }
+        }
+    }
+    pub fn random_in_unit_disk() -> Vec3 {
+        // TODO: Better implementation for faster performance
+        loop {
+            let p: Vec3 = Vec3::new(random_f32_range(-1.0, 1.0), random_f32_range(-1.0, 1.0), 0.0);
             if p.length_squared() < 1.0 { return p; }
         }
     }
@@ -241,6 +249,12 @@ mod tests {
     #[test]
     fn test_random_in_unit_sphere() -> Result<(), std::fmt::Error> {
         let v = Vec3::random_in_unit_sphere();
+        assert!(v.length() < 1.0);
+        Ok(())
+    }
+    #[test]
+    fn test_random_in_unit_disk() -> Result<(), std::fmt::Error> {
+        let v = Vec3::random_in_unit_disk();
         assert!(v.length() < 1.0);
         Ok(())
     }
