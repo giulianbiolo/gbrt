@@ -2,14 +2,17 @@
 // Date: 24/01/2023
 // Description: This file implements the Material trait and its implementations
 use dyn_clone::DynClone;
+use glam;
+use glam::Vec3A;
 
-use crate::vec3::{Color, Vec3};
+use crate::color::Color;
 use crate::ray::Ray;
 use crate::hittable::HitRecord;
+use crate::utility;
 
 
 
-pub trait Material: DynClone + Send + Sync {
+pub trait Material: DynClone + Send {
     fn scatter(&self, ray_in: &Ray, rec: &HitRecord, attenuation: &mut Color, scattered: &mut Ray) -> bool;
 }
 dyn_clone::clone_trait_object!(Material);
@@ -26,9 +29,9 @@ impl Lambertian {
 impl Material for Lambertian {
     fn scatter(&self, _: &Ray, rec: &HitRecord, attenuation: &mut Color, scattered: &mut Ray) -> bool {
         // Scatter direction will be the normal plus a random vector in the unit sphere
-        let mut scatter_direction: Vec3 = rec.normal + Vec3::random_unit_vector();
+        let mut scatter_direction: Vec3A = rec.normal + utility::random_unit_vector();
         // If the scatter direction is too close to zero, we set it to the normal
-        if scatter_direction.near_zero() { scatter_direction = rec.normal; }
+        if scatter_direction.length_squared() < 0.00001 { scatter_direction = rec.normal; }
         *scattered = Ray::new(rec.p, scatter_direction);
         *attenuation = self.albedo; // The attenuation is the albedo
         true
@@ -50,13 +53,13 @@ impl Metal {
 impl Material for Metal {
     fn scatter(&self, ray_in: &Ray, rec: &HitRecord, attenuation: &mut Color, scattered: &mut Ray) -> bool {
         // The scattered ray is the reflected ray plus a random vector in the unit sphere times the fuzz factor
-        let reflected: Vec3 = ray_in.direction().unit_vector().reflect(&rec.normal);
-        *scattered = Ray::new(rec.p, reflected + self.fuzz * Vec3::random_in_unit_sphere());
+        let reflected: Vec3A = reflect(&ray_in.direction().normalize(), &rec.normal);
+        *scattered = Ray::new(rec.p, reflected + utility::random_in_unit_sphere() * self.fuzz);
         *attenuation = self.albedo; // The attenuation is the albedo
         // The ray is scattered only if the dot product is positive
         // If the dot product is negative, the ray would be reflected backwards, inside the object
         // If the dot product is zero, the ray would be reflected in the same direction, might result in infinite loops
-        scattered.direction().dot(&rec.normal) > 0.0
+        scattered.direction().dot(rec.normal) > 0.0
     }
 }
 
@@ -77,18 +80,26 @@ impl Material for Dielectric {
     fn scatter(&self, ray_in: &Ray, rec: &HitRecord, attenuation: &mut Color, scattered: &mut Ray) -> bool {
         *attenuation = Color::new(1.0, 1.0, 1.0); // The attenuation is white
         let refraction_rate = if rec.front_face { 1.0 / self.refr_idx } else { self.refr_idx };
-        let unit_direction: Vec3 = ray_in.direction().unit_vector();
+        let unit_direction: Vec3A = ray_in.direction().normalize();
         
-        let cos_theta: f32 = (-unit_direction).dot(&rec.normal).min(1.0);
-        let sin_theta: f32 = (1.0 - cos_theta * cos_theta).sqrt();
+        let cos_theta: f32 = (-unit_direction.dot(rec.normal)).min(1.0);
+        let sin_theta: f32 = (1.0 - cos_theta.powi(2)).sqrt();
 
-        let direction: Vec3;
+        let direction: Vec3A;
         if refraction_rate * sin_theta > 1.0 || self.reflectance(cos_theta, refraction_rate) > rand::random::<f32>() {
-            direction = unit_direction.reflect(&rec.normal);
+            direction = reflect(&unit_direction, &rec.normal);
         } else {
-            direction = unit_direction.refract(&rec.normal, refraction_rate);
+            direction = refract(&unit_direction, &rec.normal, refraction_rate);
         }
         *scattered = Ray::new(rec.p, direction);
         true
     }
+}
+
+fn reflect(vec: &Vec3A, normal: &Vec3A) -> Vec3A { *vec - *normal * vec.dot(*normal) * 2.0 }
+fn refract(vec: &Vec3A, normal: &Vec3A, etai_over_etat: f32) -> Vec3A {
+    let cos_theta: f32 = (-*vec).dot(*normal).min(1.0);
+    let r_out_perp: Vec3A = (*vec + *normal * cos_theta) * etai_over_etat;
+    let r_out_parallel: Vec3A = *normal * -(1.0 - r_out_perp.length_squared()).abs().sqrt();
+    r_out_perp + r_out_parallel
 }
