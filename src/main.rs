@@ -4,19 +4,19 @@
 mod point3;
 mod color;
 mod ray;
-mod hittable;
+mod hit_record;
 mod sphere;
 mod hittable_list;
 mod utility;
 mod camera;
 mod material;
+mod rectangle;
 mod raytracer;
 
 use glam::Vec3A;
 
 use hittable_list::HittableList;
 use camera::Camera;
-use sphere::Sphere;
 
 
 
@@ -25,16 +25,25 @@ fn main() -> Result<(), std::fmt::Error> {
     // Print various logs
     println!("Image Size: {}x{}", utility::WIDTH, utility::HEIGHT);
     // Initialize the scene
-    // let world: HittableList<Sphere> = raytracer::init_scene();
-    let world: HittableList<Sphere> = raytracer::init_random_scene();
+    //let world: HittableList<Sphere> = raytracer::init_random_scene();
     // Initialize the camera
-    let cam: Camera = Camera::new(
+    /*let cam: Camera = Camera::new(
         &Vec3A::new(13.0, 2.0, 3.0),
         &Vec3A::new(0.0, 0.0, 0.0),
         &Vec3A::new(0.0, 1.0, 0.0),
         40.0,
         utility::ASPECT_RATIO,
         0.1,
+        10.0,
+    );*/
+    let world: HittableList = raytracer::init_scene();
+    let cam: Camera = Camera::new(
+        &Vec3A::new(0.0, 0.0, 0.0),
+        &Vec3A::new(0.0, 0.0, -1.0),
+        &Vec3A::new(0.0, 1.0, 0.0),
+        90.0,
+        utility::ASPECT_RATIO,
+        0.0,
         10.0,
     );
     // Render the scene to an image

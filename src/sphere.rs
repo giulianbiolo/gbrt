@@ -5,7 +5,8 @@ use glam;
 use glam::Vec3A;
 
 use crate::ray::Ray;
-use crate::hittable::{Hittable, HitRecord};
+use crate::hit_record::HitRecord;
+use crate::hittable_list::Hittable;
 use crate::material::Material;
 use crate::point3::Point3;
 
@@ -16,6 +17,9 @@ pub struct Sphere {
     radius: f32,
     material: Box<dyn Material>,
 }
+
+unsafe impl Sync for Sphere {}
+unsafe impl Send for Sphere {}
 
 impl Sphere {
     pub fn new(center: Point3, radius: f32, material: Box<dyn Material>) -> Sphere { Sphere { center, radius, material } }

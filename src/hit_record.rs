@@ -37,9 +37,6 @@ impl HitRecord {
     }
 }
 
-pub trait Hittable: Clone {
-    // The hit function returns true if the ray hits the object.
-    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool;
-}
+
 
 // Unit Tests are to be found in the HittableList struct in src\hittable_list.rs

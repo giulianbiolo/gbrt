@@ -4,10 +4,11 @@
 pub mod point3;
 pub mod color;
 pub mod ray;
-pub mod hittable;
+pub mod hit_record;
 pub mod sphere;
 pub mod hittable_list;
 pub mod utility;
 pub mod camera;
 pub mod material;
 pub mod raytracer;
+pub mod rectangle;

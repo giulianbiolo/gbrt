@@ -7,7 +7,7 @@ use glam::Vec3A;
 
 use crate::color::Color;
 use crate::ray::Ray;
-use crate::hittable::HitRecord;
+use crate::hit_record::HitRecord;
 use crate::utility;
 
 
