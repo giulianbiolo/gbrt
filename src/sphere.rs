@@ -22,6 +22,7 @@ unsafe impl Sync for Sphere {}
 unsafe impl Send for Sphere {}
 
 impl Sphere {
+    #[allow(dead_code)]
     pub fn new(center: Point3, radius: f32, material: Box<dyn Material>) -> Sphere { Sphere { center, radius, material } }
 }
 

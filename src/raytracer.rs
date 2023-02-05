@@ -12,6 +12,7 @@ use crate::hit_record::HitRecord;
 use crate::hittable_list::HittableList;
 use crate::hittable_list::Hittable;
 use crate::sphere::Sphere;
+use crate::triangle::Triangle;
 use crate::material::{Lambertian, Metal, Dielectric};
 use crate::camera::Camera;
 use crate::utility;
@@ -95,15 +96,16 @@ pub fn init_scene() -> HittableList {
     // Materials
     let material_ground: Lambertian = Lambertian::new(Color::new(0.8, 0.8, 0.0));
     let material_center: Lambertian = Lambertian::new(Color::new(0.1, 0.2, 0.5));
-    let material_left: Dielectric = Dielectric::new(1.5);
+    let material_left: Lambertian = Lambertian::new(Color::new(0.0, 0.5, 1.0));
     let material_right: Metal = Metal::new(Color::new(0.8, 0.6, 0.2), 0.0);
 
     // World
     let mut world: HittableList = HittableList::new();
     world.push(Box::new(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0, Box::new(material_ground))));
     world.push(Box::new(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5, Box::new(material_center))));
-    world.push(Box::new(Sphere::new(Point3::new(-1.0, 0.0, -1.0), 0.5, Box::new(material_left.clone()))));
-    world.push(Box::new(Sphere::new(Point3::new(-1.0, 0.0, -1.0), -0.45, Box::new(material_left))));
+    //world.push(Box::new(Sphere::new(Point3::new(-1.0, 0.0, -1.0), 0.5, Box::new(material_left))));
+    //world.push(Box::new(BBox::new(Point3::new(-1.0, 0.0, -1.0), Point3::new(0.7, 2.5, 0.7), Box::new(material_left))));
+    world.push(Box::new(Triangle::new([Point3::new(-2.0, -0.5, -1.0), Point3::new(0.0, 0.0, -1.0), Point3::new(-1.0, 2.0, -1.0)], Box::new(material_left))));
     world.push(Box::new(Sphere::new(Point3::new(1.0, 0.0, -1.0), 0.5, Box::new(material_right))));
     world
 }

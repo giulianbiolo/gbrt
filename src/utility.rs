@@ -18,6 +18,7 @@ pub const MAX_DEPTH: u32 = 50; // Maximum ray bounces
 // Numerical Constants
 pub const INFINITY: f32 = std::f32::INFINITY;
 pub const PI: f32 = std::f32::consts::PI;
+pub const EPSILON: f32 = 0.0001;
 
 // Utility functions
 pub fn random_f32() -> f32 { rand::random::<f32>() }

@@ -11,4 +11,5 @@ pub mod utility;
 pub mod camera;
 pub mod material;
 pub mod raytracer;
-pub mod rectangle;
+pub mod bbox;
+pub mod triangle;
