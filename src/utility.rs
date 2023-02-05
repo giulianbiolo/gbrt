@@ -8,7 +8,7 @@ use glam::{vec3a, Vec3A};
 
 // Image constants
 pub const WIDTH: u32 = 800;
-pub const HEIGHT: u32 = 600;
+pub const HEIGHT: u32 = 400;
 pub const ASPECT_RATIO: f32 = (WIDTH as f32) / (HEIGHT as f32);
 // pub const ASPECT_RATIO: f32 = 16.0 / 9.0;
 // pub const HEIGHT: u32 = ((WIDTH as f32) / ASPECT_RATIO) as u32;
@@ -17,6 +17,7 @@ pub const MAX_DEPTH: u32 = 50; // Maximum ray bounces
 
 // Numerical Constants
 pub const INFINITY: f32 = std::f32::INFINITY;
+pub const NEG_INFINITY: f32 = std::f32::NEG_INFINITY;
 pub const PI: f32 = std::f32::consts::PI;
 pub const EPSILON: f32 = 0.0001;
 

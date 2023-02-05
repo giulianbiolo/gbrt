@@ -12,6 +12,7 @@ mod camera;
 mod material;
 mod bbox;
 mod triangle;
+mod obj_mesh;
 mod raytracer;
 
 use glam::Vec3A;
@@ -39,7 +40,7 @@ fn main() -> Result<(), std::fmt::Error> {
     );*/
     let world: HittableList = raytracer::init_scene();
     let cam: Camera = Camera::new(
-        &Vec3A::new(0.0, 0.0, 0.5),
+        &Vec3A::new(0.0, 0.0, 0.75),
         &Vec3A::new(0.0, 0.0, -1.0),
         &Vec3A::new(0.0, 1.0, 0.0),
         90.0,
