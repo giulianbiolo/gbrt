@@ -14,3 +14,4 @@ pub mod raytracer;
 pub mod bbox;
 pub mod triangle;
 pub mod obj_mesh;
+pub mod sphere_array;

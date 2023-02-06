@@ -26,7 +26,6 @@ use crate::utility::{INFINITY, NEG_INFINITY};
 #[derive(Clone)]
 pub struct ObjMesh {
     triangles: Vec<Triangle>,
-    hitbox: BBox,
     bvh: BVH,
 }
 
@@ -39,7 +38,6 @@ impl ObjMesh {
         let mut stlfile = std::fs::OpenOptions::new().read(true).open(filename).unwrap();
         let stl = stl_io::read_stl(&mut stlfile).unwrap();
         let mut triangles: Vec<Triangle> = Vec::new();
-        let hitbox: BBox = BBox::new(position, dimensions, material.clone());
 
         let mut min_x = INFINITY;
         let mut min_y = INFINITY;
@@ -84,17 +82,26 @@ impl ObjMesh {
             let v2: Vec3A = rotation_matrix.mul((Vec3A::new(v2[0], v2[1], v2[2]) - median_vector).mul(scaling_factor) + position);
             triangles.push(Triangle::new([v0, v1, v2], material.clone(), 0));
         }
-        let bvh = BVH::build(&mut triangles);
-        ObjMesh { triangles, hitbox, bvh }
+        let bvh: BVH = BVH::build(&mut triangles);
+        ObjMesh { triangles, bvh }
     }
 }
 
 impl Hittable for ObjMesh {
     fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool {
-        if !self.hitbox.hit(ray, t_min, t_max, rec) { return false; }
         let bvhray: BVHRay = BVHRay::new(BVHPoint3::new(ray.origin[0], ray.origin[1], ray.origin[2]), BVHVector3::new(ray.direction[0], ray.direction[1], ray.direction[2]));
         let hit_triangles_aabbs: Vec<&Triangle> = self.bvh.traverse(&bvhray, &self.triangles);
-        for triangle in hit_triangles_aabbs { if triangle.hit(ray, t_min, t_max, rec) { return true; } }
-        false
+        
+        let mut temp_rec = HitRecord::empty();
+        let mut hit_anything = false;
+        let mut closest_so_far = t_max;
+        for triangle in hit_triangles_aabbs {
+            if triangle.hit(ray, t_min, closest_so_far, &mut temp_rec) {
+                hit_anything = true;
+                closest_so_far = temp_rec.t;
+                *rec = temp_rec.clone();
+            }
+        }
+        hit_anything
     }
 }

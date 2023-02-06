@@ -13,6 +13,7 @@ mod material;
 mod bbox;
 mod triangle;
 mod obj_mesh;
+mod sphere_array;
 mod raytracer;
 
 use glam::Vec3A;
@@ -29,7 +30,8 @@ fn main() -> Result<(), std::fmt::Error> {
     // Initialize the scene
     //let world: HittableList<Sphere> = raytracer::init_random_scene();
     // Initialize the camera
-    /*let cam: Camera = Camera::new(
+    /*
+    let cam: Camera = Camera::new(
         &Vec3A::new(13.0, 2.0, 3.0),
         &Vec3A::new(0.0, 0.0, 0.0),
         &Vec3A::new(0.0, 1.0, 0.0),
@@ -39,6 +41,7 @@ fn main() -> Result<(), std::fmt::Error> {
         10.0,
     );*/
     let world: HittableList = raytracer::init_scene();
+    
     let cam: Camera = Camera::new(
         &Vec3A::new(0.0, 0.0, 0.5),
         &Vec3A::new(0.0, 0.0, -1.0),

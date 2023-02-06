@@ -16,6 +16,7 @@ use crate::sphere::Sphere;
 use crate::obj_mesh::ObjMesh;
 use crate::material::{Lambertian, Metal, Dielectric};
 use crate::camera::Camera;
+use crate::sphere_array::SphereArray;
 use crate::utility;
 use crate::color::{Color, to_rgb};
 use crate::point3::Point3;
@@ -102,29 +103,27 @@ pub fn init_scene() -> HittableList {
     // Materials
     let material_ground: Lambertian = Lambertian::new(Color::new(0.8, 0.8, 0.0));
     // let material_center: Lambertian = Lambertian::new(Color::new(0.1, 0.2, 0.5));
-    let material_left: Lambertian = Lambertian::new(Color::new(0.2, 0.5, 0.8));
-    // let material_left: Metal = Metal::new(Color::ew(0.2, 0.6, 0.8), 0.3);
+    // let material_left: Lambertian = Lambertian::new(Color::new(0.2, 0.5, 0.8));
+    let material_left: Metal = Metal::new(Color::new(0.2, 0.6, 0.8), 0.3);
     let material_right: Metal = Metal::new(Color::new(0.8, 0.6, 0.2), 0.0);
     let material_high: DiffuseLight = DiffuseLight::new(Color::new(8.0, 8.0, 8.0));
 
     // World
     let mut world: HittableList = HittableList::new();
-    world.push(Box::new(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0, Box::new(material_ground))));
+    world.push(Box::new(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0, Box::new(material_ground), 0)));
     //world.push(Box::new(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5, Box::new(material_center))));
     //world.push(Box::new(Sphere::new(Point3::new(-1.0, 0.0, -1.0), 0.5, Box::new(material_left))));
     //world.push(Box::new(BBox::new(Point3::new(-1.0, 0.0, -1.0), Point3::new(0.7, 2.5, 0.7), Box::new(material_left))));
     //world.push(Box::new(Triangle::new([Point3::new(-2.0, -0.5, -1.0), Point3::new(0.0, 0.0, -1.0), Point3::new(-1.0, 2.0, -1.0)], Box::new(material_left))));
-    world.push(Box::new(ObjMesh::new(Point3::new(0.0, 0.0, 0.0), vec3a(1.0, 1.0, 1.0), vec3a(90.0, 180.0, 15.0), "models/skull.stl", Box::new(material_left))));
-    world.push(Box::new(Sphere::new(Point3::new(1.5, 0.0, -1.0), 0.5, Box::new(material_right))));
-    world.push(Box::new(Sphere::new(Point3::new(0.0, 1.0, 0.0), 0.5, Box::new(material_high))));
+    world.push(Box::new(ObjMesh::new(Point3::new(0.0, 0.0, 0.0), vec3a(1.0, 1.0, 1.0), vec3a(90.0, 180.0, 180.0), "models/upa.stl", Box::new(material_left))));
+    world.push(Box::new(Sphere::new(Point3::new(1.5, 0.0, -1.0), 0.5, Box::new(material_right), 0)));
+    world.push(Box::new(Sphere::new(Point3::new(0.0, 1.0, 0.0), 0.5, Box::new(material_high), 0)));
     world
 }
 
 #[allow(dead_code)]
 pub fn init_random_scene() -> HittableList {
-    let ground_material: Lambertian = Lambertian::new(Color::new(0.5, 0.5, 0.5));
-    let mut world: HittableList = HittableList::new();
-    world.push(Box::new(Sphere::new(Point3::new(0.0, -1000.0, 0.0), 1000.0, Box::new(ground_material))));
+    let mut spheres = Vec::<Sphere>::new();
     for a in -11..11 {
         for b in -11..11 {
             let choose_mat: f32 = utility::random_f32();
@@ -134,27 +133,35 @@ pub fn init_random_scene() -> HittableList {
                     // Diffuse
                     let albedo: Color = vec3a(utility::random_f32(), utility::random_f32(), utility::random_f32()) * vec3a(utility::random_f32(), utility::random_f32(), utility::random_f32());
                     let sphere_material: Lambertian = Lambertian::new(albedo);
-                    world.push(Box::new(Sphere::new(center, 0.2, Box::new(sphere_material))));
+                    spheres.push(Sphere::new(center, 0.2, Box::new(sphere_material), 0));
                 } else if choose_mat < 0.95 {
                     // Metal
                     let albedo: Color = vec3a(utility::random_f32_range(0.5, 1.0), utility::random_f32_range(0.5, 1.0), utility::random_f32_range(0.5, 1.0));
                     let fuzz: f32 = utility::random_f32_range(0.0, 0.5);
                     let sphere_material: Metal = Metal::new(albedo, fuzz);
-                    world.push(Box::new(Sphere::new(center, 0.2, Box::new(sphere_material))));
+                    spheres.push(Sphere::new(center, 0.2, Box::new(sphere_material), 0));
                 } else {
                     // Glass
                     let sphere_material: Dielectric = Dielectric::new(1.5);
-                    world.push(Box::new(Sphere::new(center, 0.2, Box::new(sphere_material))));
+                    spheres.push(Sphere::new(center, 0.2, Box::new(sphere_material), 0));
                 }
             }
         }
     }
+    let mut world: HittableList = HittableList::new();
+    let spheres_arr: SphereArray = SphereArray::new(&mut spheres);
+    world.push(Box::new(spheres_arr));
+
     let mat1: Dielectric = Dielectric::new(1.5);
-    world.push(Box::new(Sphere::new(Point3::new(0.0, 1.0, 0.0), 1.0, Box::new(mat1))));
+    world.push(Box::new(Sphere::new(Point3::new(0.0, 1.0, 0.0), 1.0, Box::new(mat1), 0)));
     let mat2: Lambertian = Lambertian::new(Color::new(0.4, 0.2, 0.1));
-    world.push(Box::new(Sphere::new(Point3::new(-4.0, 1.0, 0.0), 1.0, Box::new(mat2))));
+    world.push(Box::new(Sphere::new(Point3::new(-4.0, 1.0, 0.0), 1.0, Box::new(mat2), 0)));
     let mat3: Metal = Metal::new(Color::new(0.7, 0.6, 0.5), 0.0);
-    world.push(Box::new(Sphere::new(Point3::new(4.0, 1.0, 0.0), 1.0, Box::new(mat3))));
+    world.push(Box::new(Sphere::new(Point3::new(4.0, 1.0, 0.0), 1.0, Box::new(mat3), 0)));
+
+
+    let ground_material: Lambertian = Lambertian::new(Color::new(0.5, 0.5, 0.5));
+    world.push(Box::new(Sphere::new(Point3::new(0.0, -1000.0, 0.0), 1000.0, Box::new(ground_material), 0)));
 
     world
 }

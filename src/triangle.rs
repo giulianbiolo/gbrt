@@ -84,7 +84,6 @@ impl Hittable for Triangle {
             rec.p = ray.at(t);
             let outward_normal: Vec3A = e2.cross(e1).normalize();
             rec.set_face_normal(ray, &outward_normal);
-            // rec.normal = e2.cross(e1).normalize();
             rec.mat_ptr = self.material.clone();
             return true;
         }

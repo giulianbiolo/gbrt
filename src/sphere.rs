@@ -1,6 +1,11 @@
 // Author: Giulian Biolo, github.com/giulianbiolo
 // Date: 24/01/2023
 // Description: This file implements the Sphere struct
+
+use bvh::aabb::{AABB, Bounded};
+use bvh::bounding_hierarchy::BHShape;
+use bvh::Point3 as BVHPoint3;
+
 use glam;
 use glam::Vec3A;
 
@@ -16,6 +21,7 @@ pub struct Sphere {
     center: Point3,
     radius: f32,
     material: Box<dyn Material>,
+    node_index: usize,
 }
 
 unsafe impl Sync for Sphere {}
@@ -23,7 +29,20 @@ unsafe impl Send for Sphere {}
 
 impl Sphere {
     #[allow(dead_code)]
-    pub fn new(center: Point3, radius: f32, material: Box<dyn Material>) -> Sphere { Sphere { center, radius, material } }
+    pub fn new(center: Point3, radius: f32, material: Box<dyn Material>, node_index: usize) -> Sphere { Sphere { center, radius, material, node_index } }
+}
+
+impl Bounded for Sphere {
+    fn aabb(&self) -> AABB {
+        let min: BVHPoint3 = BVHPoint3::new(self.center.x - self.radius, self.center.y - self.radius, self.center.z - self.radius);
+        let max: BVHPoint3 = BVHPoint3::new(self.center.x + self.radius, self.center.y + self.radius, self.center.z + self.radius);
+        AABB::with_bounds(min, max)
+    }
+}
+
+impl BHShape for Sphere {
+    fn set_bh_node_index(&mut self, index: usize) { self.node_index = index; }
+    fn bh_node_index(&self) -> usize { self.node_index }
 }
 
 impl Hittable for Sphere {
