@@ -14,6 +14,7 @@ use crate::utility;
 
 pub trait Material: DynClone + Send {
     fn scatter(&self, ray_in: &Ray, rec: &HitRecord, attenuation: &mut Color, scattered: &mut Ray) -> bool;
+    fn emitted(&self) -> Color { Color::new(0.0, 0.0, 0.0) }
 }
 dyn_clone::clone_trait_object!(Material);
 
@@ -102,4 +103,17 @@ fn refract(vec: &Vec3A, normal: &Vec3A, etai_over_etat: f32) -> Vec3A {
     let r_out_perp: Vec3A = (*vec + *normal * cos_theta) * etai_over_etat;
     let r_out_parallel: Vec3A = *normal * -(1.0 - r_out_perp.length_squared()).abs().sqrt();
     r_out_perp + r_out_parallel
+}
+
+#[derive(Clone, Debug)]
+pub struct DiffuseLight {
+    // The DiffuseLight material is a light source that emits light equally in all directions.
+    emit: Color,
+}
+impl DiffuseLight {
+    pub fn new(emit: Color) -> DiffuseLight { DiffuseLight { emit } }
+}
+impl Material for DiffuseLight {
+    fn scatter(&self, _: &Ray, _: &HitRecord, _: &mut Color, _: &mut Ray) -> bool { false }
+    fn emitted(&self) -> Color { self.emit }
 }

@@ -7,13 +7,13 @@ use glam::{vec3a, Vec3A};
 
 
 // Image constants
-pub const WIDTH: u32 = 800;
-pub const HEIGHT: u32 = 400;
+pub const WIDTH: u32 = 1920;
+pub const HEIGHT: u32 = 1080;
 pub const ASPECT_RATIO: f32 = (WIDTH as f32) / (HEIGHT as f32);
 // pub const ASPECT_RATIO: f32 = 16.0 / 9.0;
 // pub const HEIGHT: u32 = ((WIDTH as f32) / ASPECT_RATIO) as u32;
-pub const SAMPLES_PER_PIXEL: u32 = 32; // Antialiasing samples per pixel
-pub const MAX_DEPTH: u32 = 50; // Maximum ray bounces
+pub const SAMPLES_PER_PIXEL: u32 = 512; // Antialiasing samples per pixel
+pub const MAX_DEPTH: u32 = 5000; // Maximum ray bounces
 
 // Numerical Constants
 pub const INFINITY: f32 = std::f32::INFINITY;

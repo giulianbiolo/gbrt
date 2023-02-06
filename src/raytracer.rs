@@ -7,6 +7,7 @@ use image::{ImageBuffer, Rgb};
 use glam;
 use glam::vec3a;
 
+use crate::material::DiffuseLight;
 use crate::ray::Ray;
 use crate::hit_record::HitRecord;
 use crate::hittable_list::HittableList;
@@ -80,10 +81,11 @@ pub fn ray_color(r: &Ray, world: &HittableList, depth: u32) -> Color {
     if world.hit(r, 0.001, utility::INFINITY, &mut rec) {
         let mut scattered = Ray::empty();
         let mut attenuation = vec3a(0.0, 0.0, 0.0);
+        let emitted = rec.mat_ptr.emitted();
         if rec.mat_ptr.scatter(r, &rec, &mut attenuation, &mut scattered) {
             return attenuation * ray_color(&scattered, world, depth + 1);
         }
-        return Color::new(0.0, 0.0, 0.0);
+        return emitted;
     }
 
     // If no intersection, return the background sky color
@@ -100,8 +102,10 @@ pub fn init_scene() -> HittableList {
     // Materials
     let material_ground: Lambertian = Lambertian::new(Color::new(0.8, 0.8, 0.0));
     // let material_center: Lambertian = Lambertian::new(Color::new(0.1, 0.2, 0.5));
-    let material_left: Lambertian = Lambertian::new(Color::new(0.2, 0.2, 1.0));
+    let material_left: Lambertian = Lambertian::new(Color::new(0.2, 0.5, 0.8));
+    // let material_left: Metal = Metal::new(Color::ew(0.2, 0.6, 0.8), 0.3);
     let material_right: Metal = Metal::new(Color::new(0.8, 0.6, 0.2), 0.0);
+    let material_high: DiffuseLight = DiffuseLight::new(Color::new(8.0, 8.0, 8.0));
 
     // World
     let mut world: HittableList = HittableList::new();
@@ -110,8 +114,9 @@ pub fn init_scene() -> HittableList {
     //world.push(Box::new(Sphere::new(Point3::new(-1.0, 0.0, -1.0), 0.5, Box::new(material_left))));
     //world.push(Box::new(BBox::new(Point3::new(-1.0, 0.0, -1.0), Point3::new(0.7, 2.5, 0.7), Box::new(material_left))));
     //world.push(Box::new(Triangle::new([Point3::new(-2.0, -0.5, -1.0), Point3::new(0.0, 0.0, -1.0), Point3::new(-1.0, 2.0, -1.0)], Box::new(material_left))));
-    world.push(Box::new(ObjMesh::new(Point3::new(0.0, 0.0, 0.0), vec3a(1.0, 1.0, 1.0), vec3a(90.0, 90.0, 0.0), "models/skull.stl", Box::new(material_left))));
+    world.push(Box::new(ObjMesh::new(Point3::new(0.0, 0.0, 0.0), vec3a(1.0, 1.0, 1.0), vec3a(90.0, 180.0, 15.0), "models/skull.stl", Box::new(material_left))));
     world.push(Box::new(Sphere::new(Point3::new(1.5, 0.0, -1.0), 0.5, Box::new(material_right))));
+    world.push(Box::new(Sphere::new(Point3::new(0.0, 1.0, 0.0), 0.5, Box::new(material_high))));
     world
 }
 

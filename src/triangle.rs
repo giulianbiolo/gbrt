@@ -5,6 +5,7 @@
 use bvh::aabb::{AABB, Bounded};
 use bvh::bounding_hierarchy::BHShape;
 use bvh::Point3 as BVHPoint3;
+use glam::Vec3A;
 
 use crate::ray::Ray;
 use crate::hit_record::HitRecord;
@@ -81,7 +82,9 @@ impl Hittable for Triangle {
         if t > t_min && t < t_max {
             rec.t = t;
             rec.p = ray.at(t);
-            rec.normal = e2.cross(e1).normalize();
+            let outward_normal: Vec3A = e2.cross(e1).normalize();
+            rec.set_face_normal(ray, &outward_normal);
+            // rec.normal = e2.cross(e1).normalize();
             rec.mat_ptr = self.material.clone();
             return true;
         }
