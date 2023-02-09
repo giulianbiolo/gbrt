@@ -30,6 +30,10 @@ fn main() -> Result<(), std::fmt::Error> {
     // Initialize the scene
     //let world: HittableList<Sphere> = raytracer::init_random_scene();
     // Initialize the camera
+    let cam = Camera::new_from_yaml("configs/jet.yaml");
+    println!("{:?}", cam);
+
+    let world: HittableList = raytracer::init_scene_from_yaml("configs/jet.yaml");
     /*
     let cam: Camera = Camera::new(
         &Vec3A::new(13.0, 2.0, 3.0),
@@ -39,9 +43,10 @@ fn main() -> Result<(), std::fmt::Error> {
         utility::ASPECT_RATIO,
         0.1,
         10.0,
-    );*/
-    let world: HittableList = raytracer::init_scene();
-    
+    );
+    */
+    // let world: HittableList = raytracer::init_scene();
+    /*
     let cam: Camera = Camera::new(
         &Vec3A::new(0.0, 0.0, 0.5),
         &Vec3A::new(0.0, 0.0, -1.0),
@@ -50,7 +55,7 @@ fn main() -> Result<(), std::fmt::Error> {
         utility::ASPECT_RATIO,
         0.0,
         10.0,
-    );
+    );*/
     // Render the scene to an image
     // raytracer::render_to_image(&world, &cam, "test.png");
     raytracer::render_to_image_multithreaded(&world, cam, "test.png");

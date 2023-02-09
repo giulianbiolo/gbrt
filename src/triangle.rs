@@ -35,12 +35,9 @@ impl Bounded for Triangle {
         let mut min: BVHPoint3 = BVHPoint3::new(self.vertices[0].x, self.vertices[0].y, self.vertices[0].z);
         let mut max: BVHPoint3 = BVHPoint3::new(self.vertices[0].x, self.vertices[0].y, self.vertices[0].z);
         for i in 1..3 {
-            if self.vertices[i].x < min.x { min.x = self.vertices[i].x; }
-            if self.vertices[i].y < min.y { min.y = self.vertices[i].y; }
-            if self.vertices[i].z < min.z { min.z = self.vertices[i].z; }
-            if self.vertices[i].x > max.x { max.x = self.vertices[i].x; }
-            if self.vertices[i].y > max.y { max.y = self.vertices[i].y; }
-            if self.vertices[i].z > max.z { max.z = self.vertices[i].z; }
+            let vert: BVHPoint3 = BVHPoint3::new(self.vertices[i].x, self.vertices[i].y, self.vertices[i].z);
+            min = min.min(vert);
+            max = max.max(vert);
         }
         AABB::with_bounds(min, max)
     }

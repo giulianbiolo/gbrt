@@ -5,7 +5,9 @@ use std::sync::{Arc, Mutex};
 use rayon::prelude::*;
 use image::{ImageBuffer, Rgb};
 use glam;
-use glam::vec3a;
+use glam::{vec3a, Vec3A};
+use yaml_rust::{YamlLoader, Yaml};
+
 
 use crate::material::DiffuseLight;
 use crate::ray::Ray;
@@ -13,8 +15,9 @@ use crate::hit_record::HitRecord;
 use crate::hittable_list::HittableList;
 use crate::hittable_list::Hittable;
 use crate::sphere::Sphere;
+use crate::triangle::Triangle;
 use crate::obj_mesh::ObjMesh;
-use crate::material::{Lambertian, Metal, Dielectric};
+use crate::material::{Material, Lambertian, Metal, Dielectric};
 use crate::camera::Camera;
 use crate::sphere_array::SphereArray;
 use crate::utility;
@@ -101,23 +104,26 @@ pub fn ray_color(r: &Ray, world: &HittableList, depth: u32) -> Color {
 #[allow(dead_code)]
 pub fn init_scene() -> HittableList {
     // Materials
-    let material_ground: Lambertian = Lambertian::new(Color::new(0.8, 0.8, 0.0));
+    let material_ground: Lambertian = Lambertian::new(Color::new(0.5, 0.5, 0.5));
     // let material_center: Lambertian = Lambertian::new(Color::new(0.1, 0.2, 0.5));
     // let material_left: Lambertian = Lambertian::new(Color::new(0.2, 0.5, 0.8));
-    let material_left: Metal = Metal::new(Color::new(0.2, 0.6, 0.8), 0.3);
+    // let material_left: Dielectric = Dielectric::new(1.5);
+    let material_left: Metal = Metal::new(Color::new(0.3, 0.3, 0.3), 0.1);
     let material_right: Metal = Metal::new(Color::new(0.8, 0.6, 0.2), 0.0);
     let material_high: DiffuseLight = DiffuseLight::new(Color::new(8.0, 8.0, 8.0));
 
     // World
     let mut world: HittableList = HittableList::new();
-    world.push(Box::new(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0, Box::new(material_ground), 0)));
+    world.push(Box::new(Sphere::new(Point3::new(0.0, -1000.0, 0.0), 1000.0, Box::new(material_ground), 0)));
     //world.push(Box::new(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5, Box::new(material_center))));
     //world.push(Box::new(Sphere::new(Point3::new(-1.0, 0.0, -1.0), 0.5, Box::new(material_left))));
     //world.push(Box::new(BBox::new(Point3::new(-1.0, 0.0, -1.0), Point3::new(0.7, 2.5, 0.7), Box::new(material_left))));
     //world.push(Box::new(Triangle::new([Point3::new(-2.0, -0.5, -1.0), Point3::new(0.0, 0.0, -1.0), Point3::new(-1.0, 2.0, -1.0)], Box::new(material_left))));
-    world.push(Box::new(ObjMesh::new(Point3::new(0.0, 0.0, 0.0), vec3a(1.0, 1.0, 1.0), vec3a(90.0, 180.0, 180.0), "models/upa.stl", Box::new(material_left))));
-    world.push(Box::new(Sphere::new(Point3::new(1.5, 0.0, -1.0), 0.5, Box::new(material_right), 0)));
-    world.push(Box::new(Sphere::new(Point3::new(0.0, 1.0, 0.0), 0.5, Box::new(material_high), 0)));
+    //world.push(Box::new(ObjMesh::new(Point3::new(0.0, 0.5, -0.2), vec3a(1.0, 1.0, 1.0), vec3a(90.0, 180.0, 220.0), "models/rabbit.stl", Box::new(material_left))));
+    world.push(Box::new(ObjMesh::new(Point3::new(-1.0, 1.0, 8.0), 2.5, vec3a(90.0, 90.0, 220.0), "models/jet/jet2.obj", Box::new(material_left))));
+    world.push(Box::new(Sphere::new(Point3::new(1.5, 0.5, -1.0), 0.5, Box::new(material_right), 0)));
+    world.push(Box::new(Sphere::new(Point3::new(0.0, 2.0, 0.0), 0.5, Box::new(material_high), 0)));
+    _add_random_world_spheres(&mut world).expect("Failed to add random world spheres");
     world
 }
 
@@ -163,5 +169,118 @@ pub fn init_random_scene() -> HittableList {
     let ground_material: Lambertian = Lambertian::new(Color::new(0.5, 0.5, 0.5));
     world.push(Box::new(Sphere::new(Point3::new(0.0, -1000.0, 0.0), 1000.0, Box::new(ground_material), 0)));
 
+    world
+}
+
+fn _add_random_world_spheres(world: &mut HittableList) -> Result<(), std::io::Error> {
+    let mut spheres = Vec::<Sphere>::new();
+    for a in -11..11 {
+        for b in -11..11 {
+            let choose_mat: f32 = utility::random_f32();
+            let center: Point3 = vec3a(a as f32 + 0.9 * utility::random_f32(), 0.2, b as f32 + 0.9 * utility::random_f32());
+            if (center - vec3a(4.0, 0.2, 0.0)).length() > 0.9 {
+                if choose_mat < 0.8 {
+                    // Diffuse
+                    let albedo: Color = vec3a(utility::random_f32(), utility::random_f32(), utility::random_f32()) * vec3a(utility::random_f32(), utility::random_f32(), utility::random_f32());
+                    let sphere_material: Lambertian = Lambertian::new(albedo);
+                    spheres.push(Sphere::new(center, 0.2, Box::new(sphere_material), 0));
+                } else if choose_mat < 0.95 {
+                    // Metal
+                    let albedo: Color = vec3a(utility::random_f32_range(0.5, 1.0), utility::random_f32_range(0.5, 1.0), utility::random_f32_range(0.5, 1.0));
+                    let fuzz: f32 = utility::random_f32_range(0.0, 0.5);
+                    let sphere_material: Metal = Metal::new(albedo, fuzz);
+                    spheres.push(Sphere::new(center, 0.2, Box::new(sphere_material), 0));
+                } else {
+                    // Glass
+                    let sphere_material: Dielectric = Dielectric::new(1.5);
+                    spheres.push(Sphere::new(center, 0.2, Box::new(sphere_material), 0));
+                }
+            }
+        }
+    }
+    let spheres_arr: SphereArray = SphereArray::new(&mut spheres);
+    world.push(Box::new(spheres_arr));
+    Ok(())
+}
+
+pub fn init_scene_from_yaml(filename: &str) -> HittableList {
+    let mut world: HittableList = HittableList::new();
+    let content: String = std::fs::read_to_string(filename).unwrap();
+    let docs: Vec<Yaml> = YamlLoader::load_from_str(&content).unwrap();
+    let hashworld = docs[0].as_hash().unwrap()[&yaml_rust::Yaml::String("world".to_string())].as_vec().unwrap();
+    println!("hashcam: {:?}", hashworld);
+    for hashobj in hashworld {
+        let hashobj = hashobj.as_hash().unwrap();
+        let objtype = hashobj[&yaml_rust::Yaml::String("objType".to_string())].as_str().unwrap();
+        let objmat = hashobj[&yaml_rust::Yaml::String("material".to_string())].as_hash().unwrap();
+        let objmattype = objmat[&yaml_rust::Yaml::String("matType".to_string())].as_str().unwrap();
+        // For each kind of object we have different properties (attributes)
+        let material: Box<dyn Material>;
+        match objmattype {
+            "Lambertian" => {
+                // has just an albedo
+                let albedo = objmat[&yaml_rust::Yaml::String("albedo".to_string())].as_vec().unwrap();
+                material = Box::new(Lambertian::new(Color::new(albedo[0].as_f64().unwrap() as f32, albedo[1].as_f64().unwrap() as f32, albedo[2].as_f64().unwrap() as f32)));
+            },
+            "Metal" => {
+                // has an albedo and a fuzz
+                let albedo = objmat[&yaml_rust::Yaml::String("albedo".to_string())].as_vec().unwrap();
+                let fuzz = objmat[&yaml_rust::Yaml::String("fuzz".to_string())].as_f64().unwrap();
+                material = Box::new(Metal::new(Color::new(albedo[0].as_f64().unwrap() as f32, albedo[1].as_f64().unwrap() as f32, albedo[2].as_f64().unwrap() as f32), fuzz as f32));
+            },
+            "Dielectric" => {
+                // has just an index of refraction
+                let ior = objmat[&yaml_rust::Yaml::String("refractionIdx".to_string())].as_f64().unwrap();
+                material = Box::new(Dielectric::new(ior as f32));
+            },
+            _ => { panic!("Unknown object type: {}", objtype); }
+        };
+        let obj: Box<dyn Hittable + Send + Sync>;
+        match objtype {
+            "Sphere" => {
+                // has a center and radius
+                let center = hashobj[&yaml_rust::Yaml::String("center".to_string())].as_vec().unwrap();
+                let radius = hashobj[&yaml_rust::Yaml::String("radius".to_string())].as_f64().unwrap();
+                obj = Box::new(Sphere::new(Point3::new(center[0].as_f64().unwrap() as f32, center[1].as_f64().unwrap() as f32, center[2].as_f64().unwrap() as f32), radius as f32, material, 0));
+            },
+            "Triangle" => {
+                // has an array of 3 arrays (the vertices)
+                let vertices = hashobj[&yaml_rust::Yaml::String("vertices".to_string())].as_vec().unwrap();
+                let v0 = vertices[0].as_vec().unwrap();
+                let v1 = vertices[1].as_vec().unwrap();
+                let v2 = vertices[2].as_vec().unwrap();
+                // obj = Box::new(Triangle::new(Point3::new(v0[0].as_f64().unwrap() as f32, v0[1].as_f64().unwrap() as f32, v0[2].as_f64().unwrap() as f32), Point3::new(v1[0].as_f64().unwrap() as f32, v1[1].as_f64().unwrap() as f32, v1[2].as_f64().unwrap() as f32), Point3::new(v2[0].as_f64().unwrap() as f32, v2[1].as_f64().unwrap() as f32, v2[2].as_f64().unwrap() as f32), material, 0));
+                obj = Box::new(
+                    Triangle::new(
+                        [
+                            Vec3A::new(v0[0].as_f64().unwrap() as f32, v0[1].as_f64().unwrap() as f32, v0[2].as_f64().unwrap() as f32),
+                            Vec3A::new(v1[0].as_f64().unwrap() as f32, v1[1].as_f64().unwrap() as f32, v1[2].as_f64().unwrap() as f32),
+                            Vec3A::new(v2[0].as_f64().unwrap() as f32, v2[1].as_f64().unwrap() as f32, v2[2].as_f64().unwrap() as f32)
+                        ],
+                        material,
+                        0
+                    )
+                );
+            },
+            "ObjMesh" => {
+                // has a filename, position, rotation and scale
+                let filename = hashobj[&yaml_rust::Yaml::String("filename".to_string())].as_str().unwrap();
+                let position = hashobj[&yaml_rust::Yaml::String("position".to_string())].as_vec().unwrap();
+                let rotation = hashobj[&yaml_rust::Yaml::String("rotation".to_string())].as_vec().unwrap();
+                let scale = hashobj[&yaml_rust::Yaml::String("scalingFactor".to_string())].as_f64().unwrap();
+                obj = Box::new(
+                    ObjMesh::new(
+                        Vec3A::new(position[0].as_f64().unwrap() as f32, position[1].as_f64().unwrap() as f32, position[2].as_f64().unwrap() as f32),
+                        scale as f32,
+                        Vec3A::new(rotation[0].as_f64().unwrap() as f32, rotation[1].as_f64().unwrap() as f32, rotation[2].as_f64().unwrap() as f32),
+                        filename,
+                        material
+                    )
+                );
+            },
+            _ => { panic!("Unknown object type: {}", objtype); }
+        }
+        world.push(obj);
+    }
     world
 }

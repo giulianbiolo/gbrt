@@ -1,0 +1,65 @@
+# This is my configuration YAML file containing the instruction on objects and their positioning on the scene
+camera:
+  lookFrom: [13.0, 2.0, 3.0]
+  lookAt: [0.0, 0.0, 0.0]
+  vup: [0.0, 1.0, 0.0]
+  vfov: 40.0
+  aspectRatio: 1.77777777778
+  aperture: 0.1
+  focusDistance: 10.0
+
+world: [
+  {
+    # The Ground Material
+    objType: "Sphere",
+    center: [0.0, -1000.0, 0.0],
+    radius: 1000.0,
+    material: {
+      matType: "Lambertian",
+      albedo: [0.2, 0.2, 0.2]
+    }
+  },
+  {
+    objType: "Sphere",
+    center: [0.0, 0.0, 0.0],
+    radius: 5.0,
+    material: {
+      matType: "Metal",
+      albedo: [0.2, 0.2, 0.5],
+      fuzz: 0.3
+    }
+  },
+  {
+    objType: "Sphere",
+    center: [0.0, 0.0, 0.0],
+    radius: 5.0,
+    material: {
+      matType: "Dielectric",
+      refractionIdx: 1.4
+    }
+  },
+  {
+    objType: "Triangle",
+    vertices: [
+      [0.0, 0.0, -1.0],
+      [1.0, 0.0, 0.0],
+      [0.0, 0.5, 0.0]
+    ],
+    material: {
+      matType: "Lambertian",
+      albedo: [0.2, 0.2, 0.5]
+    }
+  },
+  {
+    objType: "ObjMesh",
+    position: [0.0, 0.0, 0.0],
+    scalingFactor: 2.0,
+    rotation: [90.0, 90.0, 220.0],
+    filename: "models/jet/jet2.obj",
+    material: {
+      matType: "Metal",
+      albedo: [0.2, 0.2, 0.2],
+      fuzz: 0.3
+    }
+  }
+]
