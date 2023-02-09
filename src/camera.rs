@@ -2,11 +2,11 @@
 // Date: 24/01/2023
 // Description: This file implements the Camera struct
 use glam::Vec3A;
-use yaml_rust::{YamlLoader, Yaml};
 
 use crate::utility;
 use crate::ray::Ray;
 use crate::point3::Point3;
+use crate::parser;
 
 
 #[derive(Clone, Copy, Debug)]
@@ -49,27 +49,7 @@ impl Camera {
             lens_radius,
         }
     }
-    pub fn new_from_yaml(filename: &str) -> Camera {
-        let content: String = std::fs::read_to_string(filename).unwrap();
-        let docs: Vec<Yaml> = YamlLoader::load_from_str(&content).unwrap();
-        let hashcam = docs[0].as_hash().unwrap()[&yaml_rust::Yaml::String("camera".to_string())].as_hash().unwrap().clone();
-        let lookfrom = hashcam[&yaml_rust::Yaml::String("lookFrom".to_string())].as_vec().unwrap();
-        let lookat = hashcam[&yaml_rust::Yaml::String("lookAt".to_string())].as_vec().unwrap();
-        let vup = hashcam[&yaml_rust::Yaml::String("vup".to_string())].as_vec().unwrap();
-        let vfov = hashcam[&yaml_rust::Yaml::String("vfov".to_string())].as_f64().unwrap();
-        let aspect_ratio = hashcam[&yaml_rust::Yaml::String("aspectRatio".to_string())].as_f64().unwrap();
-        let aperture = hashcam[&yaml_rust::Yaml::String("aperture".to_string())].as_f64().unwrap();
-        let focus_dist = hashcam[&yaml_rust::Yaml::String("focusDistance".to_string())].as_f64().unwrap();
-        Camera::new(
-            &Vec3A::new(lookfrom[0].as_f64().unwrap() as f32, lookfrom[1].as_f64().unwrap() as f32, lookfrom[2].as_f64().unwrap() as f32),
-            &Vec3A::new(lookat[0].as_f64().unwrap() as f32, lookat[1].as_f64().unwrap() as f32, lookat[2].as_f64().unwrap() as f32),
-            &Vec3A::new(vup[0].as_f64().unwrap() as f32, vup[1].as_f64().unwrap() as f32, vup[2].as_f64().unwrap() as f32),
-            vfov as f32,
-            aspect_ratio as f32,
-            aperture as f32,
-            focus_dist as f32
-        )
-    }
+    pub fn new_from_yaml(filename: &str) -> Camera { parser::parse_yaml_camera(filename) }
     pub fn get_ray(&self, u: f32, v: f32) -> Ray {
         let rd: Vec3A = utility::random_in_unit_disk() * self.lens_radius;
         let offset: Vec3A = self.u * rd.x + self.v * rd.y;

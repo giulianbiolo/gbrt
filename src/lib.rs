@@ -13,5 +13,6 @@ pub mod material;
 pub mod raytracer;
 pub mod bbox;
 pub mod triangle;
-pub mod obj_mesh;
+pub mod mesh;
 pub mod sphere_array;
+pub mod parser;

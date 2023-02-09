@@ -1,6 +1,6 @@
 // Author: Giulian Biolo, github.com/giulianbiolo
 // Date: 24/01/2023
-// Description: This file implements the Object Mesh struct
+// Description: This file implements the Mesh struct
 
 use std::ops::Mul;
 
@@ -25,30 +25,25 @@ use crate::utility::{INFINITY, NEG_INFINITY};
 
 
 #[derive(Clone)]
-pub struct ObjMesh {
+pub struct Mesh {
     triangles: Vec<Triangle>,
     bvh: BVH,
 }
 
-unsafe impl Sync for ObjMesh {}
-unsafe impl Send for ObjMesh {}
+unsafe impl Sync for Mesh {}
+unsafe impl Send for Mesh {}
 
-impl ObjMesh {
+impl Mesh {
     #[allow(dead_code)]
-    pub fn new(position: Point3, scaling_factor: f32, rotation: Vec3A, filename: &str, material: Box<dyn Material>) -> ObjMesh {
+    pub fn new(position: Point3, scaling_factor: f32, rotation: Vec3A, filename: &str, material: Box<dyn Material>) -> Mesh {
         let mut triangles: Vec<Triangle>;
-        if filename.split('.').last().unwrap() == "stl" { triangles = ObjMesh::_load_stl_triangles(position, scaling_factor, rotation, filename, material); }
-        else { triangles = ObjMesh::_load_obj_triangles(position, scaling_factor, rotation, filename, material); }
-        println!("Loading of mesh completed successfully!");
+        if filename.split('.').last().unwrap() == "stl" { triangles = Mesh::_load_stl_triangles(position, scaling_factor, rotation, filename, material); }
+        else { triangles = Mesh::_load_obj_triangles(position, scaling_factor, rotation, filename, material); }
         let bvh: BVH = BVH::build(&mut triangles);
-        println!("BVH built successfully!");
-        ObjMesh { triangles, bvh }
+        Mesh { triangles, bvh }
     }
     fn _load_obj_triangles(position: Point3, scaling_factor: f32, rotation: Vec3A, filename: &str, material: Box<dyn Material>) -> Vec<Triangle> {
         let mut triangles: Vec<Triangle> = Vec::new();
-        // TODO: Complete the implementation here making the same as in the STL loader
-        // ...
-        println!("Now beginning loading of mesh: {}", filename);
         let objfile = std::fs::File::open(filename).unwrap();
         let input = std::io::BufReader::new(objfile);
         let mut model: Obj = load_obj(input).expect("Failed to load obj");
@@ -62,8 +57,6 @@ impl ObjMesh {
             }
         );
         let center: Vec3A = center / model.vertices.len() as f32;
-        println!("Center of the object: {:?}", center);
-        println!("Size of the object: {:?}", max - min);
         // We want to find the greatest difference between the dimensions
         let diff = (max - min).max_element(); // This is the greatest difference
         // We will scale the object so that the greatest difference is 1
@@ -75,7 +68,6 @@ impl ObjMesh {
             v = v * scaling_factor;
             vertex.position = [v.x, v.y, v.z];
         }
-        println!("Mesh has been normalized successfully...");
         let rotation_matrix: glam::Mat3A = 
           glam::Mat3A::from_rotation_x(rotation[0].to_radians())
         * glam::Mat3A::from_rotation_y(rotation[1].to_radians())
@@ -90,7 +82,6 @@ impl ObjMesh {
             v2 = rotation_matrix.mul(v2 + position);
             triangles.push(Triangle::new([v0, v1, v2], material.clone(), 0));
         }
-
         triangles
     }
 
@@ -99,7 +90,6 @@ impl ObjMesh {
         let mut stlfile = std::fs::OpenOptions::new().read(true).open(filename).unwrap();
         let mut stl = stl_io::read_stl(&mut stlfile).unwrap();
         let mut triangles: Vec<Triangle> = Vec::new();
-        println!("Now beginning loading of mesh: {}", filename);
         let (center, min, max) = stl.vertices.iter().fold(
             (Vec3A::ZERO, Vec3A::new(INFINITY, INFINITY, INFINITY), Vec3A::new(NEG_INFINITY, NEG_INFINITY, NEG_INFINITY)),
             |(acc, min, max), v| {
@@ -108,8 +98,6 @@ impl ObjMesh {
             }
         );
         let center: Vec3A = center / stl.vertices.len() as f32;
-        println!("Center of the object: {:?}", center);
-        println!("Size of the object: {:?}", max - min);
         let scaling_factor: Vec3A = (max - min).recip() * Vec3A::splat(scaling_factor);
         for vertex in stl.vertices.iter_mut() {
             let mut v: Vec3A = Vec3A::new(vertex[0], vertex[1], vertex[2]);
@@ -117,7 +105,6 @@ impl ObjMesh {
             v = v * scaling_factor;
             *vertex = Vector::new([v.x, v.y, v.z]);
         }
-        println!("Mesh has been normalized successfully...");
         let rotation_matrix: glam::Mat3A = 
           glam::Mat3A::from_rotation_x(rotation[0].to_radians())
         * glam::Mat3A::from_rotation_y(rotation[1].to_radians())
@@ -135,7 +122,7 @@ impl ObjMesh {
     }
 }
 
-impl Hittable for ObjMesh {
+impl Hittable for Mesh {
     fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool {
         let bvhray: BVHRay = BVHRay::new(BVHPoint3::new(ray.origin[0], ray.origin[1], ray.origin[2]), BVHVector3::new(ray.direction[0], ray.direction[1], ray.direction[2]));
         let hit_triangles_aabbs: Vec<&Triangle> = self.bvh.traverse(&bvhray, &self.triangles);

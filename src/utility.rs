@@ -4,16 +4,33 @@
 use glam;
 use glam::{vec3a, Vec3A};
 
+use lazy_static::lazy_static;
+use std::env::args;
+use crate::parser;
 
+#[derive(Debug, Clone, Copy)]
+pub struct Constants {
+    pub width: u32,
+    pub height: u32,
+    pub aspect_ratio: f32,
+    pub samples_per_pixel: u32,
+    pub max_depth: u32,
+}
+
+impl Default for Constants {
+    fn default() -> Self {
+        Self {
+            width: 800,
+            height: 600,
+            aspect_ratio: 800.0 / 600.0,
+            samples_per_pixel: 32,
+            max_depth: 5000,
+        }
+    }
+}
 
 // Image constants
-pub const WIDTH: u32 = 1920;
-pub const HEIGHT: u32 = 1080;
-pub const ASPECT_RATIO: f32 = (WIDTH as f32) / (HEIGHT as f32);
-// pub const ASPECT_RATIO: f32 = 16.0 / 9.0;
-// pub const HEIGHT: u32 = ((WIDTH as f32) / ASPECT_RATIO) as u32;
-pub const SAMPLES_PER_PIXEL: u32 = 16; // Antialiasing samples per pixel
-pub const MAX_DEPTH: u32 = 5000; // Maximum ray bounces
+lazy_static! { pub static ref CONSTS: Constants = parser::parse_yaml_constants(&args().nth(1).unwrap_or("".to_string())); }
 
 // Numerical Constants
 pub const INFINITY: f32 = std::f32::INFINITY;
