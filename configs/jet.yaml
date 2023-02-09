@@ -2,15 +2,15 @@
 constants:
   width: 1920
   height: 1080
-  samplesPerPixel: 32
+  samplesPerPixel: 256
   maxDepth: 5000
 
 camera:
-  lookFrom: [13.0, 2.0, 3.0]
+  lookFrom: [0.0, 6.0, 14.0]
   lookAt: [0.0, 0.0, 0.0]
   vup: [0.0, 1.0, 0.0]
-  vfov: 40.0
-  aspectRatio: 1.77777777778
+  vfov: 90.0
+  aspectRatio: 1.77777777778 # 16.0 / 9.0
   aperture: 0.1
   focusDistance: 10.0
 
@@ -28,29 +28,19 @@ world: [
   {
     # A Light Object
     objType: "Sphere",
-    center: [0.0, 5.0, 0.0],
-    radius: 1.0,
+    center: [7.5, 10.0, 3.0],
+    radius: 2.0,
     material: {
       matType: "DiffuseLight",
       # Basically like a Lambertian but has an emittance instead of an albedo
       # Albedo : [r, g, b] => r ∈ [0.0, 1.0), g ∈ [0.0, 1.0), b ∈ [0.0, 1.0)
       # Emit : [r, g, b] => r ∈ [0.0, +∞), g ∈ [0.0, +∞), g ∈ [0.0, +∞)
-      emittance: [0.2, 0.2, 0.2]
+      emittance: [9.2, 9.2, 9.2]
     }
   },
   {
     objType: "Sphere",
-    center: [0.0, 0.0, 0.0],
-    radius: 5.0,
-    material: {
-      matType: "Metal",
-      albedo: [0.2, 0.2, 0.5],
-      fuzz: 0.3
-    }
-  },
-  {
-    objType: "Sphere",
-    center: [0.0, 0.0, 0.0],
+    center: [0.0, 5.0, 0.0],
     radius: 5.0,
     material: {
       matType: "Dielectric",
@@ -68,6 +58,30 @@ world: [
       matType: "Lambertian",
       albedo: [0.2, 0.2, 0.5]
     }
+  },
+  {
+    objType: "Array:Sphere",
+    objects: [
+      {
+        objType: "Sphere",
+        center: [-2.5, 5.0, 0.0],
+        radius: 2.5,
+        material: {
+          matType: "Lambertian",
+          albedo: [0.9, 0.1, 0.1]
+        }
+      },
+      {
+        objType: "Sphere",
+        center: [2.5, 5.0, 0.0],
+        radius: 2.5,
+        material: {
+          matType: "Metal",
+          albedo: [0.2, 0.9, 0.2],
+          fuzz: 0.2
+        }
+      }
+    ]
   },
   {
     objType: "Mesh",
