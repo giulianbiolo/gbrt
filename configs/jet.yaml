@@ -83,16 +83,18 @@ world: [
       }
     ]
   },
-  {
-    objType: "Mesh",
-    position: [0.0, 0.0, 0.0],
-    scalingFactor: 2.0,
-    rotation: [90.0, 90.0, 220.0],
-    filename: "models/jet/jet2.obj",
-    material: {
-      matType: "Metal",
-      albedo: [0.2, 0.2, 0.2],
-      fuzz: 0.3
-    }
-  }
+
+#  {
+#    objType: "Mesh",
+#    position: [0.0, 0.0, 0.0],
+#    scalingFactor: 2.0,
+#    rotation: [90.0, 90.0, 220.0],
+#    filename: "models/jet/jet2.obj",
+#    material: {
+#      matType: "Metal",
+#      albedo: [0.2, 0.2, 0.2],
+#      fuzz: 0.3
+#    }
+#  }
+
 ]

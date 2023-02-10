@@ -1,7 +1,9 @@
 // Author: Giulian Biolo, github.com/giulianbiolo
 // Date: 24/01/2023
 // Description: This file implements the Material trait and its implementations
+
 use dyn_clone::DynClone;
+
 use glam;
 use glam::Vec3A;
 
@@ -11,13 +13,12 @@ use crate::hit_record::HitRecord;
 use crate::utility;
 
 
-
 pub trait Material: DynClone + Send {
     fn scatter(&self, ray_in: &Ray, rec: &HitRecord, attenuation: &mut Color, scattered: &mut Ray) -> bool;
     fn emitted(&self) -> Color { Color::new(0.0, 0.0, 0.0) }
 }
-dyn_clone::clone_trait_object!(Material);
 
+dyn_clone::clone_trait_object!(Material);
 
 #[derive(Clone, Debug)]
 pub struct Lambertian {
@@ -116,4 +117,35 @@ impl DiffuseLight {
 impl Material for DiffuseLight {
     fn scatter(&self, _: &Ray, _: &HitRecord, _: &mut Color, _: &mut Ray) -> bool { false }
     fn emitted(&self) -> Color { self.emit }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_lambertian() -> Result<(), std::fmt::Error> {
+        let material: Lambertian = Lambertian::new(Color::new(0.5, 0.5, 0.5));
+        assert_eq!(material.albedo, Color::new(0.5, 0.5, 0.5));
+        Ok(())
+    }
+    #[test]
+    fn test_metal() -> Result<(), std::fmt::Error> {
+        let material: Metal = Metal::new(Color::new(0.5, 0.5, 0.5), 0.0);
+        assert_eq!(material.albedo, Color::new(0.5, 0.5, 0.5));
+        assert_eq!(material.fuzz, 0.0);
+        Ok(())
+    }
+    #[test]
+    fn test_dielectric() -> Result<(), std::fmt::Error> {
+        let material: Dielectric = Dielectric::new(1.5);
+        assert_eq!(material.refr_idx, 1.5);
+        Ok(())
+    }
+    #[test]
+    fn test_diffuse_light() -> Result<(), std::fmt::Error> {
+        let material: DiffuseLight = DiffuseLight::new(Color::new(0.5, 0.5, 0.5));
+        assert_eq!(material.emit, Color::new(0.5, 0.5, 0.5));
+        Ok(())
+    }
 }

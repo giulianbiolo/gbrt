@@ -1,6 +1,7 @@
 // Author: Giulian Biolo, github.com/giulianbiolo
 // Date: 24/01/2023
 // Description: This file implements the Camera struct
+
 use glam::Vec3A;
 
 use crate::utility;
@@ -63,6 +64,7 @@ impl Camera {
 #[cfg(test)]
 mod tests {
     use super::*;
+
     #[test]
     fn test_camera() -> Result<(), std::fmt::Error> {
         let camera: Camera = Camera::new(

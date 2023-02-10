@@ -1,6 +1,7 @@
 // Author: Giulian Biolo, github.com/giulianbiolo
 // Date: 24/01/2023
-// Description: This file implements the Hittable trait and the HitRecord struct
+// Description: This file implements the HitRecord struct
+
 use glam;
 use glam::Vec3A;
 
@@ -8,7 +9,6 @@ use crate::ray::Ray;
 use crate::material::{Material, Lambertian};
 use crate::color::Color;
 use crate::point3::Point3;
-
 
 
 #[derive(Clone)]
@@ -37,6 +37,19 @@ impl HitRecord {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::utility::EPSILON;
 
-
-// Unit Tests are to be found in the HittableList struct in src\hittable_list.rs
+    #[test]
+    fn test_hitrecord() -> Result<(), std::fmt::Error> {
+        let mut hit_record: HitRecord = HitRecord::empty();
+        let ray: Ray = Ray::new(Point3::new(0.0, 0.0, 0.0), Vec3A::new(0.0, 0.0, 1.0));
+        let outward_normal: Vec3A = Vec3A::new(0.0, 0.0, 1.0);
+        hit_record.set_face_normal(&ray, &outward_normal);
+        assert!((hit_record.normal - Vec3A::new(0.0, 0.0, -1.0)).length() <= EPSILON);
+        assert_eq!(hit_record.front_face, false);
+        Ok(())
+    }
+}

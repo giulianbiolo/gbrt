@@ -12,7 +12,6 @@ use crate::hittable_list::Hittable;
 use crate::sphere::Sphere;
 
 
-
 #[derive(Clone)]
 pub struct SphereArray {
     spheres: Vec<Sphere>,
@@ -48,5 +47,25 @@ impl Hittable for SphereArray {
             }
         }
         hit_anything
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::material::Lambertian;
+    use crate::color::Color;
+    use crate::point3::Point3;
+
+    #[test]
+    fn test_sphere_array_hit() -> Result<(), std::fmt::Error> {
+        let mut spheres: Vec<Sphere> = Vec::new();
+        spheres.push(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5, Box::new(Lambertian::new(Color::new(0.1, 0.2, 0.5))), 0));
+        spheres.push(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0, Box::new(Lambertian::new(Color::new(0.8, 0.8, 0.0))), 0));
+        let sphere_array: SphereArray = SphereArray::new(&mut spheres);
+        let r: Ray = Ray::new(Point3::new(0.0, 0.0, 0.0), Point3::new(0.0, 0.0, -1.0));
+        let mut rec: HitRecord = HitRecord::empty();
+        assert!(sphere_array.hit(&r, 0.0, 100.0, &mut rec));
+        Ok(())
     }
 }

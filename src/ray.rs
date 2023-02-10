@@ -1,10 +1,10 @@
 // Author: Giulian Biolo, github.com/giulianbiolo
 // Date: 24/01/2023
 // Description: This file implements the Ray struct
+
 use glam::Vec3A;
 
 use crate::point3::Point3;
-
 
 
 pub struct Ray {
@@ -23,11 +23,12 @@ impl Ray {
 #[cfg(test)]
 mod tests {
     use super::*;
+
     #[test]
     fn test_at() -> Result<(), std::fmt::Error> {
-        let origin = Point3::new(2.0, 3.0, 4.0);
-        let direction = Vec3A::new(1.0, 0.0, 0.0);
-        let ray = Ray::new(origin, direction);
+        let origin: Point3 = Point3::new(2.0, 3.0, 4.0);
+        let direction: Vec3A = Vec3A::new(1.0, 0.0, 0.0);
+        let ray: Ray = Ray::new(origin, direction);
         assert_eq!(ray.at(0.0), origin);
         assert_eq!(ray.at(1.0), Point3::new(3.0, 3.0, 4.0));
         assert_eq!(ray.at(-1.0), Point3::new(1.0, 3.0, 4.0));

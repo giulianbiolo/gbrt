@@ -4,16 +4,15 @@
 
 use std::ops::Mul;
 
-use glam;
-use glam::Vec3A;
-
 use stl_io::{self, Vector};
 use obj::{load_obj, Obj};
-
 
 use bvh::bvh::BVH;
 use bvh::{Point3 as BVHPoint3, Vector3 as BVHVector3};
 use bvh::ray::Ray as BVHRay;
+
+use glam;
+use glam::Vec3A;
 
 use crate::ray::Ray;
 use crate::hit_record::HitRecord;

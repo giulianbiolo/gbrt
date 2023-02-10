@@ -1,9 +1,10 @@
 // Author: Giulian Biolo, github.com/giulianbiolo
 // Date: 24/01/2023
-// Description: This file implements the HittableList struct
+// Description: This file implements the HittableList struct and the Hittable trait
+
 use crate::hit_record::HitRecord;
 use crate::ray::Ray;
-// use crate::sphere::Sphere;
+
 
 pub trait Hittable: Sync + Send {
     // The hit function returns true if the ray hits the object.
@@ -11,7 +12,6 @@ pub trait Hittable: Sync + Send {
 }
 
 pub type HittableList = Vec<Box<dyn Hittable + Sync + Send>>;
-
 
 impl Hittable for HittableList {
     fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool {
@@ -28,7 +28,6 @@ impl Hittable for HittableList {
         hit_anything
     }
 }
-
 
 #[cfg(test)]
 mod tests {

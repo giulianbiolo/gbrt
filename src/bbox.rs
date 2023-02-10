@@ -1,6 +1,7 @@
 // Author: Giulian Biolo, github.com/giulianbiolo
 // Date: 24/01/2023
 // Description: This file implements the BBox struct
+
 use glam;
 use glam::Vec3A;
 
@@ -77,5 +78,24 @@ impl Hittable for BBox {
             }
         }
         false
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::color::Color;
+    use crate::material::Lambertian;
+
+    #[test]
+    fn test_bbox() -> Result<(), String> {
+        let center: Point3 = Point3::new(0.0, 0.0, 0.0);
+        let dimensions: Vec3A = Vec3A::new(1.0, 1.0, 1.0);
+        let material: Box<Lambertian> = Box::new(Lambertian::new(Color::new(0.0, 0.0, 0.0)));
+        let bbox: BBox = BBox::new(center, dimensions, material);
+        let ray: Ray = Ray::new(Point3::new(0.0, 0.0, -2.0), Vec3A::new(0.0, 0.0, 1.0));
+        let mut rec: HitRecord = HitRecord::empty();
+        assert!(bbox.hit(&ray, 0.0, 100.0, &mut rec));
+        Ok(())
     }
 }

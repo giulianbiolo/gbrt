@@ -1,10 +1,11 @@
 // Author: Giulian Biolo, github.com/giulianbiolo
 // Date: 09/02/2023
 // Description: This file implements the parsing of YAML config files
-use glam;
-use glam::Vec3A;
+
 use yaml_rust::{YamlLoader, Yaml};
 
+use glam;
+use glam::Vec3A;
 
 use crate::material::DiffuseLight;
 use crate::hittable_list::HittableList;
@@ -34,7 +35,6 @@ pub fn parse_yaml_constants(filename: &str) -> utility::Constants {
         utility::Constants {width, height, aspect_ratio, samples_per_pixel, max_depth}
     }
 }
-
 
 pub fn parse_yaml_camera(filename: &str) -> Camera {
     let content: String = std::fs::read_to_string(filename).unwrap();

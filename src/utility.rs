@@ -1,12 +1,16 @@
 // Author: Giulian Biolo, github.com/giulianbiolo
 // Date: 24/01/2023
 // Description: This file implements various utility constants and functions used throughout the project
-use glam;
-use glam::{vec3a, Vec3A};
+
+use std::env::args;
 
 use lazy_static::lazy_static;
-use std::env::args;
+
+use glam;
+use glam::Vec3A;
+
 use crate::parser;
+
 
 #[derive(Debug, Clone, Copy)]
 pub struct Constants {
@@ -44,7 +48,7 @@ pub fn random_f32_range(min: f32, max: f32) -> f32 { min + (max - min) * random_
 
 pub fn random_in_unit_disk() -> Vec3A {
     loop {
-        let p: Vec3A = vec3a(random_f32_range(-1.0, 1.0), random_f32_range(-1.0, 1.0), 0.0);
+        let p: Vec3A = Vec3A::new(random_f32_range(-1.0, 1.0), random_f32_range(-1.0, 1.0), 0.0);
         if p.dot(p) < 1.0 { return p; }
     }
 }
@@ -53,12 +57,12 @@ pub fn random_unit_vector() -> Vec3A {
     let a: f32 = random_f32_range(0.0, 2.0 * PI);
     let z: f32 = random_f32_range(-1.0, 1.0);
     let r: f32 = (1.0 - z * z).sqrt();
-    vec3a(r * a.cos(), r * a.sin(), z)
+    Vec3A::new(r * a.cos(), r * a.sin(), z)
 }
 
 pub fn random_in_unit_sphere() -> Vec3A {
     loop {
-        let p: Vec3A = vec3a(random_f32_range(-1.0, 1.0), random_f32_range(-1.0, 1.0), random_f32_range(-1.0, 1.0));
+        let p: Vec3A = Vec3A::new(random_f32_range(-1.0, 1.0), random_f32_range(-1.0, 1.0), random_f32_range(-1.0, 1.0));
         if p.dot(p) < 1.0 { return p; }
     }
 }
@@ -66,26 +70,35 @@ pub fn random_in_unit_sphere() -> Vec3A {
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[test]
-    fn test_degrees_to_radians() -> Result<(), std::fmt::Error> {
-        assert_eq!(f32::to_radians(180.0), PI);
-        Ok(())
-    }
+
     #[test]
     fn test_random_f32() -> Result<(), std::fmt::Error> {
-        let r = random_f32();
+        let r: f32 = random_f32();
         assert!(r >= 0.0 && r < 1.0);
         Ok(())
     }
     #[test]
     fn test_random_f32_range() -> Result<(), std::fmt::Error> {
-        let r = random_f32_range(0.0, 1.0);
+        let r: f32 = random_f32_range(0.0, 1.0);
         assert!(r >= 0.0 && r < 1.0);
         Ok(())
     }
     #[test]
-    fn test_clamp() -> Result<(), std::fmt::Error> {
-        assert_eq!(Vec3A::new(-1.0, 0.0, 2.0).clamp(Vec3A::new(0.0, 0.0, 0.0), Vec3A::new(1.0, 1.0, 1.0)), Vec3A::new(0.0, 0.0, 1.0));
+    fn test_random_in_unit_disk() -> Result<(), std::fmt::Error> {
+        let r: Vec3A = random_in_unit_disk();
+        assert!(r.dot(r) < 1.0);
+        Ok(())
+    }
+    #[test]
+    fn test_random_unit_vector() -> Result<(), std::fmt::Error> {
+        let r: Vec3A = random_unit_vector();
+        assert!(r.length() - 1.0 <= EPSILON);
+        Ok(())
+    }
+    #[test]
+    fn test_random_in_unit_sphere() -> Result<(), std::fmt::Error> {
+        let r: Vec3A = random_in_unit_sphere();
+        assert!(r.dot(r) < 1.0);
         Ok(())
     }
 }

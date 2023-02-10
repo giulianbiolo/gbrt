@@ -72,3 +72,19 @@ impl Hittable for Sphere {
         true
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::color::Color;
+    use crate::material::Lambertian;
+
+    #[test]
+    fn test_sphere_hit() -> Result<(), std::fmt::Error> {
+        let sphere: Sphere = Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5, Box::new(Lambertian::new(Color::new(0.0, 0.0, 0.0))), 0);
+        let mut rec: HitRecord = HitRecord::empty();
+        let ray: Ray = Ray::new(Point3::new(0.0, 0.0, 0.0), Vec3A::new(0.0, 0.0, -1.0));
+        assert!(sphere.hit(&ray, 0.0, 100.0, &mut rec));
+        Ok(())
+    }
+}

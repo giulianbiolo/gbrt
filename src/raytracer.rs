@@ -1,12 +1,14 @@
 // Author: Giulian Biolo, github.com/giulianbiolo
 // Date: 24/01/2023
 // Description: This file implements various raytracing functions
+
 use std::sync::{Arc, Mutex};
+
 use rayon::prelude::*;
 use image::{ImageBuffer, Rgb};
+
 use glam;
 use glam::Vec3A;
-
 
 use crate::material::DiffuseLight;
 use crate::ray::Ray;
@@ -23,7 +25,6 @@ use crate::utility::CONSTS;
 use crate::color::{Color, to_rgb};
 use crate::point3::Point3;
 use crate::parser;
-
 
 
 // Renders the scene to an image
@@ -45,7 +46,6 @@ pub fn render_to_image(world: &HittableList, cam: &Camera, filename: &str) {
     // Save the image
     img.save(filename).unwrap();
 }
-
 
 pub fn render_to_image_multithreaded(world: &HittableList, cam: Camera, filename: &str) {
     let img: ImageBuffer<Rgb<u8>, Vec<u8>> = ImageBuffer::new(CONSTS.width, CONSTS.height);
@@ -73,7 +73,6 @@ pub fn render_to_image_multithreaded(world: &HittableList, cam: Camera, filename
     // Save the image
     safe_img.lock().unwrap().save(filename).unwrap();
 }
-
 
 // Returns the color of a ray
 pub fn ray_color(r: &Ray, world: &HittableList, depth: u32) -> Color {

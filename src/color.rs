@@ -1,10 +1,10 @@
 // Author: Giulian Biolo, github.com/giulianbiolo
 // Date: 24/01/2023
 // Description: This file implements the Color struct
+
 use glam;
 use glam::{vec3a, Vec3A};
 pub type Color = Vec3A;
-
 
 
 pub fn to_rgb(pixel_color: Color, samples_per_pixel: u32) -> image::Rgb<u8> {
@@ -21,6 +21,7 @@ pub fn to_rgb(pixel_color: Color, samples_per_pixel: u32) -> image::Rgb<u8> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
     #[test]
     fn test_to_rgb() -> Result<(), std::fmt::Error> {
         let c: Color = Color::new(0.5, 1.0, 0.0);

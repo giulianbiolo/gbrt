@@ -5,6 +5,7 @@
 use bvh::aabb::{AABB, Bounded};
 use bvh::bounding_hierarchy::BHShape;
 use bvh::Point3 as BVHPoint3;
+
 use glam::Vec3A;
 
 use crate::ray::Ray;
@@ -85,5 +86,25 @@ impl Hittable for Triangle {
             return true;
         }
         false
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::color::Color;
+    use crate::material::Lambertian;
+
+    #[test]
+    fn test_triangle_hit() -> Result<(), std::fmt::Error> {
+        let vertices: [Point3; 3] = [Point3::new(0.0, 0.0, 0.0), Point3::new(1.0, 0.0, 0.0), Point3::new(0.0, 1.0, 0.0)];
+        let material: Box<dyn Material> = Box::new(Lambertian::new(Color::new(0.0, 0.0, 0.0)));
+        let triangle: Triangle = Triangle::new(vertices, material, 0);
+        let ray: Ray = Ray::new(Point3::new(0.0, 0.0, -1.0), Vec3A::new(0.0, 0.0, 1.0));
+        let mut rec: HitRecord = HitRecord::empty();
+        assert!(triangle.hit(&ray, 0.0, 100.0, &mut rec));
+        assert_eq!(rec.t, 1.0);
+        assert_eq!(rec.p, Point3::new(0.0, 0.0, 0.0));
+        Ok(())
     }
 }
