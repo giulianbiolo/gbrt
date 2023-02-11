@@ -13,6 +13,7 @@ mod camera;
 mod material;
 mod bbox;
 mod triangle;
+mod rectangle;
 mod mesh;
 mod sphere_array;
 mod raytracer;

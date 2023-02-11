@@ -12,6 +12,7 @@ use crate::hittable_list::HittableList;
 use crate::hittable_list::Hittable;
 use crate::sphere::Sphere;
 use crate::triangle::Triangle;
+use crate::rectangle::{XYRectangle, XZRectangle, YZRectangle};
 use crate::mesh::Mesh;
 use crate::material::{Material, Lambertian, Metal, Dielectric};
 use crate::camera::Camera;
@@ -31,8 +32,10 @@ pub fn parse_yaml_constants(filename: &str) -> utility::Constants {
         let height = hashconsts[&yaml_rust::Yaml::String("height".to_string())].as_i64().unwrap() as u32;
         let samples_per_pixel = hashconsts[&yaml_rust::Yaml::String("samplesPerPixel".to_string())].as_i64().unwrap() as u32;
         let max_depth = hashconsts[&yaml_rust::Yaml::String("maxDepth".to_string())].as_i64().unwrap() as u32;
+        let background_yaml = hashconsts[&yaml_rust::Yaml::String("backgroundColor".to_string())].as_vec().unwrap();
+        let background: Vec3A = Vec3A::new(background_yaml[0].as_f64().unwrap() as f32, background_yaml[1].as_f64().unwrap() as f32, background_yaml[2].as_f64().unwrap() as f32);
         let aspect_ratio = width as f32 / height as f32;
-        utility::Constants {width, height, aspect_ratio, samples_per_pixel, max_depth}
+        utility::Constants {width, height, aspect_ratio, samples_per_pixel, max_depth, background}
     }
 }
 
@@ -148,6 +151,51 @@ fn _parse_geometry(hashobj: &yaml_rust::yaml::Hash, material: Box<dyn Material +
                     0
                 )
             )
+        },
+        "XYRectangle" => {
+            // has a position, width and height
+            let position = hashobj[&yaml_rust::Yaml::String("position".to_string())].as_vec().unwrap();
+            let width = hashobj[&yaml_rust::Yaml::String("width".to_string())].as_f64().unwrap();
+            let height = hashobj[&yaml_rust::Yaml::String("height".to_string())].as_f64().unwrap();
+            Box::new(XYRectangle::new(
+                position[0].as_f64().unwrap() as f32 - width as f32 / 2.0,
+                position[0].as_f64().unwrap() as f32 + width as f32 / 2.0,
+                position[1].as_f64().unwrap() as f32 - height as f32 / 2.0,
+                position[1].as_f64().unwrap() as f32 + height as f32 / 2.0,
+                position[2].as_f64().unwrap() as f32,
+                material,
+                0
+            ))
+        },
+        "XZRectangle" => {
+            // has a position, width and height
+            let position = hashobj[&yaml_rust::Yaml::String("position".to_string())].as_vec().unwrap();
+            let width = hashobj[&yaml_rust::Yaml::String("width".to_string())].as_f64().unwrap();
+            let height = hashobj[&yaml_rust::Yaml::String("height".to_string())].as_f64().unwrap();
+            Box::new(XZRectangle::new(
+                position[0].as_f64().unwrap() as f32 - width as f32 / 2.0,
+                position[0].as_f64().unwrap() as f32 + width as f32 / 2.0,
+                position[2].as_f64().unwrap() as f32 - height as f32 / 2.0,
+                position[2].as_f64().unwrap() as f32 + height as f32 / 2.0,
+                position[1].as_f64().unwrap() as f32,
+                material,
+                0
+            ))
+        },
+        "YZRectangle" => {
+            // has a position, width and height
+            let position = hashobj[&yaml_rust::Yaml::String("position".to_string())].as_vec().unwrap();
+            let width = hashobj[&yaml_rust::Yaml::String("width".to_string())].as_f64().unwrap();
+            let height = hashobj[&yaml_rust::Yaml::String("height".to_string())].as_f64().unwrap();
+            Box::new(YZRectangle::new(
+                position[1].as_f64().unwrap() as f32 - width as f32 / 2.0,
+                position[1].as_f64().unwrap() as f32 + width as f32 / 2.0,
+                position[2].as_f64().unwrap() as f32 - height as f32 / 2.0,
+                position[2].as_f64().unwrap() as f32 + height as f32 / 2.0,
+                position[0].as_f64().unwrap() as f32,
+                material,
+                0
+            ))
         },
         "Mesh" => {
             // has a filename, position, rotation and scale

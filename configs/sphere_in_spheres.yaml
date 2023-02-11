@@ -38,16 +38,37 @@ world: [
       emittance: [9.2, 9.2, 9.2]
     }
   },
-  {
-    objType: "Mesh",
-    position: [0.0, 5.0, 3.0],
-    scalingFactor: 10.0,
-    rotation: [140.0, 120.0, 220.0], # 90, 90, 220 [ Yaw, Roll, Pitch ]
-    filename: "models/jet/jet2.obj",
+  { # A Glass Sphere
+    objType: "Sphere",
+    center: [0.0, 5.0, 0.0],
+    radius: 5.0,
     material: {
-      matType: "Metal",
-      albedo: [0.2, 0.2, 0.2],
-      fuzz: 0.3
+      matType: "Dielectric",
+      refractionIdx: 1.4
     }
-  }
+  },
+  {
+    objType: "Array:Sphere",
+    objects: [
+      { # Left Red Lambertian Sphere
+        objType: "Sphere",
+        center: [-2.5, 5.0, 0.0],
+        radius: 2.5,
+        material: {
+          matType: "Lambertian",
+          albedo: [0.9, 0.1, 0.1]
+        }
+      },
+      { # Right Green Metal Sphere
+        objType: "Sphere",
+        center: [2.5, 5.0, 0.0],
+        radius: 2.5,
+        material: {
+          matType: "Metal",
+          albedo: [0.2, 0.9, 0.2],
+          fuzz: 0.2
+        }
+      }
+    ]
+  },
 ]
