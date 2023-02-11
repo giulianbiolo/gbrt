@@ -86,8 +86,11 @@ pub fn ray_color(r: &Ray, background: &Color, world: &HittableList, depth: u32) 
     let mut scattered = Ray::empty();
     let mut attenuation = Vec3A::new(0.0, 0.0, 0.0);
     let emitted = rec.mat_ptr.emitted();
-    if !rec.mat_ptr.scatter(r, &rec, &mut attenuation, &mut scattered) { return emitted; }
-    return emitted + attenuation * ray_color(&scattered, background, world, depth + 1);
+    let mut pdf: f32 = 0.0;
+    if !rec.mat_ptr.scatter(r, &rec, &mut attenuation, &mut scattered, &mut pdf) { return emitted; }
+    return emitted
+        + attenuation * rec.mat_ptr.scattering_pdf(r, &rec, &scattered)
+        * ray_color(&scattered, background, world, depth + 1) / pdf;
 }
 
 // Inits the scene and returns it as a HittableList
@@ -100,7 +103,7 @@ pub fn init_scene() -> HittableList {
     // let material_left: Dielectric = Dielectric::new(1.5);
     let material_left: Metal = Metal::new(Color::new(0.3, 0.3, 0.3), 0.1);
     let material_right: Metal = Metal::new(Color::new(0.8, 0.6, 0.2), 0.0);
-    let material_high: DiffuseLight = DiffuseLight::new(Color::new(8.0, 8.0, 8.0));
+    let material_high: DiffuseLight = DiffuseLight::new(Color::new(15.0, 15.0, 15.0));
 
     // World
     let mut world: HittableList = HittableList::new();
@@ -112,7 +115,7 @@ pub fn init_scene() -> HittableList {
     //world.push(Box::new(Mesh::new(Point3::new(0.0, 0.5, -0.2), Vec3A::new((1.0, 1.0, 1.0), Vec3A::new((90.0, 180.0, 220.0), "models/rabbit.stl", Box::new(material_left))));
     // world.push(Box::new(Mesh::new(Point3::new(-1.0, 1.0, 8.0), 2.5, Vec3A::new(90.0, 90.0, 220.0), "models/jet/jet2.obj", Box::new(material_left))));
     world.push(Box::new(Sphere::new(Point3::new(1.5, 0.5, -1.0), 0.5, Box::new(material_right), 0)));
-    world.push(Box::new(Sphere::new(Point3::new(0.0, 2.0, 0.0), 0.5, Box::new(material_high), 0)));
+    world.push(Box::new(Sphere::new(Point3::new(0.0, 4.0, 0.0), 2.0, Box::new(material_high), 0)));
     _add_random_world_spheres(&mut world).expect("Failed to add random world spheres");
     world
 }

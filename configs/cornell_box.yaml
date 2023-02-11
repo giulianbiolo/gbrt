@@ -1,7 +1,7 @@
 constants:
   width: 800
   height: 800
-  samplesPerPixel: 32
+  samplesPerPixel: 100
   maxDepth: 5000
   backgroundColor: [0.0, 0.0, 0.0]
 
@@ -76,6 +76,30 @@ world: [
     position: [277.5, 277.5, 555.0],
     width: 555.0,
     height: 555.0,
+    material: {
+      matType: "Lambertian",
+      albedo: [0.73, 0.73, 0.73]
+    }
+  },
+  {
+    # A Lambertian White Box
+    objType: "Box",
+    position: [212.5, 82.5, 147.5],
+    width: 165.0,
+    height: 165.0,
+    depth: 165.0,
+    material: {
+      matType: "Lambertian",
+      albedo: [0.73, 0.73, 0.73]
+    }
+  },
+  {
+    # Another Lambertian White Box
+    objType: "Box",
+    position: [347.5, 165.0, 377.5],
+    width: 165.0,
+    height: 330.0,
+    depth: 165.0,
     material: {
       matType: "Lambertian",
       albedo: [0.73, 0.73, 0.73]
