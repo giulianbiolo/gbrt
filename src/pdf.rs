@@ -7,8 +7,8 @@ use glam::Vec3A;
 
 
 pub trait PDF {
-    fn value(&self, direction: Vec3A) -> f32;
-    fn generate(&self) -> Vec3A;
+    fn value(&self, direction: Vec3A, lights: &Box<dyn Hittable + Send + Sync>) -> f32;
+    fn generate(&self, lights: &Box<dyn Hittable + Send + Sync>) -> Vec3A;
 }
 
 /*********************** Cosine PDF ***********************/
@@ -25,29 +25,40 @@ impl CosinePDF {
 }
 
 impl PDF for CosinePDF {
-    fn value(&self, direction: Vec3A) -> f32 {
+    fn value(&self, direction: Vec3A, _: &Box<dyn Hittable + Send + Sync>) -> f32 {
         let cosine: f32 = direction.normalize().dot(self.uvw.w());
         if cosine < 0.0 { 0.0 } else { cosine / std::f32::consts::PI }
     }
-    fn generate(&self) -> Vec3A { self.uvw.local_vec(utility::random_cosine_direction()) }
+    fn generate(&self, _: &Box<dyn Hittable + Send + Sync>) -> Vec3A { self.uvw.local_vec(utility::random_cosine_direction()) }
 }
 
 /*********************** Hittable PDF ***********************/
-pub struct HittablePDF<'a> {
-    o: Vec3A,
-    ptr: &'a Box<dyn Hittable + Send + Sync>,
+pub struct HittablePDF {
+    origin: Vec3A,
 }
 
-impl <'a> HittablePDF<'a> {
-    pub fn new(o: Vec3A, ptr: &'a Box<dyn Hittable + Send + Sync>) -> HittablePDF<'a> {
-        HittablePDF { o, ptr }
+impl HittablePDF {
+    pub fn new(origin: Vec3A) -> HittablePDF { HittablePDF { origin } }
+}
+
+impl PDF for HittablePDF {
+    fn value(&self, direction: Vec3A, lights: &Box<dyn Hittable + Send + Sync>) -> f32 { lights.pdf_value(&self.origin, &direction) }
+    fn generate(&self, lights: &Box<dyn Hittable + Send + Sync>) -> Vec3A { lights.random(&self.origin) }
+}
+
+/*********************** Mixture PDF ***********************/
+pub struct MixturePDF {
+    p0: Box<dyn PDF + Send + Sync>,
+    p1: Box<dyn PDF + Send + Sync>,
+}
+
+impl MixturePDF {
+    pub fn new(p0: Box<dyn PDF + Send + Sync>, p1: Box<dyn PDF + Send + Sync>) -> MixturePDF { MixturePDF { p0, p1 } }
+}
+
+impl PDF for MixturePDF {
+    fn value(&self, direction: Vec3A, lights: &Box<dyn Hittable + Send + Sync>) -> f32 { 0.5 * self.p0.value(direction, lights) + 0.5 * self.p1.value(direction, lights) }
+    fn generate(&self, lights: &Box<dyn Hittable + Send + Sync>) -> Vec3A {
+        if utility::random_f32() < 0.5 { self.p0.generate(lights) } else { self.p1.generate(lights) }
     }
 }
-
-impl <'a> PDF for HittablePDF<'a> {
-    fn value(&self, direction: Vec3A) -> f32 { self.ptr.pdf_value(&self.o, &direction) }
-    fn generate(&self) -> Vec3A { self.ptr.random(&self.o) }
-}
-
-pub fn hittable_pdf_generate(p: Vec3A, ptr: &Box<dyn Hittable + Send + Sync>) -> Vec3A { ptr.random(&p) }
-pub fn hittable_pdf_value(p: Vec3A, direction: Vec3A, ptr: &Box<dyn Hittable + Send + Sync>) -> f32 { ptr.pdf_value(&p, &direction) }
