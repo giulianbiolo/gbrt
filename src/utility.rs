@@ -28,9 +28,9 @@ impl Default for Constants {
             width: 800,
             height: 600,
             aspect_ratio: 800.0 / 600.0,
-            samples_per_pixel: 32,
+            samples_per_pixel: 64,
             max_depth: 5000,
-            background: Vec3A::new(0.6, 0.6, 0.6),
+            background: Vec3A::new(0.7, 0.7, 0.7),
         }
     }
 }
@@ -72,6 +72,16 @@ pub fn random_in_unit_sphere() -> Vec3A {
 pub fn random_in_hemisphere(normal: &Vec3A) -> Vec3A {
     let in_unit_sphere: Vec3A = random_in_unit_sphere();
     if in_unit_sphere.dot(*normal) > 0.0 { in_unit_sphere } else { -in_unit_sphere }
+}
+
+pub fn random_cosine_direction() -> Vec3A {
+    let r1: f32 = random_f32();
+    let r2: f32 = random_f32();
+    let z: f32 = (1.0 - r2).sqrt();
+    let phi: f32 = 2.0 * PI * r1;
+    let x: f32 = phi.cos() * r2.sqrt();
+    let y: f32 = phi.sin() * r2.sqrt();
+    Vec3A::new(x, y, z)
 }
 
 #[cfg(test)]

@@ -10,12 +10,13 @@ use glam::Vec3A;
 use crate::color::Color;
 use crate::ray::Ray;
 use crate::hit_record::HitRecord;
+use crate::onb::ONB;
 use crate::utility;
 
 
 pub trait Material: DynClone + Send {
     fn scatter(&self, ray_in: &Ray, rec: &HitRecord, attenuation: &mut Color, scattered: &mut Ray, pdf: &mut f32) -> bool;
-    fn emitted(&self) -> Color { Color::new(0.0, 0.0, 0.0) }
+    fn emitted(&self, rec: &HitRecord) -> Color { Color::new(0.0, 0.0, 0.0) }
     fn scattering_pdf(&self, ray_in: &Ray, rec: &HitRecord, scattered: &Ray) -> f32 { 0.0 }
 }
 
@@ -33,13 +34,18 @@ impl Material for Lambertian {
     fn scatter(&self, _: &Ray, rec: &HitRecord, attenuation: &mut Color, scattered: &mut Ray, pdf: &mut f32) -> bool {
         // Scatter direction will be the normal plus a random vector in the unit sphere
         // let mut scatter_direction: Vec3A = rec.normal + utility::random_unit_vector();
-        let mut scatter_direction: Vec3A = utility::random_in_hemisphere(&rec.normal);
+        let mut uvw: ONB = ONB::new();
+        uvw.build_from_w(rec.normal);
+        let mut scatter_direction: Vec3A = uvw.local_vec(utility::random_cosine_direction());
+        
+        // let mut scatter_direction: Vec3A = utility::random_in_hemisphere(&rec.normal);
         // If the scatter direction is too close to zero, we set it to the normal
         if scatter_direction.length_squared() < 0.00001 { scatter_direction = rec.normal; }
         *scattered = Ray::new(rec.p, scatter_direction);
         *attenuation = self.albedo; // The attenuation is the albedo
         // *pdf = rec.normal.dot(scattered.direction()) / std::f32::consts::PI;
-        *pdf = 0.5 / std::f32::consts::PI;
+        // *pdf = 0.5 / std::f32::consts::PI;
+        *pdf = uvw.w().dot(scattered.direction()) / std::f32::consts::PI;
         true
     }
     fn scattering_pdf(&self, _: &Ray, rec: &HitRecord, scattered: &Ray) -> f32 {
@@ -124,7 +130,9 @@ impl DiffuseLight {
 }
 impl Material for DiffuseLight {
     fn scatter(&self, _: &Ray, _: &HitRecord, _: &mut Color, _: &mut Ray, _: &mut f32) -> bool { false }
-    fn emitted(&self) -> Color { self.emit }
+    fn emitted(&self, rec: &HitRecord) -> Color {
+        if rec.front_face { self.emit } else { Color::new(0.0, 0.0, 0.0) }
+    }
 }
 
 #[cfg(test)]

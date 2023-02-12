@@ -1,4 +1,3 @@
-use std::sync::Arc;
 
 use bvh::aabb::{AABB, Bounded};
 use bvh::bounding_hierarchy::BHShape;
@@ -10,11 +9,9 @@ use glam::Vec3A;
 use crate::ray::Ray;
 use crate::hit_record::HitRecord;
 use crate::hittable_list::Hittable;
-use crate::material::Material;
-use crate::point3::Point3;
 
 
-trait Translatable: Hittable + Bounded + Sync + Send {}
+pub trait Translatable: Hittable + Bounded + Sync + Send {}
 struct Translate {
     // ptr has to implement the trait Bounded
     ptr: Box<dyn Translatable>,
@@ -54,6 +51,32 @@ impl Hittable for Translate {
         //rec.u = temp_rec.u;
         //rec.v = temp_rec.v;
         rec.front_face = temp_rec.front_face;
+        true
+    }
+}
+
+pub struct FlipNormals {
+    ptr: Box<dyn Translatable>,
+    node_index: usize,
+}
+
+impl FlipNormals {
+    pub fn new(ptr: Box<dyn Translatable>, node_index: usize) -> FlipNormals { FlipNormals { ptr, node_index } }
+}
+
+impl Bounded for FlipNormals {
+    fn aabb(&self) -> AABB { self.ptr.aabb() }
+}
+
+impl BHShape for FlipNormals {
+    fn set_bh_node_index(&mut self, index: usize) { self.node_index = index; }
+    fn bh_node_index(&self) -> usize { self.node_index }
+}
+
+impl Hittable for FlipNormals {
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool {
+        if !self.ptr.hit(ray, t_min, t_max, rec) { return false; }
+        rec.front_face = !rec.front_face;
         true
     }
 }

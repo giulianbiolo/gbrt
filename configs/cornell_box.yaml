@@ -21,6 +21,7 @@ world: [
     position: [555.0, 277.5, 277.5],
     width: 555.0,
     height: 555.0,
+    flipNormals: false,
     material: {
       matType: "Lambertian",
       albedo: [0.12, 0.45, 0.15]
@@ -32,6 +33,7 @@ world: [
     position: [0.0, 277.5, 277.5],
     width: 555.0,
     height: 555.0,
+    flipNormals: false,
     material: {
       matType: "Lambertian",
       albedo: [0.66, 0.05, 0.05]
@@ -43,6 +45,7 @@ world: [
     position: [278.0, 554.0, 279.5],
     width: 130.0,
     height: 115.0,
+    flipNormals: true,
     material: {
       matType: "DiffuseLight",
       emittance: [15.0, 15.0, 15.0]
@@ -54,6 +57,7 @@ world: [
     position: [277.5, 0.0, 277.5],
     width: 555.0,
     height: 555.0,
+    flipNormals: false,
     material: {
       matType: "Lambertian",
       albedo: [0.73, 0.73, 0.73]
@@ -65,6 +69,7 @@ world: [
     position: [277.5, 555.0, 277.5],
     width: 555.0,
     height: 555.0,
+    flipNormals: false,
     material: {
       matType: "Lambertian",
       albedo: [0.73, 0.73, 0.73]
@@ -76,6 +81,7 @@ world: [
     position: [277.5, 277.5, 555.0],
     width: 555.0,
     height: 555.0,
+    flipNormals: false,
     material: {
       matType: "Lambertian",
       albedo: [0.73, 0.73, 0.73]
