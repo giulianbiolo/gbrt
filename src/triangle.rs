@@ -87,6 +87,9 @@ impl Hittable for Triangle {
         }
         false
     }
+    fn is_light(&self) -> bool { self.material.is_light() }
+    fn pdf_value(&self, origin: &Vec3A, v: &Vec3A) -> f32 { 0.0 }
+    fn random(&self, origin: &Vec3A) -> Vec3A { Vec3A::ZERO }
 }
 
 #[cfg(test)]

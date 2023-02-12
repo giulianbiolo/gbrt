@@ -4,11 +4,16 @@
 
 use crate::hit_record::HitRecord;
 use crate::ray::Ray;
+use glam;
+use glam::Vec3A;
 
 
 pub trait Hittable: Sync + Send {
     // The hit function returns true if the ray hits the object.
     fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool;
+    fn pdf_value(&self, origin: &Vec3A, v: &Vec3A) -> f32;
+    fn random(&self, origin: &Vec3A) -> Vec3A;
+    fn is_light(&self) -> bool;
 }
 
 pub type HittableList = Vec<Box<dyn Hittable + Sync + Send>>;
@@ -27,7 +32,20 @@ impl Hittable for HittableList {
         }
         hit_anything
     }
+    fn is_light(&self) -> bool {
+        for object in self {
+            if object.is_light() { return true; }
+        }
+        false
+    }
+    fn pdf_value(&self, _origin: &Vec3A, _v: &Vec3A) -> f32 { 0.0 }
+    fn random(&self, _origin: &Vec3A) -> Vec3A { Vec3A::ZERO }
 }
+pub fn get_lights(world: &HittableList) -> Vec<&Box<dyn Hittable + Sync + Send>> {
+    world.iter().filter(|object| object.is_light()).collect()
+}
+
+pub fn get_light(world: &HittableList) -> &Box<dyn Hittable + Sync + Send> { get_lights(world).first().unwrap() }
 
 #[cfg(test)]
 mod tests {

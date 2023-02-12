@@ -14,8 +14,9 @@ use crate::hit_record::HitRecord;
 use crate::hittable_list::Hittable;
 use crate::material::Material;
 use crate::translate::Translatable;
+use crate::utility;
 
-// trait Translatable: Hittable + Bounded + Sync + Send {}
+
 /*********************** XY Rectangle ***********************/
 #[derive(Clone)]
 pub struct XYRectangle {
@@ -67,6 +68,24 @@ impl Hittable for XYRectangle {
         rec.set_face_normal(ray, &outward_normal);
         rec.mat_ptr = self.material.clone();
         true
+    }
+    fn is_light(&self) -> bool { self.material.is_light() }
+    fn pdf_value(&self, origin: &Vec3A, v: &Vec3A) -> f32 {
+        let mut rec: HitRecord = HitRecord::empty();
+        if self.hit(&Ray::new(*origin, *v), 0.001, utility::INFINITY, &mut rec) {
+            let area: f32 = (self.x1 - self.x0) * (self.y1 - self.y0);
+            let distance_squared: f32 = rec.t * rec.t * v.length_squared();
+            let cosine: f32 = (v.dot(rec.normal) / v.length()).abs();
+            distance_squared / (cosine * area)
+        } else { 0.0 }
+    }
+    fn random(&self, origin: &Vec3A) -> Vec3A {
+        let random_point: Vec3A = Vec3A::new(
+            utility::random_f32_range(self.x0, self.x1),
+            utility::random_f32_range(self.y0, self.y1),
+            self.k,
+        );
+        random_point - *origin
     }
 }
 
@@ -123,6 +142,23 @@ impl Hittable for XZRectangle {
         rec.mat_ptr = self.material.clone();
         true
     }
+    fn pdf_value(&self, origin: &Vec3A, v: &Vec3A) -> f32 {
+        let mut rec: HitRecord = HitRecord::empty();
+        if !self.hit(&Ray::new(*origin, *v), 0.001, f32::INFINITY, &mut rec) { return 0.0; }
+        let area: f32 = (self.x1 - self.x0) * (self.z1 - self.z0);
+        let distance_squared: f32 = rec.t * rec.t * v.length_squared();
+        let cosine: f32 = v.dot(rec.normal).abs() / v.length();
+        distance_squared / (cosine * area)
+    }
+    fn random(&self, origin: &Vec3A) -> Vec3A {
+        let random_point: Vec3A = Vec3A::new(
+            utility::random_f32_range(self.x0, self.x1),
+            self.k,
+            utility::random_f32_range(self.z0, self.z1)
+        );
+        random_point - *origin
+    }
+    fn is_light(&self) -> bool { self.material.is_light() }
 }
 
 
@@ -177,6 +213,23 @@ impl Hittable for YZRectangle {
         rec.set_face_normal(ray, &outward_normal);
         rec.mat_ptr = self.material.clone();
         true
+    }
+    fn is_light(&self) -> bool { self.material.is_light() }
+    fn pdf_value(&self, origin: &Vec3A, v: &Vec3A) -> f32 {
+        let mut rec: HitRecord = HitRecord::empty();
+        if !self.hit(&Ray::new(*origin, *v), 0.001, f32::INFINITY, &mut rec) { return 0.0; }
+        let area: f32 = (self.y1 - self.y0) * (self.z1 - self.z0);
+        let distance_squared: f32 = rec.t * rec.t * v.length_squared();
+        let cosine: f32 = v.dot(rec.normal).abs() / v.length();
+        distance_squared / (cosine * area)
+    }
+    fn random(&self, origin: &Vec3A) -> Vec3A {
+        let random_point: Vec3A = Vec3A::new(
+            self.k,
+            utility::random_f32_range(self.y0, self.y1),
+            utility::random_f32_range(self.z0, self.z1)
+        );
+        random_point - *origin
     }
 }
 

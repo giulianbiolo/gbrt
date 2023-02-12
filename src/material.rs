@@ -18,6 +18,7 @@ pub trait Material: DynClone + Send {
     fn scatter(&self, ray_in: &Ray, rec: &HitRecord, attenuation: &mut Color, scattered: &mut Ray, pdf: &mut f32) -> bool;
     fn emitted(&self, rec: &HitRecord) -> Color { Color::new(0.0, 0.0, 0.0) }
     fn scattering_pdf(&self, ray_in: &Ray, rec: &HitRecord, scattered: &Ray) -> f32 { 0.0 }
+    fn is_light(&self) -> bool;
 }
 
 dyn_clone::clone_trait_object!(Material);
@@ -52,6 +53,7 @@ impl Material for Lambertian {
         let cosine: f32 = rec.normal.dot(scattered.direction().normalize());
         if cosine < 0.0 { 0.0 } else { cosine / std::f32::consts::PI }
     }
+    fn is_light(&self) -> bool { false }
 }
 
 #[derive(Clone, Debug)]
@@ -77,6 +79,7 @@ impl Material for Metal {
         // If the dot product is zero, the ray would be reflected in the same direction, might result in infinite loops
         scattered.direction().dot(rec.normal) > 0.0
     }
+    fn is_light(&self) -> bool { false }
 }
 
 #[derive(Clone, Debug)]
@@ -110,6 +113,7 @@ impl Material for Dielectric {
         *scattered = Ray::new(rec.p, direction);
         true
     }
+    fn is_light(&self) -> bool { false }
 }
 
 fn reflect(vec: &Vec3A, normal: &Vec3A) -> Vec3A { *vec - *normal * vec.dot(*normal) * 2.0 }
@@ -133,6 +137,7 @@ impl Material for DiffuseLight {
     fn emitted(&self, rec: &HitRecord) -> Color {
         if rec.front_face { self.emit } else { Color::new(0.0, 0.0, 0.0) }
     }
+    fn is_light(&self) -> bool { true }
 }
 
 #[cfg(test)]

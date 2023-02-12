@@ -53,6 +53,9 @@ impl Hittable for Translate {
         rec.front_face = temp_rec.front_face;
         true
     }
+    fn is_light(&self) -> bool { self.ptr.is_light() }
+    fn pdf_value(&self, origin: &Vec3A, v: &Vec3A) -> f32 { self.ptr.pdf_value(origin, v) }
+    fn random(&self, origin: &Vec3A) -> Vec3A { self.ptr.random(origin) }
 }
 
 pub struct FlipNormals {
@@ -79,4 +82,7 @@ impl Hittable for FlipNormals {
         rec.front_face = !rec.front_face;
         true
     }
+    fn is_light(&self) -> bool { self.ptr.is_light() }
+    fn pdf_value(&self, origin: &Vec3A, v: &Vec3A) -> f32 { self.ptr.pdf_value(origin, v) }
+    fn random(&self, origin: &Vec3A) -> Vec3A { self.ptr.random(origin) }
 }
