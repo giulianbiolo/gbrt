@@ -13,9 +13,8 @@ use crate::ray::Ray;
 use crate::hit_record::HitRecord;
 use crate::hittable_list::Hittable;
 use crate::material::Material;
-use crate::translate::Translatable;
 
-// trait Translatable: Hittable + Bounded + Sync + Send {}
+
 /*********************** XY Rectangle ***********************/
 #[derive(Clone)]
 pub struct XYRectangle {
@@ -30,8 +29,6 @@ pub struct XYRectangle {
 
 unsafe impl Sync for XYRectangle {}
 unsafe impl Send for XYRectangle {}
-
-impl Translatable for XYRectangle {}
 
 impl XYRectangle {
     #[allow(dead_code)]
@@ -86,8 +83,6 @@ pub struct XZRectangle {
 unsafe impl Sync for XZRectangle {}
 unsafe impl Send for XZRectangle {}
 
-impl Translatable for XZRectangle {}
-
 impl XZRectangle {
     #[allow(dead_code)]
     pub fn new(x0: f32, x1: f32, z0: f32, z1: f32, k: f32, material: Box<dyn Material>, node_index: usize) -> XZRectangle { XZRectangle { x0, x1, z0, z1, k, material, node_index } }
@@ -140,8 +135,6 @@ pub struct YZRectangle {
 
 unsafe impl Sync for YZRectangle {}
 unsafe impl Send for YZRectangle {}
-
-impl Translatable for YZRectangle {}
 
 impl YZRectangle {
     #[allow(dead_code)]

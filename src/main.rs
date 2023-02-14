@@ -19,7 +19,6 @@ mod sphere_array;
 mod raytracer;
 mod parser;
 mod translate;
-mod onb;
 
 use glam::Vec3A;
 

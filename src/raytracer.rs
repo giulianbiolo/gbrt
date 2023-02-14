@@ -25,7 +25,6 @@ use crate::utility::CONSTS;
 use crate::color::{Color, to_rgb};
 use crate::point3::Point3;
 use crate::parser;
-use crate::utility::random_f32_range;
 
 
 // Renders the scene to an image
@@ -86,20 +85,9 @@ pub fn ray_color(r: &Ray, background: &Color, world: &HittableList, depth: u32) 
 
     let mut scattered = Ray::empty();
     let mut attenuation = Vec3A::new(0.0, 0.0, 0.0);
-    let emitted = rec.mat_ptr.emitted(&rec);
+    let emitted = rec.mat_ptr.emitted();
     let mut pdf: f32 = 0.0;
     if !rec.mat_ptr.scatter(r, &rec, &mut attenuation, &mut scattered, &mut pdf) { return emitted; }
-    let on_light = Vec3A::new(utility::random_f32_range(213.0, 343.0), 554.0, utility::random_f32_range(227.0, 332.0));
-    let mut to_light = on_light - rec.p;
-    let distance_squared = to_light.length_squared();
-    to_light = to_light.normalize();
-    if to_light.dot(rec.normal) < 0.0 { return emitted; }
-    let light_area = (343.0 - 213.0) * (332.0 - 227.0);
-    let light_cosine = to_light.y.abs();
-    if light_cosine < 0.0001 { return emitted; }
-    let pdf = distance_squared / (light_cosine * light_area);
-    scattered = Ray::new(rec.p, to_light);
-
     return emitted
         + attenuation * rec.mat_ptr.scattering_pdf(r, &rec, &scattered)
         * ray_color(&scattered, background, world, depth + 1) / pdf;

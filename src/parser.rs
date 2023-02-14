@@ -18,7 +18,6 @@ use crate::mesh::Mesh;
 use crate::material::{Material, Lambertian, Metal, Dielectric};
 use crate::camera::Camera;
 use crate::sphere_array::SphereArray;
-use crate::translate::FlipNormals;
 use crate::utility;
 use crate::color::Color;
 use crate::point3::Point3;
@@ -159,8 +158,7 @@ fn _parse_geometry(hashobj: &yaml_rust::yaml::Hash, material: Box<dyn Material +
             let position = hashobj[&yaml_rust::Yaml::String("position".to_string())].as_vec().unwrap();
             let width = hashobj[&yaml_rust::Yaml::String("width".to_string())].as_f64().unwrap();
             let height = hashobj[&yaml_rust::Yaml::String("height".to_string())].as_f64().unwrap();
-            let flip_normals = hashobj[&yaml_rust::Yaml::String("flipNormals".to_string())].as_bool().unwrap();
-            let obj = Box::new(XYRectangle::new(
+            Box::new(XYRectangle::new(
                 position[0].as_f64().unwrap() as f32 - width as f32 / 2.0,
                 position[0].as_f64().unwrap() as f32 + width as f32 / 2.0,
                 position[1].as_f64().unwrap() as f32 - height as f32 / 2.0,
@@ -168,16 +166,14 @@ fn _parse_geometry(hashobj: &yaml_rust::yaml::Hash, material: Box<dyn Material +
                 position[2].as_f64().unwrap() as f32,
                 material,
                 0
-            ));
-            if flip_normals { Box::new(FlipNormals::new(obj, 0)) } else { obj }
+            ))
         },
         "XZRectangle" => {
             // has a position, width and height
             let position = hashobj[&yaml_rust::Yaml::String("position".to_string())].as_vec().unwrap();
             let width = hashobj[&yaml_rust::Yaml::String("width".to_string())].as_f64().unwrap();
             let height = hashobj[&yaml_rust::Yaml::String("height".to_string())].as_f64().unwrap();
-            let flip_normals = hashobj[&yaml_rust::Yaml::String("flipNormals".to_string())].as_bool().unwrap();
-            let obj = Box::new(XZRectangle::new(
+            Box::new(XZRectangle::new(
                 position[0].as_f64().unwrap() as f32 - width as f32 / 2.0,
                 position[0].as_f64().unwrap() as f32 + width as f32 / 2.0,
                 position[2].as_f64().unwrap() as f32 - height as f32 / 2.0,
@@ -185,16 +181,14 @@ fn _parse_geometry(hashobj: &yaml_rust::yaml::Hash, material: Box<dyn Material +
                 position[1].as_f64().unwrap() as f32,
                 material,
                 0
-            ));
-            if flip_normals { Box::new(FlipNormals::new(obj, 0)) } else { obj }
+            ))
         },
         "YZRectangle" => {
             // has a position, width and height
             let position = hashobj[&yaml_rust::Yaml::String("position".to_string())].as_vec().unwrap();
             let width = hashobj[&yaml_rust::Yaml::String("width".to_string())].as_f64().unwrap();
             let height = hashobj[&yaml_rust::Yaml::String("height".to_string())].as_f64().unwrap();
-            let flip_normals = hashobj[&yaml_rust::Yaml::String("flipNormals".to_string())].as_bool().unwrap();
-            let obj = Box::new(YZRectangle::new(
+            Box::new(YZRectangle::new(
                 position[1].as_f64().unwrap() as f32 - width as f32 / 2.0,
                 position[1].as_f64().unwrap() as f32 + width as f32 / 2.0,
                 position[2].as_f64().unwrap() as f32 - height as f32 / 2.0,
@@ -202,8 +196,7 @@ fn _parse_geometry(hashobj: &yaml_rust::yaml::Hash, material: Box<dyn Material +
                 position[0].as_f64().unwrap() as f32,
                 material,
                 0
-            ));
-            if flip_normals { Box::new(FlipNormals::new(obj, 0)) } else { obj }
+            ))
         },
         "Box" => {
             // has a position, width, height and depth
