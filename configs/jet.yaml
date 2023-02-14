@@ -3,7 +3,6 @@ constants:
   height: 1080
   samplesPerPixel: 32
   maxDepth: 5000
-  backgroundColor: [0.6, 0.6, 0.6]
 
 camera:
   lookFrom: [0.0, 6.0, 14.0]
