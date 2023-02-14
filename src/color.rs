@@ -2,14 +2,13 @@
 // Date: 24/01/2023
 // Description: This file implements the Color struct
 
-use glam;
-use glam::{vec3a, Vec3A};
+use glam::Vec3A;
 pub type Color = Vec3A;
 
 
 pub fn to_rgb(pixel_color: Color, samples_per_pixel: u32) -> image::Rgb<u8> {
     let scale: f32 = 1.0 / (samples_per_pixel as f32);
-    let rgb: Color = (pixel_color * scale).powf(0.5).clamp(vec3a(0.0, 0.0, 0.0), vec3a(0.999, 0.999, 0.999));
+    let rgb: Color = (pixel_color * scale).powf(0.5).clamp(Vec3A::new(0.0, 0.0, 0.0), Vec3A::new(0.999, 0.999, 0.999));
     image::Rgb([
         (256.0 * rgb.x) as u8,
         (256.0 * rgb.y) as u8,

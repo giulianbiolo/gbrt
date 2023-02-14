@@ -11,7 +11,6 @@ use bvh::bvh::BVH;
 use bvh::{Point3 as BVHPoint3, Vector3 as BVHVector3};
 use bvh::ray::Ray as BVHRay;
 
-use glam;
 use glam::Vec3A;
 
 use crate::ray::Ray;

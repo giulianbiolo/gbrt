@@ -3,10 +3,8 @@
 // Description: This file implements various utility constants and functions used throughout the project
 
 use std::env::args;
-
 use lazy_static::lazy_static;
 
-use glam;
 use glam::Vec3A;
 
 use crate::parser;
@@ -41,6 +39,9 @@ pub const INFINITY: f32 = std::f32::INFINITY;
 pub const NEG_INFINITY: f32 = std::f32::NEG_INFINITY;
 pub const PI: f32 = std::f32::consts::PI;
 pub const EPSILON: f32 = 0.0001;
+
+// Background SkyBox
+pub const BLUE_SKY: Vec3A = Vec3A::new(0.5, 0.7, 1.0);
 
 // Utility functions
 pub fn random_f32() -> f32 { rand::random::<f32>() }

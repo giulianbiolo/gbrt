@@ -2,7 +2,6 @@
 // Date: 24/01/2023
 // Description: This file implements the BBox struct
 
-use glam;
 use glam::Vec3A;
 
 use crate::ray::Ray;

@@ -1,7 +1,7 @@
 constants:
-  width: 800
-  height: 600
-  samplesPerPixel: 64
+  width: 1920
+  height: 1080
+  samplesPerPixel: 128
   maxDepth: 5000
 
 camera:
@@ -9,7 +9,7 @@ camera:
   lookAt: [0.0, 0.0, 0.0]
   vup: [0.0, 1.0, 0.0]
   vfov: 90.0
-  aspectRatio: 1.33333 # 800.0 / 600.0
+  aspectRatio: 1.77777 # 1920.0 / 1080.0
   aperture: 0.1
   focusDistance: 10.0
 

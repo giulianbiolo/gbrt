@@ -6,7 +6,6 @@ use bvh::aabb::{AABB, Bounded};
 use bvh::bounding_hierarchy::BHShape;
 use bvh::Point3 as BVHPoint3;
 
-use glam;
 use glam::Vec3A;
 
 use crate::ray::Ray;
@@ -66,7 +65,7 @@ impl Hittable for Sphere {
         rec.t = root; // The ray hits the sphere at this value for 't'.
         rec.p = ray.at(rec.t); // The ray hits the sphere at this point 'p'.
         // The outward normal is the vector from the center of the sphere to the point of intersection.
-        let outward_normal = (rec.p - self.center) / self.radius;
+        let outward_normal: Vec3A = (rec.p - self.center) / self.radius;
         // This function is used to determine whether the ray is inside or outside the object.
         rec.set_face_normal(ray, &outward_normal);
         rec.mat_ptr = self.material.clone();

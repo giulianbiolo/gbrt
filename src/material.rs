@@ -2,9 +2,9 @@
 // Date: 24/01/2023
 // Description: This file implements the Material trait and its implementations
 
+use likely_stable::unlikely;
 use dyn_clone::DynClone;
 
-use glam;
 use glam::Vec3A;
 
 use crate::color::Color;
@@ -33,7 +33,7 @@ impl Material for Lambertian {
         // Scatter direction will be the normal plus a random vector in the unit sphere
         let mut scatter_direction: Vec3A = rec.normal + utility::random_unit_vector();
         // If the scatter direction is too close to zero, we set it to the normal
-        if scatter_direction.length_squared() < 0.00001 { scatter_direction = rec.normal; }
+        if unlikely(scatter_direction.length_squared() < utility::EPSILON) { scatter_direction = rec.normal; }
         *scattered = Ray::new(rec.p, scatter_direction);
         *attenuation = self.albedo; // The attenuation is the albedo
         true

@@ -19,12 +19,12 @@ mod sphere_array;
 mod raytracer;
 mod parser;
 
+use std::env::args;
+
 use glam::Vec3A;
 
 use hittable_list::HittableList;
 use camera::Camera;
-
-use std::env::args;
 
 
 fn main() -> Result<(), std::fmt::Error> {

@@ -4,7 +4,6 @@
 
 use yaml_rust::{YamlLoader, Yaml};
 
-use glam;
 use glam::Vec3A;
 
 use crate::material::DiffuseLight;

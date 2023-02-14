@@ -1,18 +1,18 @@
 // Author: Giulian Biolo, github.com/giulianbiolo
 // Date: 24/01/2023
-// Description: This file implements the Rectangle struct
+// Description: This file implements the various Rectangles structs
 
 use bvh::aabb::{AABB, Bounded};
 use bvh::bounding_hierarchy::BHShape;
 use bvh::Point3 as BVHPoint3;
 
-use glam;
 use glam::Vec3A;
 
 use crate::ray::Ray;
 use crate::hit_record::HitRecord;
 use crate::hittable_list::Hittable;
 use crate::material::Material;
+use crate::utility;
 
 
 /*********************** XY Rectangle ***********************/
@@ -37,8 +37,8 @@ impl XYRectangle {
 
 impl Bounded for XYRectangle {
     fn aabb(&self) -> AABB {
-        let min: BVHPoint3 = BVHPoint3::new(self.x0, self.y0, self.k - 0.0001);
-        let max: BVHPoint3 = BVHPoint3::new(self.x1, self.y1, self.k + 0.0001);
+        let min: BVHPoint3 = BVHPoint3::new(self.x0, self.y0, self.k - utility::EPSILON);
+        let max: BVHPoint3 = BVHPoint3::new(self.x1, self.y1, self.k + utility::EPSILON);
         AABB::with_bounds(min, max)
     }
 }
@@ -91,8 +91,8 @@ impl XZRectangle {
 
 impl Bounded for XZRectangle {
     fn aabb(&self) -> AABB {
-        let min: BVHPoint3 = BVHPoint3::new(self.x0, self.k - 0.0001, self.z0);
-        let max: BVHPoint3 = BVHPoint3::new(self.x1, self.k + 0.0001, self.z1);
+        let min: BVHPoint3 = BVHPoint3::new(self.x0, self.k - utility::EPSILON, self.z0);
+        let max: BVHPoint3 = BVHPoint3::new(self.x1, self.k + utility::EPSILON, self.z1);
         AABB::with_bounds(min, max)
     }
 }
@@ -145,8 +145,8 @@ impl YZRectangle {
 
 impl Bounded for YZRectangle {
     fn aabb(&self) -> AABB {
-        let min: BVHPoint3 = BVHPoint3::new(self.k - 0.0001, self.y0, self.z0);
-        let max: BVHPoint3 = BVHPoint3::new(self.k + 0.0001, self.y1, self.z1);
+        let min: BVHPoint3 = BVHPoint3::new(self.k - utility::EPSILON, self.y0, self.z0);
+        let max: BVHPoint3 = BVHPoint3::new(self.k + utility::EPSILON, self.y1, self.z1);
         AABB::with_bounds(min, max)
     }
 }

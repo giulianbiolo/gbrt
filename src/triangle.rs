@@ -52,30 +52,30 @@ impl BHShape for Triangle {
 impl Hittable for Triangle {
     fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         // This is a simple implementation of the Moller-Trumbore algorithm for ray-triangle intersection
-        let v0 = self.vertices[0];
-        let v1 = self.vertices[1];
-        let v2 = self.vertices[2];
+        let v0: Vec3A = self.vertices[0];
+        let v1: Vec3A = self.vertices[1];
+        let v2: Vec3A = self.vertices[2];
 
-        let e1 = v1 - v0;
-        let e2 = v2 - v0;
+        let e1: Vec3A = v1 - v0;
+        let e2: Vec3A = v2 - v0;
 
-        let h = ray.direction.cross(e2);
-        let a = e1.dot(h);
+        let h: Vec3A = ray.direction.cross(e2);
+        let a: f32 = e1.dot(h);
 
         if a > -EPSILON && a < EPSILON { return None; }
 
-        let f = 1.0 / a;
-        let s = ray.origin - v0;
-        let u = f * s.dot(h);
+        let f: f32 = 1.0 / a;
+        let s: Vec3A = ray.origin - v0;
+        let u: f32 = f * s.dot(h);
 
         if u < 0.0 || u > 1.0 { return None; }
 
-        let q = s.cross(e1);
-        let v = f * ray.direction.dot(q);
+        let q: Vec3A = s.cross(e1);
+        let v: f32 = f * ray.direction.dot(q);
 
         if v < 0.0 || u + v > 1.0 { return None; }
 
-        let t = f * e2.dot(q);
+        let t: f32 = f * e2.dot(q);
 
         if t > t_min && t < t_max {
             let mut rec: HitRecord = HitRecord::empty();

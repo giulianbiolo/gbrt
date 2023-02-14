@@ -3,11 +3,12 @@
 // Description: This file implements various raytracing functions
 
 use std::sync::{Arc, Mutex};
+use core::sync::atomic::{AtomicU32, Ordering};
 
+use likely_stable::unlikely;
 use rayon::prelude::*;
 use image::{ImageBuffer, Rgb};
 
-use glam;
 use glam::Vec3A;
 
 use crate::material::DiffuseLight;
@@ -41,7 +42,6 @@ pub fn render_to_image(world: &HittableList, cam: &Camera, filename: &str) {
         }
         *pixel = to_rgb(pixel_color, CONSTS.samples_per_pixel);
     }
-
     // Save the image
     img.save(filename).unwrap();
 }
@@ -50,24 +50,23 @@ pub fn render_to_image_multithreaded(world: &HittableList, cam: Camera, filename
     let img: ImageBuffer<Rgb<u8>, Vec<u8>> = ImageBuffer::new(CONSTS.width, CONSTS.height);
     let safe_img = Arc::new(Mutex::new(img));
     let safe_world = Arc::new(world.clone());
-
     let total_rows = CONSTS.height as f32;
-    let completed_rows = core::sync::atomic::AtomicU32::new(0);
-    (0..CONSTS.height).into_par_iter().enumerate().for_each(|(y, _)| {
+    let completed_rows = AtomicU32::new(0);
+    (0..CONSTS.height).into_par_iter().for_each(|y| {
         for x in 0..CONSTS.width {
             let mut pixel_color: Color = Color::new(0.0, 0.0, 0.0);
             for _s in 0..CONSTS.samples_per_pixel {
                 let u: f32 = (x as f32 + utility::random_f32()) / (CONSTS.width - 1) as f32;
                 let v: f32 = (CONSTS.height - y as u32 - 1) as f32 / (CONSTS.height - 1) as f32;
                 let r: Ray = cam.get_ray(u, v);
-                pixel_color = pixel_color + ray_color(&r, &*safe_world, 0);
+                pixel_color += ray_color(&r, &*safe_world, 0);
             }
-            let rgb = to_rgb(pixel_color, CONSTS.samples_per_pixel);
+            let rgb: Rgb<u8> = to_rgb(pixel_color, CONSTS.samples_per_pixel);
             let mut img = safe_img.lock().unwrap();
             img.put_pixel(x, y as u32, rgb);
         }
-        completed_rows.fetch_add(1, core::sync::atomic::Ordering::Relaxed);
-        print!("{:.2}% complete\r", completed_rows.load(core::sync::atomic::Ordering::Relaxed) as f32 / total_rows * 100.0);
+        completed_rows.fetch_add(1, Ordering::Relaxed);
+        print!("{:.2}% complete\r", completed_rows.load(Ordering::Relaxed) as f32 / total_rows * 100.0);
     });
     // Save the image
     safe_img.lock().unwrap().save(filename).unwrap();
@@ -76,19 +75,17 @@ pub fn render_to_image_multithreaded(world: &HittableList, cam: Camera, filename
 // Returns the color of a ray
 pub fn ray_color(r: &Ray, world: &HittableList, depth: u32) -> Color {
     // If we've exceeded the ray bounce limit, no more light is gathered
-    if depth >= CONSTS.max_depth { return Color::new(0.0, 0.0, 0.0); }
+    if unlikely(depth >= CONSTS.max_depth) { return Color::new(0.0, 0.0, 0.0); }
     // Check for ray-sphere intersection
-    if let Some(rec) = world.hit(r, 0.001, utility::INFINITY) {
-        let mut scattered = Ray::empty();
-        let mut attenuation = Vec3A::new(0.0, 0.0, 0.0);
-        let emitted = rec.mat_ptr.emitted();
-        if !rec.mat_ptr.scatter(r, &rec, &mut attenuation, &mut scattered) { return emitted; }
-        return emitted + attenuation * ray_color(&scattered, world, depth + 1);
+    if let Some(rec) = world.hit(r, utility::EPSILON, utility::INFINITY) {
+        let mut scattered: Ray = Ray::empty();
+        let mut attenuation: Vec3A = Vec3A::new(0.0, 0.0, 0.0);
+        let emitted: Vec3A = rec.mat_ptr.emitted();
+        if !rec.mat_ptr.scatter(r, &rec, &mut attenuation, &mut scattered) { emitted }
+        else { emitted + attenuation * ray_color(&scattered, world, depth + 1) }
     } else {
         // Return a skybox color
-        let unit_direction: Vec3A = r.direction().normalize();
-        let t: f32 = 0.5 * (unit_direction.y + 1.0);
-        return (1.0 - t) * Color::new(1.0, 1.0, 1.0) + t * Color::new(0.5, 0.7, 1.0);
+        Vec3A::ONE.lerp(utility::BLUE_SKY, 0.5 * (r.direction().normalize().y + 1.0))
     }
 }
 
@@ -97,9 +94,6 @@ pub fn ray_color(r: &Ray, world: &HittableList, depth: u32) -> Color {
 pub fn init_scene() -> HittableList {
     // Materials
     let material_ground: Lambertian = Lambertian::new(Color::new(0.5, 0.5, 0.5));
-    // let material_center: Lambertian = Lambertian::new(Color::new(0.1, 0.2, 0.5));
-    // let material_left: Lambertian = Lambertian::new(Color::new(0.2, 0.5, 0.8));
-    // let material_left: Dielectric = Dielectric::new(1.5);
     let material_left: Metal = Metal::new(Color::new(0.3, 0.3, 0.3), 0.1);
     let material_right: Metal = Metal::new(Color::new(0.8, 0.6, 0.2), 0.0);
     let material_high: DiffuseLight = DiffuseLight::new(Color::new(8.0, 8.0, 8.0));
@@ -107,11 +101,6 @@ pub fn init_scene() -> HittableList {
     // World
     let mut world: HittableList = HittableList::new();
     world.push(Box::new(Sphere::new(Point3::new(0.0, -1000.0, 0.0), 1000.0, Box::new(material_ground), 0)));
-    //world.push(Box::new(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5, Box::new(material_center))));
-    //world.push(Box::new(Sphere::new(Point3::new(-1.0, 0.0, -1.0), 0.5, Box::new(material_left))));
-    //world.push(Box::new(BBox::new(Point3::new(-1.0, 0.0, -1.0), Point3::new(0.7, 2.5, 0.7), Box::new(material_left))));
-    //world.push(Box::new(Triangle::new([Point3::new(-2.0, -0.5, -1.0), Point3::new(0.0, 0.0, -1.0), Point3::new(-1.0, 2.0, -1.0)], Box::new(material_left))));
-    //world.push(Box::new(Mesh::new(Point3::new(0.0, 0.5, -0.2), Vec3A::new((1.0, 1.0, 1.0), Vec3A::new((90.0, 180.0, 220.0), "models/rabbit.stl", Box::new(material_left))));
     world.push(Box::new(Mesh::new(Point3::new(-1.0, 1.0, 8.0), 2.5, Vec3A::new(90.0, 90.0, 220.0), "models/jet/jet2.obj", Box::new(material_left))));
     world.push(Box::new(Sphere::new(Point3::new(1.5, 0.5, -1.0), 0.5, Box::new(material_right), 0)));
     world.push(Box::new(Sphere::new(Point3::new(0.0, 2.0, 0.0), 0.5, Box::new(material_high), 0)));
@@ -130,7 +119,6 @@ pub fn init_random_scene() -> HittableList {
     world.push(Box::new(Sphere::new(Point3::new(-4.0, 1.0, 0.0), 1.0, Box::new(mat2), 0)));
     let mat3: Metal = Metal::new(Color::new(0.7, 0.6, 0.5), 0.0);
     world.push(Box::new(Sphere::new(Point3::new(4.0, 1.0, 0.0), 1.0, Box::new(mat3), 0)));
-
 
     let ground_material: Lambertian = Lambertian::new(Color::new(0.5, 0.5, 0.5));
     world.push(Box::new(Sphere::new(Point3::new(0.0, -1000.0, 0.0), 1000.0, Box::new(ground_material), 0)));

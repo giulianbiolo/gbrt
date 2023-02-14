@@ -2,7 +2,6 @@
 // Date: 24/01/2023
 // Description: This file implements the HitRecord struct
 
-use glam;
 use glam::Vec3A;
 
 use crate::ray::Ray;
@@ -30,15 +29,7 @@ impl HitRecord {
             front_face: false
         }
     }
-    pub fn new(p: Point3, normal: Vec3A, mat_ptr: Box<dyn Material>, t: f32, front_face: bool) -> HitRecord {
-        HitRecord {
-            p,
-            normal,
-            mat_ptr,
-            t,
-            front_face
-        }
-    }
+    pub fn new(p: Point3, normal: Vec3A, mat_ptr: Box<dyn Material>, t: f32, front_face: bool) -> HitRecord { HitRecord { p, normal, mat_ptr, t, front_face } }
     pub fn set_face_normal(&mut self, ray: &Ray, outward_normal: &Vec3A) {
         // This function is used to determine whether the ray is inside or outside the object.
         self.front_face = ray.direction().dot(*outward_normal) < 0.0;
