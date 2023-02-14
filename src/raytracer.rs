@@ -24,7 +24,7 @@ use crate::utility::CONSTS;
 use crate::color::{Color, to_rgb};
 use crate::point3::Point3;
 use crate::parser;
-use crate::pdf::{PDF, CosinePDF, HittablePDF, MixturePDF};
+use crate::pdf::{PDF, CosinePDF, HittablePDF, hittable_pdf_generate, hittable_pdf_value};
 
 
 // Renders the scene to an image
@@ -90,21 +90,20 @@ pub fn ray_color(r: &Ray, background: &Color, world: &HittableList, lights: &Box
     let emitted = rec.mat_ptr.emitted(&rec);
     let mut pdf: f32 = 0.0;
     if !rec.mat_ptr.scatter(r, &rec, &mut attenuation, &mut scattered, &mut pdf) { return emitted; }
+    
     /*
-    /************* COSINE BASED LIGHT SCATTERING *************/
     let cosine_pdf: CosinePDF = CosinePDF::new(rec.normal);
     scattered = Ray::new(rec.p, cosine_pdf.generate());
     pdf = cosine_pdf.value(scattered.direction);
-    /************* LIGHT-EMITTEND OBJECTS BASED LIGHT SCATTERING *************/
-    scattered = Ray::new(rec.p, lights.random(&rec.p));
-    pdf = lights.pdf_value(&rec.p, &scattered.direction);
     */
-    /************* MIXTURED LIGHT SCATTERING *************/
-    let cosine_pdf: CosinePDF = CosinePDF::new(rec.normal);
-    let lights_pdf: HittablePDF = HittablePDF::new(rec.p);
-    let mixture_pdf: MixturePDF = MixturePDF::new(Box::new(cosine_pdf), Box::new(lights_pdf));
-    scattered = Ray::new(rec.p, mixture_pdf.generate(lights));
-    pdf = mixture_pdf.value(scattered.direction, lights);
+
+    // let light_pdf: HittablePDF = HittablePDF::new(rec.p, lights);
+    // scattered = Ray::new(rec.p, hittable_pdf_generate(rec.p, lights));
+    scattered = Ray::new(rec.p, lights.random(&rec.p));
+    // scattered = Ray::new(rec.p, light_pdf.generate());
+    pdf = lights.pdf_value(&rec.p, &scattered.direction);
+    // pdf = hittable_pdf_value(rec.p, scattered.direction, lights);
+    // pdf = light_pdf.value(scattered.direction);
 
     return emitted
         + attenuation * rec.mat_ptr.scattering_pdf(r, &rec, &scattered)
