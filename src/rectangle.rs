@@ -49,21 +49,22 @@ impl BHShape for XYRectangle {
 }
 
 impl Hittable for XYRectangle {
-    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool {
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         let t: f32 = (self.k - ray.origin().z) / ray.direction().z;
-        if t < t_min || t > t_max { return false; }
+        if t < t_min || t > t_max { return None; }
         let x: f32 = ray.origin().x + t * ray.direction().x;
         let y: f32 = ray.origin().y + t * ray.direction().y;
-        if x < self.x0 || x > self.x1 { return false; }
-        if y < self.y0 || y > self.y1 { return false; }
+        if x < self.x0 || x > self.x1 { return None; }
+        if y < self.y0 || y > self.y1 { return None; }
         //rec.u = (x - self.x0) / (self.x1 - self.x0);
         //rec.v = (y - self.y0) / (self.y1 - self.y0);
+        let mut rec: HitRecord = HitRecord::empty();
         rec.t = t;
         rec.p = ray.at(t);
         let outward_normal: Vec3A = Vec3A::new(0.0, 0.0, 1.0);
         rec.set_face_normal(ray, &outward_normal);
         rec.mat_ptr = self.material.clone();
-        true
+        Some(rec)
     }
 }
 
@@ -102,21 +103,22 @@ impl BHShape for XZRectangle {
 }
 
 impl Hittable for XZRectangle {
-    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool {
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         let t: f32 = (self.k - ray.origin().y) / ray.direction().y;
-        if t < t_min || t > t_max { return false; }
+        if t < t_min || t > t_max { return None; }
         let x: f32 = ray.origin().x + t * ray.direction().x;
         let z: f32 = ray.origin().z + t * ray.direction().z;
-        if x < self.x0 || x > self.x1 { return false; }
-        if z < self.z0 || z > self.z1 { return false; }
+        if x < self.x0 || x > self.x1 { return None; }
+        if z < self.z0 || z > self.z1 { return None; }
         //rec.u = (x - self.x0) / (self.x1 - self.x0);
         //rec.v = (z - self.z0) / (self.z1 - self.z0);
+        let mut rec: HitRecord = HitRecord::empty();
         rec.t = t;
         rec.p = ray.at(t);
         let outward_normal: Vec3A = Vec3A::new(0.0, 1.0, 0.0);
         rec.set_face_normal(ray, &outward_normal);
         rec.mat_ptr = self.material.clone();
-        true
+        Some(rec)
     }
 }
 
@@ -155,21 +157,22 @@ impl BHShape for YZRectangle {
 }
 
 impl Hittable for YZRectangle {
-    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool {
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         let t: f32 = (self.k - ray.origin().x) / ray.direction().x;
-        if t < t_min || t > t_max { return false; }
+        if t < t_min || t > t_max { return None; }
         let y: f32 = ray.origin().y + t * ray.direction().y;
         let z: f32 = ray.origin().z + t * ray.direction().z;
-        if y < self.y0 || y > self.y1 { return false; }
-        if z < self.z0 || z > self.z1 { return false; }
+        if y < self.y0 || y > self.y1 { return None; }
+        if z < self.z0 || z > self.z1 { return None; }
         //rec.u = (y - self.y0) / (self.y1 - self.y0);
         //rec.v = (z - self.z0) / (self.z1 - self.z0);
+        let mut rec: HitRecord = HitRecord::empty();
         rec.t = t;
         rec.p = ray.at(t);
         let outward_normal: Vec3A = Vec3A::new(1.0, 0.0, 0.0);
         rec.set_face_normal(ray, &outward_normal);
         rec.mat_ptr = self.material.clone();
-        true
+        Some(rec)
     }
 }
 
@@ -185,23 +188,20 @@ mod tests {
         let material: Box<dyn Material> = Box::new(Lambertian::new(Color::new(0.0, 0.0, 0.0)));
         let rectangle: XYRectangle = XYRectangle::new(-1.0, 1.0, -1.0, 1.0, 0.0, material, 0);
         let ray: Ray = Ray::new(Point3::new(0.0, 0.0, -1.0), Vec3A::new(0.0, 0.0, 1.0));
-        let mut rec: HitRecord = HitRecord::empty();
-        assert!(rectangle.hit(&ray, 0.0, 100.0, &mut rec));
+        assert!(rectangle.hit(&ray, 0.0, 100.0).is_some());
     }
     #[test]
     fn test_xzrectangle_hit() {
         let material: Box<dyn Material> = Box::new(Lambertian::new(Color::new(0.0, 0.0, 0.0)));
         let rectangle: XZRectangle = XZRectangle::new(-1.0, 1.0, -1.0, 1.0, 0.0, material, 0);
         let ray: Ray = Ray::new(Point3::new(0.0, -1.0, 0.0), Vec3A::new(0.0, 1.0, 0.0));
-        let mut rec: HitRecord = HitRecord::empty();
-        assert!(rectangle.hit(&ray, 0.0, 100.0, &mut rec));
+        assert!(rectangle.hit(&ray, 0.0, 100.0).is_some());
     }
     #[test]
     fn test_yzrectangle_hit() {
         let material: Box<dyn Material> = Box::new(Lambertian::new(Color::new(0.0, 0.0, 0.0)));
         let rectangle: YZRectangle = YZRectangle::new(-1.0, 1.0, -1.0, 1.0, 0.0, material, 0);
         let ray: Ray = Ray::new(Point3::new(-1.0, 0.0, 0.0), Vec3A::new(1.0, 0.0, 0.0));
-        let mut rec: HitRecord = HitRecord::empty();
-        assert!(rectangle.hit(&ray, 0.0, 100.0, &mut rec));
+        assert!(rectangle.hit(&ray, 0.0, 100.0).is_some());
     }
 }

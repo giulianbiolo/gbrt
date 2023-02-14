@@ -24,10 +24,10 @@ pub struct Constants {
 impl Default for Constants {
     fn default() -> Self {
         Self {
-            width: 800,
-            height: 600,
-            aspect_ratio: 800.0 / 600.0,
-            samples_per_pixel: 32,
+            width: 1920,
+            height: 1080,
+            aspect_ratio: 1920.0 / 1080.0,
+            samples_per_pixel: 64,
             max_depth: 5000
         }
     }

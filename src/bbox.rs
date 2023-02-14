@@ -38,7 +38,7 @@ impl BBox {
 }
 
 impl Hittable for BBox {
-    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool {
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         // Calculate the interval of possible hit times along the x axis
         let mut tmin = (self.center.x - self.width / 2.0 - ray.origin.x) / ray.direction.x;
         let mut tmax = (self.center.x + self.width / 2.0 - ray.origin.x) / ray.direction.x;
@@ -50,7 +50,7 @@ impl Hittable for BBox {
         // Swap tymin and tymax if necessary
         if tymin > tymax { std::mem::swap(&mut tymin, &mut tymax); }
         // If the intervals along the x and y axis do not overlap, the ray does not hit the box
-        if tmin > tymax || tymin > tmax { return false; }
+        if tmin > tymax || tymin > tmax { return None; }
         // If the intervals along the x and y axis overlap, the ray hits the box
         if tymin > tmin { tmin = tymin; }
         if tymax < tmax { tmax = tymax; }
@@ -60,7 +60,7 @@ impl Hittable for BBox {
         // Swap tzmin and tzmax if necessary
         if tzmin > tzmax { std::mem::swap(&mut tzmin, &mut tzmax); }
         // If the intervals along the x and z axis do not overlap, the ray does not hit the box
-        if tmin > tzmax || tzmin > tmax { return false; }
+        if tmin > tzmax || tzmin > tmax { return None; }
         // If the intervals along the x and z axis overlap, the ray hits the box
         if tzmin > tmin { tmin = tzmin; }
         if tzmax < tmax { tmax = tzmax; }
@@ -70,14 +70,9 @@ impl Hittable for BBox {
             if t < t_min { t = tmax; }
             if t > t_min && t < t_max {
                 let p = ray.at(t);
-                rec.t = t;
-                rec.p = p;
-                rec.normal = (p - self.center) / Vec3A::new(self.width, self.height, self.depth);
-                rec.mat_ptr = self.material.clone();
-                return true;
-            }
-        }
-        false
+                Some(HitRecord::new(p, (p - self.center) / Vec3A::new(self.width, self.height, self.depth), self.material.clone(), t, false))
+            } else { None }
+        } else { None }
     }
 }
 
@@ -94,8 +89,7 @@ mod tests {
         let material: Box<Lambertian> = Box::new(Lambertian::new(Color::new(0.0, 0.0, 0.0)));
         let bbox: BBox = BBox::new(center, dimensions, material);
         let ray: Ray = Ray::new(Point3::new(0.0, 0.0, -2.0), Vec3A::new(0.0, 0.0, 1.0));
-        let mut rec: HitRecord = HitRecord::empty();
-        assert!(bbox.hit(&ray, 0.0, 100.0, &mut rec));
+        assert!(bbox.hit(&ray, 0.0, 100.0).is_some());
         Ok(())
     }
 }

@@ -63,7 +63,6 @@ impl Mesh {
         let diff = (max - min).max_element(); // This is the greatest difference
         // We will scale the object so that the greatest difference is 1
         let scaling_factor: Vec3A = Vec3A::splat(diff).recip() * Vec3A::splat(scaling_factor);
-        // let scaling_factor: Vec3A = (max - min).recip();
         for vertex in model.vertices.iter_mut() {
             let mut v: Vec3A = Vec3A::new(vertex.position[0], vertex.position[1], vertex.position[2]);
             // v = v - center;
@@ -126,20 +125,12 @@ impl Mesh {
 }
 
 impl Hittable for Mesh {
-    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool {
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         let bvhray: BVHRay = BVHRay::new(BVHPoint3::new(ray.origin[0], ray.origin[1], ray.origin[2]), BVHVector3::new(ray.direction[0], ray.direction[1], ray.direction[2]));
         let hit_triangles_aabbs: Vec<&Triangle> = self.bvh.traverse(&bvhray, &self.triangles);
 
-        let mut temp_rec = HitRecord::empty();
-        let mut hit_anything = false;
-        let mut closest_so_far = t_max;
-        for triangle in hit_triangles_aabbs {
-            if triangle.hit(ray, t_min, closest_so_far, &mut temp_rec) {
-                hit_anything = true;
-                closest_so_far = temp_rec.t;
-                *rec = temp_rec.clone();
-            }
-        }
-        hit_anything
+        hit_triangles_aabbs.iter()
+        .filter_map(|triangle| triangle.hit(ray, t_min, t_max))
+        .min_by(|hit1, hit2| { hit1.t.partial_cmp(&hit2.t).unwrap() })
     }
 }

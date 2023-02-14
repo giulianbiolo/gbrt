@@ -30,10 +30,26 @@ impl HitRecord {
             front_face: false
         }
     }
+    pub fn new(p: Point3, normal: Vec3A, mat_ptr: Box<dyn Material>, t: f32, front_face: bool) -> HitRecord {
+        HitRecord {
+            p,
+            normal,
+            mat_ptr,
+            t,
+            front_face
+        }
+    }
     pub fn set_face_normal(&mut self, ray: &Ray, outward_normal: &Vec3A) {
         // This function is used to determine whether the ray is inside or outside the object.
         self.front_face = ray.direction().dot(*outward_normal) < 0.0;
         self.normal = if self.front_face { *outward_normal } else { -*outward_normal };
+    }
+    pub fn reset(&mut self) {
+        self.p = Point3::new(0.0, 0.0, 0.0);
+        self.normal = Vec3A::new(0.0, 0.0, 0.0);
+        self.mat_ptr = Box::new(Lambertian::new(Color::new(0.0, 0.0, 0.0)));
+        self.t = 0.0;
+        self.front_face = false;
     }
 }
 

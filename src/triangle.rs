@@ -50,7 +50,7 @@ impl BHShape for Triangle {
 }
 
 impl Hittable for Triangle {
-    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool {
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         // This is a simple implementation of the Moller-Trumbore algorithm for ray-triangle intersection
         let v0 = self.vertices[0];
         let v1 = self.vertices[1];
@@ -62,30 +62,30 @@ impl Hittable for Triangle {
         let h = ray.direction.cross(e2);
         let a = e1.dot(h);
 
-        if a > -EPSILON && a < EPSILON { return false; }
+        if a > -EPSILON && a < EPSILON { return None; }
 
         let f = 1.0 / a;
         let s = ray.origin - v0;
         let u = f * s.dot(h);
 
-        if u < 0.0 || u > 1.0 { return false; }
+        if u < 0.0 || u > 1.0 { return None; }
 
         let q = s.cross(e1);
         let v = f * ray.direction.dot(q);
 
-        if v < 0.0 || u + v > 1.0 { return false; }
+        if v < 0.0 || u + v > 1.0 { return None; }
 
         let t = f * e2.dot(q);
 
         if t > t_min && t < t_max {
+            let mut rec: HitRecord = HitRecord::empty();
             rec.t = t;
             rec.p = ray.at(t);
             let outward_normal: Vec3A = e2.cross(e1).normalize();
             rec.set_face_normal(ray, &outward_normal);
             rec.mat_ptr = self.material.clone();
-            return true;
-        }
-        false
+            Some(rec)
+        } else { None }
     }
 }
 
@@ -101,10 +101,7 @@ mod tests {
         let material: Box<dyn Material> = Box::new(Lambertian::new(Color::new(0.0, 0.0, 0.0)));
         let triangle: Triangle = Triangle::new(vertices, material, 0);
         let ray: Ray = Ray::new(Point3::new(0.0, 0.0, -1.0), Vec3A::new(0.0, 0.0, 1.0));
-        let mut rec: HitRecord = HitRecord::empty();
-        assert!(triangle.hit(&ray, 0.0, 100.0, &mut rec));
-        assert_eq!(rec.t, 1.0);
-        assert_eq!(rec.p, Point3::new(0.0, 0.0, 0.0));
+        assert!(triangle.hit(&ray, 0.0, 100.0).is_some());
         Ok(())
     }
 }

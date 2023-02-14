@@ -8,24 +8,16 @@ use crate::ray::Ray;
 
 pub trait Hittable: Sync + Send {
     // The hit function returns true if the ray hits the object.
-    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool;
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord>;
 }
 
 pub type HittableList = Vec<Box<dyn Hittable + Sync + Send>>;
 
 impl Hittable for HittableList {
-    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool {
-        let mut temp_rec = HitRecord::empty();
-        let mut hit_anything = false;
-        let mut closest_so_far = t_max;
-        for object in self {
-            if object.hit(ray, t_min, closest_so_far, &mut temp_rec) {
-                hit_anything = true;
-                closest_so_far = temp_rec.t;
-                *rec = temp_rec.clone();
-            }
-        }
-        hit_anything
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
+        self.iter()
+        .filter_map(|object| object.hit(ray, t_min, t_max))
+        .min_by(|hit1, hit2| { hit1.t.partial_cmp(&hit2.t).unwrap() })
     }
 }
 
@@ -43,7 +35,6 @@ mod tests {
         world.push(Box::new(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5, Box::new(Lambertian::new(Color::new(0.1, 0.2, 0.5))), 0)));
         world.push(Box::new(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0, Box::new(Lambertian::new(Color::new(0.8, 0.8, 0.0))), 0)));
         let r: Ray = Ray::new(Point3::new(0.0, 0.0, 0.0), Point3::new(0.0, 0.0, -1.0));
-        let mut rec: HitRecord = HitRecord::empty();
-        assert!(world.hit(&r, 0.0, 100.0, &mut rec));
+        assert!(world.hit(&r, 0.0, 100.0).is_some());
     }
 }

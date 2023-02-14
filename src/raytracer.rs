@@ -12,7 +12,6 @@ use glam::Vec3A;
 
 use crate::material::DiffuseLight;
 use crate::ray::Ray;
-use crate::hit_record::HitRecord;
 use crate::hittable_list::HittableList;
 use crate::hittable_list::Hittable;
 use crate::sphere::Sphere;
@@ -78,21 +77,19 @@ pub fn render_to_image_multithreaded(world: &HittableList, cam: Camera, filename
 pub fn ray_color(r: &Ray, world: &HittableList, depth: u32) -> Color {
     // If we've exceeded the ray bounce limit, no more light is gathered
     if depth >= CONSTS.max_depth { return Color::new(0.0, 0.0, 0.0); }
-
     // Check for ray-sphere intersection
-    let mut rec: HitRecord = HitRecord::empty();
-    if !world.hit(r, 0.001, utility::INFINITY, &mut rec) {
+    if let Some(rec) = world.hit(r, 0.001, utility::INFINITY) {
+        let mut scattered = Ray::empty();
+        let mut attenuation = Vec3A::new(0.0, 0.0, 0.0);
+        let emitted = rec.mat_ptr.emitted();
+        if !rec.mat_ptr.scatter(r, &rec, &mut attenuation, &mut scattered) { return emitted; }
+        return emitted + attenuation * ray_color(&scattered, world, depth + 1);
+    } else {
         // Return a skybox color
         let unit_direction: Vec3A = r.direction().normalize();
         let t: f32 = 0.5 * (unit_direction.y + 1.0);
         return (1.0 - t) * Color::new(1.0, 1.0, 1.0) + t * Color::new(0.5, 0.7, 1.0);
     }
-
-    let mut scattered = Ray::empty();
-    let mut attenuation = Vec3A::new(0.0, 0.0, 0.0);
-    let emitted = rec.mat_ptr.emitted();
-    if !rec.mat_ptr.scatter(r, &rec, &mut attenuation, &mut scattered) { return emitted; }
-    return emitted + attenuation * ray_color(&scattered, world, depth + 1);
 }
 
 // Inits the scene and returns it as a HittableList
@@ -115,7 +112,7 @@ pub fn init_scene() -> HittableList {
     //world.push(Box::new(BBox::new(Point3::new(-1.0, 0.0, -1.0), Point3::new(0.7, 2.5, 0.7), Box::new(material_left))));
     //world.push(Box::new(Triangle::new([Point3::new(-2.0, -0.5, -1.0), Point3::new(0.0, 0.0, -1.0), Point3::new(-1.0, 2.0, -1.0)], Box::new(material_left))));
     //world.push(Box::new(Mesh::new(Point3::new(0.0, 0.5, -0.2), Vec3A::new((1.0, 1.0, 1.0), Vec3A::new((90.0, 180.0, 220.0), "models/rabbit.stl", Box::new(material_left))));
-    // world.push(Box::new(Mesh::new(Point3::new(-1.0, 1.0, 8.0), 2.5, Vec3A::new(90.0, 90.0, 220.0), "models/jet/jet2.obj", Box::new(material_left))));
+    world.push(Box::new(Mesh::new(Point3::new(-1.0, 1.0, 8.0), 2.5, Vec3A::new(90.0, 90.0, 220.0), "models/jet/jet2.obj", Box::new(material_left))));
     world.push(Box::new(Sphere::new(Point3::new(1.5, 0.5, -1.0), 0.5, Box::new(material_right), 0)));
     world.push(Box::new(Sphere::new(Point3::new(0.0, 2.0, 0.0), 0.5, Box::new(material_high), 0)));
     _add_random_world_spheres(&mut world).expect("Failed to add random world spheres");

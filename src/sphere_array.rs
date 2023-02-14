@@ -31,22 +31,13 @@ impl SphereArray {
 }
 
 impl Hittable for SphereArray {
-    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool {
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         let bvhray: BVHRay = BVHRay::new(BVHPoint3::new(ray.origin[0], ray.origin[1], ray.origin[2]), BVHVector3::new(ray.direction[0], ray.direction[1], ray.direction[2]));
         let hit_spheres_aabb: Vec<&Sphere> = self.bvh.traverse(&bvhray, &self.spheres);
 
-        let mut temp_rec = HitRecord::empty();
-        let mut hit_anything = false;
-        let mut closest_so_far = t_max;
-        for sphere in hit_spheres_aabb {
-            // we want to find the closest hit
-            if sphere.hit(ray, t_min, closest_so_far, &mut temp_rec) {
-                hit_anything = true;
-                closest_so_far = temp_rec.t;
-                *rec = temp_rec.clone();
-            }
-        }
-        hit_anything
+        hit_spheres_aabb.iter()
+        .filter_map(|sphere| sphere.hit(ray, t_min, t_max))
+        .min_by(|hit1, hit2| { hit1.t.partial_cmp(&hit2.t).unwrap() })
     }
 }
 
@@ -64,8 +55,7 @@ mod tests {
         spheres.push(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0, Box::new(Lambertian::new(Color::new(0.8, 0.8, 0.0))), 0));
         let sphere_array: SphereArray = SphereArray::new(&mut spheres);
         let r: Ray = Ray::new(Point3::new(0.0, 0.0, 0.0), Point3::new(0.0, 0.0, -1.0));
-        let mut rec: HitRecord = HitRecord::empty();
-        assert!(sphere_array.hit(&r, 0.0, 100.0, &mut rec));
+        assert!(sphere_array.hit(&r, 0.0, 100.0).is_some());
         Ok(())
     }
 }

@@ -42,7 +42,7 @@ fn main() -> Result<(), std::fmt::Error> {
             &Vec3A::new(13.0, 2.0, 3.0),
             &Vec3A::new(0.0, 0.0, 0.0),
             &Vec3A::new(0.0, 1.0, 0.0),
-            40.0,
+            45.0,
             utility::CONSTS.aspect_ratio,
             0.1,
             10.0,
