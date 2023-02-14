@@ -18,8 +18,7 @@ pub struct Constants {
     pub height: u32,
     pub aspect_ratio: f32,
     pub samples_per_pixel: u32,
-    pub max_depth: u32,
-    pub background: Vec3A,
+    pub max_depth: u32
 }
 
 impl Default for Constants {
@@ -29,8 +28,7 @@ impl Default for Constants {
             height: 600,
             aspect_ratio: 800.0 / 600.0,
             samples_per_pixel: 32,
-            max_depth: 5000,
-            background: Vec3A::new(0.0, 0.0, 0.0),
+            max_depth: 5000
         }
     }
 }

@@ -32,10 +32,8 @@ pub fn parse_yaml_constants(filename: &str) -> utility::Constants {
         let height = hashconsts[&yaml_rust::Yaml::String("height".to_string())].as_i64().unwrap() as u32;
         let samples_per_pixel = hashconsts[&yaml_rust::Yaml::String("samplesPerPixel".to_string())].as_i64().unwrap() as u32;
         let max_depth = hashconsts[&yaml_rust::Yaml::String("maxDepth".to_string())].as_i64().unwrap() as u32;
-        let background_yaml = hashconsts[&yaml_rust::Yaml::String("backgroundColor".to_string())].as_vec().unwrap();
-        let background: Vec3A = Vec3A::new(background_yaml[0].as_f64().unwrap() as f32, background_yaml[1].as_f64().unwrap() as f32, background_yaml[2].as_f64().unwrap() as f32);
         let aspect_ratio = width as f32 / height as f32;
-        utility::Constants {width, height, aspect_ratio, samples_per_pixel, max_depth, background}
+        utility::Constants {width, height, aspect_ratio, samples_per_pixel, max_depth}
     }
 }
 

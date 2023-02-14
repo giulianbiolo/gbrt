@@ -38,7 +38,7 @@ pub fn render_to_image(world: &HittableList, cam: &Camera, filename: &str) {
             let u: f32 = (x as f32 + utility::random_f32()) / (CONSTS.width - 1) as f32;
             let v: f32 = (CONSTS.height - y - 1) as f32 / (CONSTS.height - 1) as f32;
             let r: Ray = cam.get_ray(u, v);
-            pixel_color = pixel_color + ray_color(&r, &utility::CONSTS.background, world, 0);
+            pixel_color = pixel_color + ray_color(&r, world, 0);
         }
         *pixel = to_rgb(pixel_color, CONSTS.samples_per_pixel);
     }
@@ -61,7 +61,7 @@ pub fn render_to_image_multithreaded(world: &HittableList, cam: Camera, filename
                 let u: f32 = (x as f32 + utility::random_f32()) / (CONSTS.width - 1) as f32;
                 let v: f32 = (CONSTS.height - y as u32 - 1) as f32 / (CONSTS.height - 1) as f32;
                 let r: Ray = cam.get_ray(u, v);
-                pixel_color = pixel_color + ray_color(&r, &utility::CONSTS.background, &*safe_world, 0);
+                pixel_color = pixel_color + ray_color(&r, &*safe_world, 0);
             }
             let rgb = to_rgb(pixel_color, CONSTS.samples_per_pixel);
             let mut img = safe_img.lock().unwrap();
@@ -75,19 +75,24 @@ pub fn render_to_image_multithreaded(world: &HittableList, cam: Camera, filename
 }
 
 // Returns the color of a ray
-pub fn ray_color(r: &Ray, background: &Color, world: &HittableList, depth: u32) -> Color {
+pub fn ray_color(r: &Ray, world: &HittableList, depth: u32) -> Color {
     // If we've exceeded the ray bounce limit, no more light is gathered
     if depth >= CONSTS.max_depth { return Color::new(0.0, 0.0, 0.0); }
 
     // Check for ray-sphere intersection
     let mut rec: HitRecord = HitRecord::empty();
-    if !world.hit(r, 0.001, utility::INFINITY, &mut rec) { return *background; }
+    if !world.hit(r, 0.001, utility::INFINITY, &mut rec) {
+        // Return a skybox color
+        let unit_direction: Vec3A = r.direction().normalize();
+        let t: f32 = 0.5 * (unit_direction.y + 1.0);
+        return (1.0 - t) * Color::new(1.0, 1.0, 1.0) + t * Color::new(0.5, 0.7, 1.0);
+    }
 
     let mut scattered = Ray::empty();
     let mut attenuation = Vec3A::new(0.0, 0.0, 0.0);
     let emitted = rec.mat_ptr.emitted();
     if !rec.mat_ptr.scatter(r, &rec, &mut attenuation, &mut scattered) { return emitted; }
-    return emitted + attenuation * ray_color(&scattered, background, world, depth + 1);
+    return emitted + attenuation * ray_color(&scattered, world, depth + 1);
 }
 
 // Inits the scene and returns it as a HittableList
