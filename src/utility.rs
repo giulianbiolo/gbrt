@@ -30,7 +30,7 @@ impl Default for Constants {
             aspect_ratio: 800.0 / 600.0,
             samples_per_pixel: 32,
             max_depth: 5000,
-            background: Vec3A::new(0.6, 0.6, 0.6),
+            background: Vec3A::new(0.0, 0.0, 0.0),
         }
     }
 }
@@ -67,11 +67,6 @@ pub fn random_in_unit_sphere() -> Vec3A {
         let p: Vec3A = Vec3A::new(random_f32_range(-1.0, 1.0), random_f32_range(-1.0, 1.0), random_f32_range(-1.0, 1.0));
         if p.dot(p) < 1.0 { return p; }
     }
-}
-
-pub fn random_in_hemisphere(normal: &Vec3A) -> Vec3A {
-    let in_unit_sphere: Vec3A = random_in_unit_sphere();
-    if in_unit_sphere.dot(*normal) > 0.0 { in_unit_sphere } else { -in_unit_sphere }
 }
 
 #[cfg(test)]

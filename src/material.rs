@@ -14,9 +14,8 @@ use crate::utility;
 
 
 pub trait Material: DynClone + Send {
-    fn scatter(&self, ray_in: &Ray, rec: &HitRecord, attenuation: &mut Color, scattered: &mut Ray, pdf: &mut f32) -> bool;
+    fn scatter(&self, ray_in: &Ray, rec: &HitRecord, attenuation: &mut Color, scattered: &mut Ray) -> bool;
     fn emitted(&self) -> Color { Color::new(0.0, 0.0, 0.0) }
-    fn scattering_pdf(&self, ray_in: &Ray, rec: &HitRecord, scattered: &Ray) -> f32 { 0.0 }
 }
 
 dyn_clone::clone_trait_object!(Material);
@@ -30,21 +29,14 @@ impl Lambertian {
     pub fn new(albedo: Color) -> Lambertian { Lambertian { albedo } }
 }
 impl Material for Lambertian {
-    fn scatter(&self, _: &Ray, rec: &HitRecord, attenuation: &mut Color, scattered: &mut Ray, pdf: &mut f32) -> bool {
+    fn scatter(&self, _: &Ray, rec: &HitRecord, attenuation: &mut Color, scattered: &mut Ray) -> bool {
         // Scatter direction will be the normal plus a random vector in the unit sphere
-        // let mut scatter_direction: Vec3A = rec.normal + utility::random_unit_vector();
-        let mut scatter_direction: Vec3A = utility::random_in_hemisphere(&rec.normal);
+        let mut scatter_direction: Vec3A = rec.normal + utility::random_unit_vector();
         // If the scatter direction is too close to zero, we set it to the normal
         if scatter_direction.length_squared() < 0.00001 { scatter_direction = rec.normal; }
         *scattered = Ray::new(rec.p, scatter_direction);
         *attenuation = self.albedo; // The attenuation is the albedo
-        // *pdf = rec.normal.dot(scattered.direction()) / std::f32::consts::PI;
-        *pdf = 0.5 / std::f32::consts::PI;
         true
-    }
-    fn scattering_pdf(&self, _: &Ray, rec: &HitRecord, scattered: &Ray) -> f32 {
-        let cosine: f32 = rec.normal.dot(scattered.direction().normalize());
-        if cosine < 0.0 { 0.0 } else { cosine / std::f32::consts::PI }
     }
 }
 
@@ -61,7 +53,7 @@ impl Metal {
     }
 }
 impl Material for Metal {
-    fn scatter(&self, ray_in: &Ray, rec: &HitRecord, attenuation: &mut Color, scattered: &mut Ray, pdf: &mut f32) -> bool {
+    fn scatter(&self, ray_in: &Ray, rec: &HitRecord, attenuation: &mut Color, scattered: &mut Ray) -> bool {
         // The scattered ray is the reflected ray plus a random vector in the unit sphere times the fuzz factor
         let reflected: Vec3A = reflect(&ray_in.direction().normalize(), &rec.normal);
         *scattered = Ray::new(rec.p, reflected + utility::random_in_unit_sphere() * self.fuzz);
@@ -87,7 +79,7 @@ impl Dielectric {
     }
 }
 impl Material for Dielectric {
-    fn scatter(&self, ray_in: &Ray, rec: &HitRecord, attenuation: &mut Color, scattered: &mut Ray, pdf: &mut f32) -> bool {
+    fn scatter(&self, ray_in: &Ray, rec: &HitRecord, attenuation: &mut Color, scattered: &mut Ray) -> bool {
         *attenuation = Color::new(1.0, 1.0, 1.0); // The attenuation is white
         let refraction_rate = if rec.front_face { 1.0 / self.refr_idx } else { self.refr_idx };
         let unit_direction: Vec3A = ray_in.direction().normalize();
@@ -123,7 +115,7 @@ impl DiffuseLight {
     pub fn new(emit: Color) -> DiffuseLight { DiffuseLight { emit } }
 }
 impl Material for DiffuseLight {
-    fn scatter(&self, _: &Ray, _: &HitRecord, _: &mut Color, _: &mut Ray, _: &mut f32) -> bool { false }
+    fn scatter(&self, _: &Ray, _: &HitRecord, _: &mut Color, _: &mut Ray) -> bool { false }
     fn emitted(&self) -> Color { self.emit }
 }
 
