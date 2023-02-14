@@ -13,7 +13,8 @@ use glam::Vec3A;
 use crate::material::DiffuseLight;
 use crate::ray::Ray;
 use crate::hit_record::HitRecord;
-use crate::hittable_list::{Hittable, HittableList, get_light};
+use crate::hittable_list::HittableList;
+use crate::hittable_list::Hittable;
 use crate::sphere::Sphere;
 use crate::mesh::Mesh;
 use crate::material::{Lambertian, Metal, Dielectric};
@@ -24,14 +25,13 @@ use crate::utility::CONSTS;
 use crate::color::{Color, to_rgb};
 use crate::point3::Point3;
 use crate::parser;
-use crate::pdf::{PDF, CosinePDF, HittablePDF, hittable_pdf_generate, hittable_pdf_value};
+use crate::utility::random_f32_range;
 
 
 // Renders the scene to an image
 #[allow(dead_code)]
 pub fn render_to_image(world: &HittableList, cam: &Camera, filename: &str) {
     // Render function
-    let lights = get_light(world);
     let mut img: ImageBuffer<Rgb<u8>, Vec<u8>> = ImageBuffer::new(CONSTS.width, CONSTS.height);
     for (x, y, pixel) in img.enumerate_pixels_mut() {
         let mut pixel_color: Color = Color::new(0.0, 0.0, 0.0);
@@ -39,7 +39,7 @@ pub fn render_to_image(world: &HittableList, cam: &Camera, filename: &str) {
             let u: f32 = (x as f32 + utility::random_f32()) / (CONSTS.width - 1) as f32;
             let v: f32 = (CONSTS.height - y - 1) as f32 / (CONSTS.height - 1) as f32;
             let r: Ray = cam.get_ray(u, v);
-            pixel_color = pixel_color + ray_color(&r, &utility::CONSTS.background, world, lights, 0);
+            pixel_color = pixel_color + ray_color(&r, &utility::CONSTS.background, world, 0);
         }
         *pixel = to_rgb(pixel_color, CONSTS.samples_per_pixel);
     }
@@ -52,7 +52,6 @@ pub fn render_to_image_multithreaded(world: &HittableList, cam: Camera, filename
     let img: ImageBuffer<Rgb<u8>, Vec<u8>> = ImageBuffer::new(CONSTS.width, CONSTS.height);
     let safe_img = Arc::new(Mutex::new(img));
     let safe_world = Arc::new(world.clone());
-    let safe_lights = Arc::new(get_light(world));
 
     let total_rows = CONSTS.height as f32;
     let completed_rows = core::sync::atomic::AtomicU32::new(0);
@@ -63,7 +62,7 @@ pub fn render_to_image_multithreaded(world: &HittableList, cam: Camera, filename
                 let u: f32 = (x as f32 + utility::random_f32()) / (CONSTS.width - 1) as f32;
                 let v: f32 = (CONSTS.height - y as u32 - 1) as f32 / (CONSTS.height - 1) as f32;
                 let r: Ray = cam.get_ray(u, v);
-                pixel_color = pixel_color + ray_color(&r, &utility::CONSTS.background, &*safe_world, *safe_lights, 0);
+                pixel_color = pixel_color + ray_color(&r, &utility::CONSTS.background, &*safe_world, 0);
             }
             let rgb = to_rgb(pixel_color, CONSTS.samples_per_pixel);
             let mut img = safe_img.lock().unwrap();
@@ -77,7 +76,7 @@ pub fn render_to_image_multithreaded(world: &HittableList, cam: Camera, filename
 }
 
 // Returns the color of a ray
-pub fn ray_color(r: &Ray, background: &Color, world: &HittableList, lights: &Box<dyn Hittable + Send + Sync>, depth: u32) -> Color {
+pub fn ray_color(r: &Ray, background: &Color, world: &HittableList, depth: u32) -> Color {
     // If we've exceeded the ray bounce limit, no more light is gathered
     if depth >= CONSTS.max_depth { return Color::new(0.0, 0.0, 0.0); }
 
@@ -90,24 +89,20 @@ pub fn ray_color(r: &Ray, background: &Color, world: &HittableList, lights: &Box
     let emitted = rec.mat_ptr.emitted(&rec);
     let mut pdf: f32 = 0.0;
     if !rec.mat_ptr.scatter(r, &rec, &mut attenuation, &mut scattered, &mut pdf) { return emitted; }
-    
-    /*
-    let cosine_pdf: CosinePDF = CosinePDF::new(rec.normal);
-    scattered = Ray::new(rec.p, cosine_pdf.generate());
-    pdf = cosine_pdf.value(scattered.direction);
-    */
-
-    // let light_pdf: HittablePDF = HittablePDF::new(rec.p, lights);
-    // scattered = Ray::new(rec.p, hittable_pdf_generate(rec.p, lights));
-    scattered = Ray::new(rec.p, lights.random(&rec.p));
-    // scattered = Ray::new(rec.p, light_pdf.generate());
-    pdf = lights.pdf_value(&rec.p, &scattered.direction);
-    // pdf = hittable_pdf_value(rec.p, scattered.direction, lights);
-    // pdf = light_pdf.value(scattered.direction);
+    let on_light = Vec3A::new(utility::random_f32_range(213.0, 343.0), 554.0, utility::random_f32_range(227.0, 332.0));
+    let mut to_light = on_light - rec.p;
+    let distance_squared = to_light.length_squared();
+    to_light = to_light.normalize();
+    if to_light.dot(rec.normal) < 0.0 { return emitted; }
+    let light_area = (343.0 - 213.0) * (332.0 - 227.0);
+    let light_cosine = to_light.y.abs();
+    if light_cosine < 0.0001 { return emitted; }
+    let pdf = distance_squared / (light_cosine * light_area);
+    scattered = Ray::new(rec.p, to_light);
 
     return emitted
         + attenuation * rec.mat_ptr.scattering_pdf(r, &rec, &scattered)
-        * ray_color(&scattered, background, world, lights, depth + 1) / pdf;
+        * ray_color(&scattered, background, world, depth + 1) / pdf;
 }
 
 // Inits the scene and returns it as a HittableList

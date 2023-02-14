@@ -20,4 +20,3 @@ pub mod sphere_array;
 pub mod parser;
 pub mod translate;
 pub mod onb;
-pub mod pdf;

@@ -20,7 +20,6 @@ mod raytracer;
 mod parser;
 mod translate;
 mod onb;
-mod pdf;
 
 use glam::Vec3A;
 

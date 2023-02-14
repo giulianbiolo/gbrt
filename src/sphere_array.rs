@@ -2,9 +2,6 @@
 // Date: 24/01/2023
 // Description: This file implements the Sphere Array struct
 
-use glam;
-use glam::Vec3A;
-
 use bvh::bvh::BVH;
 use bvh::{Point3 as BVHPoint3, Vector3 as BVHVector3};
 use bvh::ray::Ray as BVHRay;
@@ -51,9 +48,6 @@ impl Hittable for SphereArray {
         }
         hit_anything
     }
-    fn is_light(&self) -> bool { self.spheres[0].is_light() }
-    fn pdf_value(&self, origin: &Vec3A, v: &Vec3A) -> f32 { 0.0 }
-    fn random(&self, origin: &Vec3A) -> Vec3A { Vec3A::ZERO }
 }
 
 #[cfg(test)]
