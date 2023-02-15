@@ -12,6 +12,7 @@ use crate::hittable_list::Hittable;
 use crate::sphere::Sphere;
 use crate::triangle::Triangle;
 use crate::rectangle::{XYRectangle, XZRectangle, YZRectangle};
+use crate::bbox::BBox;
 use crate::mesh::Mesh;
 use crate::material::{Material, Lambertian, Metal, Dielectric};
 use crate::camera::Camera;
@@ -194,6 +195,18 @@ fn _parse_geometry(hashobj: &yaml_rust::yaml::Hash, material: Box<dyn Material +
                 0
             ))
         },
+        "Box" => {
+            // has a position, width and height and depth
+            let position = hashobj[&yaml_rust::Yaml::String("position".to_string())].as_vec().unwrap();
+            let width = hashobj[&yaml_rust::Yaml::String("width".to_string())].as_f64().unwrap();
+            let height = hashobj[&yaml_rust::Yaml::String("height".to_string())].as_f64().unwrap();
+            let depth = hashobj[&yaml_rust::Yaml::String("depth".to_string())].as_f64().unwrap();
+            Box::new(BBox::new(
+                Vec3A::new(position[0].as_f64().unwrap() as f32, position[1].as_f64().unwrap() as f32, position[2].as_f64().unwrap() as f32),
+                Vec3A::new(width as f32, height as f32, depth as f32),
+                material
+            ))
+        }
         "Mesh" => {
             // has a filename, position, rotation and scale
             let filename = hashobj[&yaml_rust::Yaml::String("filename".to_string())].as_str().unwrap();

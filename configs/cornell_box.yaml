@@ -79,5 +79,31 @@ world: [
       matType: "Lambertian",
       albedo: [0.73, 0.73, 0.73]
     }
+  },
+  {
+    # A Box in the Room
+    objType: "Box",
+    position: [450.0, 150.0, 190.0],
+    width: 150.0,
+    height: 300.0,
+    depth: 150.0,
+    material: {
+      matType: "Metal",
+      albedo: [0.9, 0.1, 0.1],
+      fuzz: 0.1
+    }
+  },
+  {
+    # Another Box in the Room
+    objType: "Box",
+    position: [100.0, 100.0, 190.0],
+    width: 150.0,
+    height: 200.0,
+    depth: 150.0,
+    material: {
+      matType: "Metal",
+      albedo: [0.1, 0.9, 0.1],
+      fuzz: 0.1
+    }
   }
 ]

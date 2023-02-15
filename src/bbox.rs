@@ -2,6 +2,10 @@
 // Date: 24/01/2023
 // Description: This file implements the BBox struct
 
+use bvh::bvh::BVH;
+use bvh::{Point3 as BVHPoint3, Vector3 as BVHVector3};
+use bvh::ray::Ray as BVHRay;
+
 use glam::Vec3A;
 
 use crate::ray::Ray;
@@ -9,15 +13,12 @@ use crate::hit_record::HitRecord;
 use crate::hittable_list::Hittable;
 use crate::material::Material;
 use crate::point3::Point3;
+use crate::rectangle::{XZRectangle, YZRectangle, Rectangle, XYRectangle};
 
 
-#[derive(Clone)]
 pub struct BBox {
-    center: Point3,
-    width: f32,
-    height: f32,
-    depth: f32,
-    material: Box<dyn Material>,
+    faces: Vec<Rectangle>,
+    bvh: BVH,
 }
 
 unsafe impl Sync for BBox {}
@@ -26,52 +27,29 @@ unsafe impl Send for BBox {}
 impl BBox {
     #[allow(dead_code)]
     pub fn new(center: Point3, dimensions: Vec3A, material: Box<dyn Material>) -> BBox {
+        let mut faces: Vec<Rectangle> = Vec::with_capacity(6);
+        faces.push(Rectangle::XYRectangle(XYRectangle::new(center.x - dimensions.x / 2.0, center.x + dimensions.x / 2.0, center.y - dimensions.y / 2.0, center.y + dimensions.y / 2.0, center.z - dimensions.z / 2.0, material.clone(), 0)));
+        faces.push(Rectangle::XYRectangle(XYRectangle::new(center.x - dimensions.x / 2.0, center.x + dimensions.x / 2.0, center.y - dimensions.y / 2.0, center.y + dimensions.y / 2.0, center.z + dimensions.z / 2.0, material.clone(), 0)));
+        faces.push(Rectangle::XZRectangle(XZRectangle::new(center.x - dimensions.x / 2.0, center.x + dimensions.x / 2.0, center.z - dimensions.z / 2.0, center.z + dimensions.z / 2.0, center.y - dimensions.y / 2.0, material.clone(), 0)));
+        faces.push(Rectangle::XZRectangle(XZRectangle::new(center.x - dimensions.x / 2.0, center.x + dimensions.x / 2.0, center.z - dimensions.z / 2.0, center.z + dimensions.z / 2.0, center.y + dimensions.y / 2.0, material.clone(), 0)));
+        faces.push(Rectangle::YZRectangle(YZRectangle::new(center.y - dimensions.y / 2.0, center.y + dimensions.y / 2.0, center.z - dimensions.z / 2.0, center.z + dimensions.z / 2.0, center.x - dimensions.x / 2.0, material.clone(), 0)));
+        faces.push(Rectangle::YZRectangle(YZRectangle::new(center.y - dimensions.y / 2.0, center.y + dimensions.y / 2.0, center.z - dimensions.z / 2.0, center.z + dimensions.z / 2.0, center.x + dimensions.x / 2.0, material.clone(), 0)));
+        let bvh: BVH = BVH::build(&mut faces);
         BBox {
-            center,
-            width: dimensions[0],
-            height: dimensions[1],
-            depth: dimensions[2],
-            material
+            faces,
+            bvh
         }
     }
 }
 
 impl Hittable for BBox {
     fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
-        // Calculate the interval of possible hit times along the x axis
-        let mut tmin = (self.center.x - self.width / 2.0 - ray.origin.x) / ray.direction.x;
-        let mut tmax = (self.center.x + self.width / 2.0 - ray.origin.x) / ray.direction.x;
-        // Swap tmin and tmax if necessary
-        if tmin > tmax { std::mem::swap(&mut tmin, &mut tmax); }
-        // Calculate the interval of possible hit times along the y axis
-        let mut tymin = (self.center.y - self.height / 2.0 - ray.origin.y) / ray.direction.y;
-        let mut tymax = (self.center.y + self.height / 2.0 - ray.origin.y) / ray.direction.y;
-        // Swap tymin and tymax if necessary
-        if tymin > tymax { std::mem::swap(&mut tymin, &mut tymax); }
-        // If the intervals along the x and y axis do not overlap, the ray does not hit the box
-        if tmin > tymax || tymin > tmax { return None; }
-        // If the intervals along the x and y axis overlap, the ray hits the box
-        if tymin > tmin { tmin = tymin; }
-        if tymax < tmax { tmax = tymax; }
-        // Calculate the interval of possible hit times along the z axis
-        let mut tzmin = (self.center.z - self.depth / 2.0 - ray.origin.z) / ray.direction.z;
-        let mut tzmax = (self.center.z + self.depth / 2.0 - ray.origin.z) / ray.direction.z;
-        // Swap tzmin and tzmax if necessary
-        if tzmin > tzmax { std::mem::swap(&mut tzmin, &mut tzmax); }
-        // If the intervals along the x and z axis do not overlap, the ray does not hit the box
-        if tmin > tzmax || tzmin > tmax { return None; }
-        // If the intervals along the x and z axis overlap, the ray hits the box
-        if tzmin > tmin { tmin = tzmin; }
-        if tzmax < tmax { tmax = tzmax; }
-        // Check if the hit time is within the allowed range
-        if tmin < t_max && tmax > t_min {
-            let mut t = tmin;
-            if t < t_min { t = tmax; }
-            if t > t_min && t < t_max {
-                let p = ray.at(t);
-                Some(HitRecord::new(p, (p - self.center) / Vec3A::new(self.width, self.height, self.depth), self.material.clone(), t, false))
-            } else { None }
-        } else { None }
+        let bvhray: BVHRay = BVHRay::new(BVHPoint3::new(ray.origin[0], ray.origin[1], ray.origin[2]), BVHVector3::new(ray.direction[0], ray.direction[1], ray.direction[2]));
+        let hit_faces_aabb: Vec<&Rectangle> = self.bvh.traverse(&bvhray, &self.faces);
+
+        hit_faces_aabb.iter()
+        .filter_map(|face| face.hit(ray, t_min, t_max))
+        .min_by(|hit1, hit2| { hit1.t.partial_cmp(&hit2.t).unwrap() })
     }
 }
 
