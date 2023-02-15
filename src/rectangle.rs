@@ -78,6 +78,7 @@ unsafe impl Send for XYRectangle {}
 impl XYRectangle {
     #[allow(dead_code)]
     pub fn new(x0: f32, x1: f32, y0: f32, y1: f32, k: f32, material: Box<dyn Material>, node_index: usize) -> XYRectangle { XYRectangle { x0, x1, y0, y1, k, material, node_index } }
+    fn _get_xyrect_uv(&self, p: &Vec3A) -> (f32, f32) { ((p.x - self.x0) / (self.x1 - self.x0), (p.y - self.y0) / (self.y1 - self.y0)) }
 }
 
 impl Bounded for XYRectangle {
@@ -101,11 +102,14 @@ impl Hittable for XYRectangle {
         if xyz.x < self.x0 || xyz.x > self.x1 || xyz.y < self.y0 || xyz.y > self.y1 { return None; }
         //rec.u = (x - self.x0) / (self.x1 - self.x0);
         //rec.v = (y - self.y0) / (self.y1 - self.y0);
+        let (u, v) = self._get_xyrect_uv(&xyz);
         let mut rec: HitRecord = HitRecord::new(
             ray.at(t),
             Vec3A::new(0.0, 0.0, 1.0),
             self.material.clone(),
             t,
+            u,
+            v,
             false
         );
         rec.set_face_normal(ray, &rec.normal.clone());
@@ -132,6 +136,7 @@ unsafe impl Send for XZRectangle {}
 impl XZRectangle {
     #[allow(dead_code)]
     pub fn new(x0: f32, x1: f32, z0: f32, z1: f32, k: f32, material: Box<dyn Material>, node_index: usize) -> XZRectangle { XZRectangle { x0, x1, z0, z1, k, material, node_index } }
+    fn _get_xzrect_uv(&self, p: &Vec3A) -> (f32, f32) { ((p.x - self.x0) / (self.x1 - self.x0), (p.z - self.z0) / (self.z1 - self.z0)) }
 }
 
 impl Bounded for XZRectangle {
@@ -155,11 +160,14 @@ impl Hittable for XZRectangle {
         if xyz.x < self.x0 || xyz.x > self.x1 || xyz.z < self.z0 || xyz.z > self.z1 { return None; }
         //rec.u = (x - self.x0) / (self.x1 - self.x0);
         //rec.v = (z - self.z0) / (self.z1 - self.z0);
+        let (u, v) = self._get_xzrect_uv(&xyz);
         let mut rec: HitRecord = HitRecord::new(
             ray.at(t),
             Vec3A::new(0.0, 1.0, 0.0),
             self.material.clone(),
             t,
+            u,
+            v,
             false
         );
         rec.set_face_normal(ray, &rec.normal.clone());
@@ -186,6 +194,7 @@ unsafe impl Send for YZRectangle {}
 impl YZRectangle {
     #[allow(dead_code)]
     pub fn new(y0: f32, y1: f32, z0: f32, z1: f32, k: f32, material: Box<dyn Material>, node_index: usize) -> YZRectangle { YZRectangle { y0, y1, z0, z1, k, material, node_index } }
+    fn _get_yzrect_uv(&self, p: &Vec3A) -> (f32, f32) { ((p.y - self.y0) / (self.y1 - self.y0), (p.z - self.z0) / (self.z1 - self.z0)) }
 }
 
 impl Bounded for YZRectangle {
@@ -209,11 +218,14 @@ impl Hittable for YZRectangle {
         if xyz.y < self.y0 || xyz.y > self.y1 || xyz.z < self.z0 || xyz.z > self.z1 { return None; }
         //rec.u = (y - self.y0) / (self.y1 - self.y0);
         //rec.v = (z - self.z0) / (self.z1 - self.z0);
+        let (u, v) = self._get_yzrect_uv(&xyz);
         let mut rec: HitRecord = HitRecord::new(
             ray.at(t),
             Vec3A::new(1.0, 0.0, 0.0),
             self.material.clone(),
             t,
+            u,
+            v,
             false
         );
         rec.set_face_normal(ray, &rec.normal.clone());

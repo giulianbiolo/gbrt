@@ -13,6 +13,7 @@ use crate::hit_record::HitRecord;
 use crate::hittable_list::Hittable;
 use crate::material::Material;
 use crate::point3::Point3;
+use crate::utility;
 
 
 #[derive(Clone)]
@@ -29,6 +30,17 @@ unsafe impl Send for Sphere {}
 impl Sphere {
     #[allow(dead_code)]
     pub fn new(center: Point3, radius: f32, material: Box<dyn Material>, node_index: usize) -> Sphere { Sphere { center, radius, material, node_index } }
+    fn _get_sphere_uv(&self, p: &Vec3A) -> (f32, f32) {
+        
+        // We need to scale the coordinates to the range [0, 1]
+        // The formula is:
+        // u = phi / 2pi
+        // v = theta / pi
+        let p: Vec3A = (*p - self.center) / self.radius;
+        let theta = (-p.y).acos();
+        let phi = (-p.z).atan2(p.x) + utility::PI;
+        (phi / (2.0 * utility::PI), theta / utility::PI)
+    }
 }
 
 impl Bounded for Sphere {
@@ -61,11 +73,14 @@ impl Hittable for Sphere {
                 return None;
             }
         }
+        let (u, v) = self._get_sphere_uv(&ray.at(root));
         let mut rec: HitRecord = HitRecord::new(
             ray.at(root),
             (ray.at(root) - self.center) / self.radius,
             self.material.clone(),
             root,
+            u,
+            v,
             false
         );
         rec.set_face_normal(ray, &rec.normal.clone());

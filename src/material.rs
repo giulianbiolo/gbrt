@@ -10,6 +10,7 @@ use glam::Vec3A;
 use crate::color::Color;
 use crate::ray::Ray;
 use crate::hit_record::HitRecord;
+use crate::texture::{Texture, SolidColor};
 use crate::utility;
 
 
@@ -23,10 +24,11 @@ dyn_clone::clone_trait_object!(Material);
 #[derive(Clone, Debug)]
 pub struct Lambertian {
     // The Lambertian material is a diffuse material that reflects light equally in all directions.
-    albedo: Color,
+    albedo: Box<dyn Texture>,
 }
 impl Lambertian {
-    pub fn new(albedo: Color) -> Lambertian { Lambertian { albedo } }
+    pub fn new(albedo: Color) -> Lambertian { Lambertian { albedo: Box::new(SolidColor::new(albedo)) } }
+    pub fn new_texture(albedo: Box<dyn Texture>) -> Lambertian { Lambertian { albedo } }
 }
 impl Material for Lambertian {
     fn scatter(&self, _: &Ray, rec: &HitRecord, attenuation: &mut Color, scattered: &mut Ray) -> bool {
@@ -35,7 +37,7 @@ impl Material for Lambertian {
         // If the scatter direction is too close to zero, we set it to the normal
         if unlikely(scatter_direction.length_squared() < utility::NEAR_ZERO) { scatter_direction = rec.normal; }
         *scattered = Ray::new(rec.p, scatter_direction);
-        *attenuation = self.albedo; // The attenuation is the albedo
+        *attenuation = self.albedo.value(rec.u, rec.v, &rec.p); // The attenuation is the albedo
         true
     }
 }
@@ -43,13 +45,13 @@ impl Material for Lambertian {
 #[derive(Clone, Debug)]
 pub struct Metal {
     // The Metal material is a shiny material that reflects light in a specular way.
-    albedo: Color,
+    albedo: Box<dyn Texture>,
     fuzz: f32,
 }
 impl Metal {
     pub fn new(albedo: Color, fuzz: f32) -> Metal {
         let fuzz = if fuzz < 1.0 { fuzz } else { 1.0 };
-        Metal { albedo, fuzz }
+        Metal { albedo: Box::new(SolidColor::new(albedo)), fuzz }
     }
 }
 impl Material for Metal {
@@ -57,7 +59,7 @@ impl Material for Metal {
         // The scattered ray is the reflected ray plus a random vector in the unit sphere times the fuzz factor
         let reflected: Vec3A = reflect(&ray_in.direction().normalize(), &rec.normal);
         *scattered = Ray::new(rec.p, reflected + utility::random_in_unit_sphere() * self.fuzz);
-        *attenuation = self.albedo; // The attenuation is the albedo
+        *attenuation = self.albedo.value(rec.u, rec.v, &rec.p); // The attenuation is the albedo
         // The ray is scattered only if the dot product is positive
         // If the dot product is negative, the ray would be reflected backwards, inside the object
         // If the dot product is zero, the ray would be reflected in the same direction, might result in infinite loops
@@ -125,14 +127,12 @@ mod tests {
 
     #[test]
     fn test_lambertian() -> Result<(), std::fmt::Error> {
-        let material: Lambertian = Lambertian::new(Color::new(0.5, 0.5, 0.5));
-        assert_eq!(material.albedo, Color::new(0.5, 0.5, 0.5));
+        let _: Lambertian = Lambertian::new(Color::new(0.5, 0.5, 0.5));
         Ok(())
     }
     #[test]
     fn test_metal() -> Result<(), std::fmt::Error> {
         let material: Metal = Metal::new(Color::new(0.5, 0.5, 0.5), 0.0);
-        assert_eq!(material.albedo, Color::new(0.5, 0.5, 0.5));
         assert_eq!(material.fuzz, 0.0);
         Ok(())
     }

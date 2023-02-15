@@ -1,7 +1,7 @@
 constants:
   width: 1920
   height: 1080
-  samplesPerPixel: 32
+  samplesPerPixel: 128
   maxDepth: 5000
 
 camera:
@@ -21,7 +21,9 @@ world: [
     radius: 1000.0,
     material: {
       matType: "Lambertian",
-      albedo: [0.2, 0.2, 0.2]
+      texType: "SolidColor",
+      albedo: [0.2, 0.2, 0.2],
+      scale: 2.0,
     }
   },
   {
@@ -55,7 +57,9 @@ world: [
         radius: 2.5,
         material: {
           matType: "Lambertian",
-          albedo: [0.9, 0.1, 0.1]
+          texType: "ImageTexture",
+          filename: "images/earthmap.jpg"
+          # albedo: [0.9, 0.1, 0.1]
         }
       },
       { # Right Green Metal Sphere
@@ -64,8 +68,9 @@ world: [
         radius: 2.5,
         material: {
           matType: "Metal",
+          texType: "SolidColor",
           albedo: [0.2, 0.9, 0.2],
-          fuzz: 0.2
+          fuzz: 0.0
         }
       }
     ]

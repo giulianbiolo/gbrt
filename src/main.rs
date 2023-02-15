@@ -18,6 +18,7 @@ mod mesh;
 mod sphere_array;
 mod raytracer;
 mod parser;
+mod texture;
 
 use std::env::args;
 

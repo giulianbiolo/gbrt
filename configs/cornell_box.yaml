@@ -22,6 +22,7 @@ world: [
     height: 555.0,
     material: {
       matType: "Lambertian",
+      texType: "SolidColor",
       albedo: [0.12, 0.45, 0.15]
     }
   },
@@ -33,6 +34,7 @@ world: [
     height: 555.0,
     material: {
       matType: "Lambertian",
+      texType: "SolidColor",
       albedo: [0.66, 0.05, 0.05]
     }
   },
@@ -55,6 +57,7 @@ world: [
     height: 555.0,
     material: {
       matType: "Lambertian",
+      texType: "SolidColor",
       albedo: [0.73, 0.73, 0.73]
     }
   },
@@ -66,6 +69,7 @@ world: [
     height: 555.0,
     material: {
       matType: "Lambertian",
+      texType: "SolidColor",
       albedo: [0.73, 0.73, 0.73]
     }
   },
@@ -77,6 +81,7 @@ world: [
     height: 555.0,
     material: {
       matType: "Lambertian",
+      texType: "SolidColor",
       albedo: [0.73, 0.73, 0.73]
     }
   },
@@ -89,6 +94,7 @@ world: [
     depth: 150.0,
     material: {
       matType: "Metal",
+      texType: "SolidColor",
       albedo: [0.9, 0.1, 0.1],
       fuzz: 0.1
     }
@@ -102,6 +108,7 @@ world: [
     depth: 150.0,
     material: {
       matType: "Metal",
+      texType: "SolidColor",
       albedo: [0.1, 0.9, 0.1],
       fuzz: 0.1
     }

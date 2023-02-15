@@ -21,6 +21,7 @@ world: [
     radius: 1000.0,
     material: {
       matType: "Lambertian",
+      texType: "SolidColor",
       albedo: [0.2, 0.2, 0.2]
     }
   },

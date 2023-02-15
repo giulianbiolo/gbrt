@@ -16,6 +16,8 @@ pub struct HitRecord {
     pub normal: Vec3A,
     pub mat_ptr: Box<dyn Material>,
     pub t: f32,
+    pub u: f32,
+    pub v: f32,
     pub front_face: bool,
 }
 
@@ -26,10 +28,12 @@ impl HitRecord {
             normal: Vec3A::new(0.0, 0.0, 0.0),
             mat_ptr: Box::new(Lambertian::new(Color::new(0.0, 0.0, 0.0))),
             t: 0.0,
+            u: 0.0,
+            v: 0.0,
             front_face: false
         }
     }
-    pub fn new(p: Point3, normal: Vec3A, mat_ptr: Box<dyn Material>, t: f32, front_face: bool) -> HitRecord { HitRecord { p, normal, mat_ptr, t, front_face } }
+    pub fn new(p: Point3, normal: Vec3A, mat_ptr: Box<dyn Material>, t: f32, u: f32, v: f32, front_face: bool) -> HitRecord { HitRecord { p, normal, mat_ptr, t, u, v, front_face } }
     pub fn set_face_normal(&mut self, ray: &Ray, outward_normal: &Vec3A) {
         // This function is used to determine whether the ray is inside or outside the object.
         self.front_face = ray.direction().dot(*outward_normal) < 0.0;

@@ -29,6 +29,7 @@ unsafe impl Send for Triangle {}
 impl Triangle {
     #[allow(dead_code)]
     pub fn new(vertices: [Point3; 3], material: Box<dyn Material>, node_index: usize) -> Triangle { Triangle { vertices, material, node_index } }
+    fn _get_triangle_uv(&self, p: &Vec3A) -> (f32, f32) { ((p.x - self.vertices[0].x) / (self.vertices[1].x - self.vertices[0].x), (p.y - self.vertices[0].y) / (self.vertices[2].y - self.vertices[0].y)) }
 }
 
 impl Bounded for Triangle {
@@ -78,11 +79,14 @@ impl Hittable for Triangle {
         let t: f32 = f * e2.dot(q);
 
         if t > t_min && t < t_max {
+            let (u, v) = self._get_triangle_uv(&ray.at(t));
             let mut rec: HitRecord = HitRecord::new(
                 ray.at(t),
                 e2.cross(e1).normalize(),
                 self.material.clone(),
                 t,
+                u,
+                v,
                 false
             );
             rec.set_face_normal(ray, &rec.normal.clone());
