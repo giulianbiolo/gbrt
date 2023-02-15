@@ -4,6 +4,7 @@
 
 use std::env::args;
 use lazy_static::lazy_static;
+use fastrand;
 
 use glam::Vec3A;
 
@@ -39,18 +40,20 @@ pub const INFINITY: f32 = std::f32::INFINITY;
 pub const NEG_INFINITY: f32 = std::f32::NEG_INFINITY;
 pub const PI: f32 = std::f32::consts::PI;
 pub const EPSILON: f32 = 0.0001;
+pub const NEAR_ZERO: f32 = 0.001;
 
 // Background SkyBox
 pub const BLUE_SKY: Vec3A = Vec3A::new(0.5, 0.7, 1.0);
 
 // Utility functions
-pub fn random_f32() -> f32 { rand::random::<f32>() }
-pub fn random_f32_range(min: f32, max: f32) -> f32 { min + (max - min) * random_f32() }
+pub fn random_f32() -> f32 { fastrand::f32() }
+pub fn random_f32_range(min: f32, max: f32) -> f32 { fastrand::f32() * (max - min) + min }
 
 pub fn random_in_unit_disk() -> Vec3A {
+    let mut p: Vec3A;
     loop {
-        let p: Vec3A = Vec3A::new(random_f32_range(-1.0, 1.0), random_f32_range(-1.0, 1.0), 0.0);
-        if p.dot(p) < 1.0 { return p; }
+        p = Vec3A::new(random_f32_range(-1.0, 1.0), random_f32_range(-1.0, 1.0), 0.0);
+        if p.length_squared() < 1.0 { return p; }
     }
 }
 
@@ -62,9 +65,10 @@ pub fn random_unit_vector() -> Vec3A {
 }
 
 pub fn random_in_unit_sphere() -> Vec3A {
+    let mut p: Vec3A;
     loop {
-        let p: Vec3A = Vec3A::new(random_f32_range(-1.0, 1.0), random_f32_range(-1.0, 1.0), random_f32_range(-1.0, 1.0));
-        if p.dot(p) < 1.0 { return p; }
+        p = Vec3A::new(random_f32_range(-1.0, 1.0), random_f32_range(-1.0, 1.0), random_f32_range(-1.0, 1.0));
+        if p.length_squared() < 1.0 { return p; }
     }
 }
 

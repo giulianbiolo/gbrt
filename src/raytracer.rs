@@ -77,7 +77,7 @@ pub fn ray_color(r: &Ray, world: &HittableList, depth: u32) -> Color {
     // If we've exceeded the ray bounce limit, no more light is gathered
     if unlikely(depth >= CONSTS.max_depth) { return Color::new(0.0, 0.0, 0.0); }
     // Check for ray-sphere intersection
-    if let Some(rec) = world.hit(r, utility::EPSILON, utility::INFINITY) {
+    if let Some(rec) = world.hit(r, utility::NEAR_ZERO, utility::INFINITY) {
         let mut scattered: Ray = Ray::empty();
         let mut attenuation: Vec3A = Vec3A::new(0.0, 0.0, 0.0);
         let emitted: Vec3A = rec.mat_ptr.emitted();

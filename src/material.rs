@@ -10,7 +10,7 @@ use glam::Vec3A;
 use crate::color::Color;
 use crate::ray::Ray;
 use crate::hit_record::HitRecord;
-use crate::utility;
+use crate::utility::{self, NEAR_ZERO};
 
 
 pub trait Material: DynClone + Send {
@@ -33,7 +33,7 @@ impl Material for Lambertian {
         // Scatter direction will be the normal plus a random vector in the unit sphere
         let mut scatter_direction: Vec3A = rec.normal + utility::random_unit_vector();
         // If the scatter direction is too close to zero, we set it to the normal
-        if unlikely(scatter_direction.length_squared() < utility::EPSILON) { scatter_direction = rec.normal; }
+        if unlikely(scatter_direction.length_squared() < utility::NEAR_ZERO) { scatter_direction = rec.normal; }
         *scattered = Ray::new(rec.p, scatter_direction);
         *attenuation = self.albedo; // The attenuation is the albedo
         true
@@ -88,7 +88,7 @@ impl Material for Dielectric {
         let sin_theta: f32 = (1.0 - cos_theta.powi(2)).sqrt();
 
         let direction: Vec3A;
-        if refraction_rate * sin_theta > 1.0 || self.reflectance(cos_theta, refraction_rate) > rand::random::<f32>() {
+        if refraction_rate * sin_theta > 1.0 || self.reflectance(cos_theta, refraction_rate) > utility::random_f32() {
             direction = reflect(&unit_direction, &rec.normal);
         } else {
             direction = refract(&unit_direction, &rec.normal, refraction_rate);
