@@ -1,7 +1,7 @@
 constants:
   width: 1920
   height: 1080
-  samplesPerPixel: 128
+  samplesPerPixel: 64
   maxDepth: 5000
 
 camera:

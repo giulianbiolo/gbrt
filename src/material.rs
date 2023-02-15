@@ -49,10 +49,8 @@ pub struct Metal {
     fuzz: f32,
 }
 impl Metal {
-    pub fn new(albedo: Color, fuzz: f32) -> Metal {
-        let fuzz = if fuzz < 1.0 { fuzz } else { 1.0 };
-        Metal { albedo: Box::new(SolidColor::new(albedo)), fuzz }
-    }
+    pub fn new(albedo: Color, fuzz: f32) -> Metal { Metal { albedo: Box::new(SolidColor::new(albedo)), fuzz: fuzz.min(1.0) } }
+    pub fn new_texture(albedo: Box<dyn Texture>, fuzz: f32) -> Metal { Metal { albedo, fuzz: fuzz.min(1.0) } }
 }
 impl Material for Metal {
     fn scatter(&self, ray_in: &Ray, rec: &HitRecord, attenuation: &mut Color, scattered: &mut Ray) -> bool {

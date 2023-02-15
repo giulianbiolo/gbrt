@@ -2,7 +2,7 @@ use std::fmt::Debug;
 use std::sync::Arc;
 
 use dyn_clone::DynClone;
-use image::{GenericImageView, Pixel, DynamicImage};
+use image::{GenericImageView, DynamicImage};
 
 use crate::point3::Point3;
 use crate::color::Color;
