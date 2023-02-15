@@ -10,7 +10,7 @@ use glam::Vec3A;
 use crate::color::Color;
 use crate::ray::Ray;
 use crate::hit_record::HitRecord;
-use crate::utility::{self, NEAR_ZERO};
+use crate::utility;
 
 
 pub trait Material: DynClone + Send {
