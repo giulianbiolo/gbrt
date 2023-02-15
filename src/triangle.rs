@@ -78,12 +78,14 @@ impl Hittable for Triangle {
         let t: f32 = f * e2.dot(q);
 
         if t > t_min && t < t_max {
-            let mut rec: HitRecord = HitRecord::empty();
-            rec.t = t;
-            rec.p = ray.at(t);
-            let outward_normal: Vec3A = e2.cross(e1).normalize();
-            rec.set_face_normal(ray, &outward_normal);
-            rec.mat_ptr = self.material.clone();
+            let mut rec: HitRecord = HitRecord::new(
+                ray.at(t),
+                e2.cross(e1).normalize(),
+                self.material.clone(),
+                t,
+                false
+            );
+            rec.set_face_normal(ray, &rec.normal.clone());
             Some(rec)
         } else { None }
     }

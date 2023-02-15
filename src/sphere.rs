@@ -61,14 +61,14 @@ impl Hittable for Sphere {
                 return None;
             }
         }
-        let mut rec: HitRecord = HitRecord::empty();
-        rec.t = root; // The ray hits the sphere at this value for 't'.
-        rec.p = ray.at(rec.t); // The ray hits the sphere at this point 'p'.
-        // The outward normal is the vector from the center of the sphere to the point of intersection.
-        let outward_normal: Vec3A = (rec.p - self.center) / self.radius;
-        // This function is used to determine whether the ray is inside or outside the object.
-        rec.set_face_normal(ray, &outward_normal);
-        rec.mat_ptr = self.material.clone();
+        let mut rec: HitRecord = HitRecord::new(
+            ray.at(root),
+            (ray.at(root) - self.center) / self.radius,
+            self.material.clone(),
+            root,
+            false
+        );
+        rec.set_face_normal(ray, &rec.normal.clone());
         Some(rec)
     }
 }
