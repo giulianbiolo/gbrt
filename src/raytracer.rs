@@ -83,10 +83,7 @@ pub fn ray_color(r: &Ray, world: &HittableList, depth: u32) -> Color {
         let emitted: Vec3A = rec.mat_ptr.emitted();
         if !rec.mat_ptr.scatter(r, &rec, &mut attenuation, &mut scattered) { emitted }
         else { emitted + attenuation * ray_color(&scattered, world, depth + 1) }
-    } else {
-        // Return a skybox color
-        Vec3A::ONE.lerp(utility::BLUE_SKY, 0.5 * (r.direction().normalize().y + 1.0))
-    }
+    } else { Vec3A::ONE.lerp(utility::BLUE_SKY, 0.5 * (r.direction().normalize().y + 1.0)) }
 }
 
 // Inits the scene and returns it as a HittableList
