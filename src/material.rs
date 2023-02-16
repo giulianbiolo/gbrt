@@ -16,7 +16,7 @@ use crate::utility;
 
 pub trait Material: DynClone + Send {
     fn scatter(&self, ray_in: &Ray, rec: &HitRecord, attenuation: &mut Color, scattered: &mut Ray) -> bool;
-    fn emitted(&self, u: f32, v: f32, p: &Vec3A) -> Color { Color::new(0.0, 0.0, 0.0) }
+    fn emitted(&self, _: f32, _: f32, _: &Vec3A) -> Color { Color::new(0.0, 0.0, 0.0) }
 }
 
 dyn_clone::clone_trait_object!(Material);

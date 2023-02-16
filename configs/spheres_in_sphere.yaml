@@ -22,7 +22,7 @@ world: [
     material: {
       matType: "Lambertian",
       texType: "SolidColor",
-      albedo: [0.2, 0.2, 0.2],
+      texture: { albedo: [0.2, 0.2, 0.2] },
       scale: 2.0,
     }
   },
@@ -34,7 +34,7 @@ world: [
     material: {
       matType: "DiffuseLight",
       texType: "SolidColor",
-      albedo: [1.0, 1.0, 1.0], # Property of SolidColor
+      texture: { albedo: [1.0, 1.0, 1.0] }, # Property of SolidColor
       intensity: 9.2 # Property of DiffuseLight
     }
   },
@@ -57,7 +57,7 @@ world: [
         material: {
           matType: "Lambertian",
           texType: "ImageTexture",
-          filename: "images/earthmap.jpg"
+          texture: { filename: "images/earthmap.jpg" }
           # albedo: [0.9, 0.1, 0.1]
         }
       },
@@ -68,7 +68,7 @@ world: [
         material: {
           matType: "Metal",
           texType: "SolidColor",
-          albedo: [0.2, 0.9, 0.2],
+          texture: { albedo: [0.2, 0.9, 0.2] },
           fuzz: 0.0
         }
       }

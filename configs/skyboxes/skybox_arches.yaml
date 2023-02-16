@@ -24,7 +24,7 @@ world: [
     material: {
       matType: "Metal",
       texType: "SolidColor",
-      albedo: [0.7, 0.6, 0.5],
+      texture: { albedo: [0.7, 0.6, 0.5] },
       fuzz: 0.0
     }
   },
@@ -36,7 +36,7 @@ world: [
     material: {
       matType: "Lambertian",
       texType: "ImageTexture",
-      filename: "skyboxes/arches.jpg"
+      texture: { filename: "skyboxes/arches.jpg" }
     }
   },
 ]

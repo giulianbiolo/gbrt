@@ -22,7 +22,7 @@ world: [
     material: {
       matType: "Lambertian",
       texType: "SolidColor",
-      albedo: [0.2, 0.2, 0.2]
+      texture: { albedo: [0.2, 0.2, 0.2] }
     }
   },
   {
@@ -33,7 +33,7 @@ world: [
     material: {
       matType: "DiffuseLight",
       texType: "SolidColor",
-      albedo: [1.0, 1.0, 1.0],
+      texture: { albedo: [1.0, 1.0, 1.0] },
       intensity: 9.2
     }
   },
@@ -46,7 +46,7 @@ world: [
     material: {
       matType: "Metal",
       texType: "SolidColor",
-      albedo: [0.2, 0.2, 0.2],
+      texture: { albedo: [0.2, 0.2, 0.2] },
       fuzz: 0.3
     }
   }

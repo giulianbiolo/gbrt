@@ -21,7 +21,6 @@ pub struct SolidColor {
 
 impl SolidColor {
     pub fn new(color_value: Color) -> SolidColor { SolidColor { color_value } }
-    pub fn from_rgb(r: f32, g: f32, b: f32) -> SolidColor { SolidColor { color_value: Color::new(r, g, b) } }
 }
 
 impl Debug for SolidColor {
@@ -46,7 +45,6 @@ pub struct ChessBoard {
 }
 
 impl ChessBoard {
-    pub fn new_from_colors(odd: Color, even: Color, scale: f32) -> ChessBoard { ChessBoard { odd: Box::new(SolidColor::new(odd)), even: Box::new(SolidColor::new(even)), scale } }
     pub fn new(odd: Box<dyn Texture>, even: Box<dyn Texture>, scale: f32) -> ChessBoard { ChessBoard { odd, even, scale } }
 }
 

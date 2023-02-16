@@ -108,11 +108,11 @@ fn _parse_material(hashobj: &yaml_rust::yaml::Hash) -> Box<dyn Material + Send +
     let objmat = hashobj[&yaml_rust::Yaml::String("material".to_string())].as_hash().unwrap();
     let objmattype = objmat[&yaml_rust::Yaml::String("matType".to_string())].as_str().unwrap();
     match objmattype {
-        "Lambertian" => { Box::new(Lambertian::new_texture(_parse_texture(hashobj))) },
+        "Lambertian" => { Box::new(Lambertian::new_texture(_parse_texture(objmat))) },
         "Metal" => {
             // has an albedo and a fuzz
             let fuzz = objmat[&yaml_rust::Yaml::String("fuzz".to_string())].as_f64().unwrap();
-            Box::new(Metal::new_texture(_parse_texture(hashobj), fuzz as f32))
+            Box::new(Metal::new_texture(_parse_texture(objmat), fuzz as f32))
         },
         "Dielectric" => {
             // has just an index of refraction
@@ -122,33 +122,30 @@ fn _parse_material(hashobj: &yaml_rust::yaml::Hash) -> Box<dyn Material + Send +
         "DiffuseLight" => {
             // has just an emittance
             let intensity = objmat[&yaml_rust::Yaml::String("intensity".to_string())].as_f64().unwrap();
-            Box::new(DiffuseLight::new_texture(_parse_texture(hashobj), intensity as f32))
+            Box::new(DiffuseLight::new_texture(_parse_texture(objmat), intensity as f32))
         }
         _ => { panic!("Unknown material type: {:?}", objmat); }
     }
 }
 
-fn _parse_texture(hashobj: &yaml_rust::yaml::Hash) -> Box<dyn Texture + Send + Sync> {
-    let objmat = hashobj[&yaml_rust::Yaml::String("material".to_string())].as_hash().unwrap();
+fn _parse_texture(objmat: &yaml_rust::yaml::Hash) -> Box<dyn Texture + Send + Sync> {
     let textype = objmat[&yaml_rust::Yaml::String("texType".to_string())].as_str().unwrap();
+    let hashtex = objmat[&yaml_rust::Yaml::String("texture".to_string())].as_hash().unwrap();
     match textype {
         "SolidColor" => {
-            let albedo = objmat[&yaml_rust::Yaml::String("albedo".to_string())].as_vec().unwrap();
+            // albedo is inside of the hash of SolidColor
+            let albedo = hashtex[&yaml_rust::Yaml::String("albedo".to_string())].as_vec().unwrap();
             Box::new(SolidColor::new(Color::new(albedo[0].as_f64().unwrap() as f32, albedo[1].as_f64().unwrap() as f32, albedo[2].as_f64().unwrap() as f32)))
         },
         "ChessBoard" => {
-            let albedo1 = objmat[&yaml_rust::Yaml::String("albedo1".to_string())].as_vec().unwrap();
-            let albedo2 = objmat[&yaml_rust::Yaml::String("albedo2".to_string())].as_vec().unwrap();
-            let scale = objmat[&yaml_rust::Yaml::String("scale".to_string())].as_f64().unwrap();
-            // let scale = objmat[&yaml_rust::Yaml::String("scale".to_string())].as_f64().unwrap();
-            Box::new(ChessBoard::new_from_colors(
-                Color::new(albedo1[0].as_f64().unwrap() as f32, albedo1[1].as_f64().unwrap() as f32, albedo1[2].as_f64().unwrap() as f32),
-                Color::new(albedo2[0].as_f64().unwrap() as f32, albedo2[1].as_f64().unwrap() as f32, albedo2[2].as_f64().unwrap() as f32),
-                scale as f32
-            ))
+            // Contains two textures and a scale
+            let tex1 = _parse_texture(hashtex[&yaml_rust::Yaml::String("tex1".to_string())].as_hash().unwrap());
+            let tex2 = _parse_texture(hashtex[&yaml_rust::Yaml::String("tex2".to_string())].as_hash().unwrap());
+            let scale = hashtex[&yaml_rust::Yaml::String("scale".to_string())].as_f64().unwrap();
+            Box::new(ChessBoard::new(tex1, tex2, scale as f32))
         },
         "ImageTexture" => {
-            let filename = objmat[&yaml_rust::Yaml::String("filename".to_string())].as_str().unwrap();
+            let filename = hashtex[&yaml_rust::Yaml::String("filename".to_string())].as_str().unwrap();
             Box::new(ImageTexture::new(filename))
         }
         _ => { panic!("Unsupported texture type: {}", textype) }
