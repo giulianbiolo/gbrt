@@ -18,6 +18,7 @@ pub struct Constants {
     pub aspect_ratio: f32,
     pub samples_per_pixel: u32,
     pub max_depth: u32,
+    pub min_depth: u32,
     pub environment_map: Option<String>,
     pub environment_distance: Option<f32>,
 }
@@ -30,6 +31,7 @@ impl Default for Constants {
             aspect_ratio: 1920.0 / 1080.0,
             samples_per_pixel: 64,
             max_depth: 5000,
+            min_depth: 5,
             environment_map: None,
             environment_distance: None,
         }

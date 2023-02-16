@@ -3,6 +3,7 @@ constants:
   height: 1080
   samplesPerPixel: 32
   maxDepth: 5000
+  minDepth: 5
 
 camera:
   lookFrom: [0.0, 6.0, 14.0]

@@ -3,6 +3,7 @@ constants:
   height: 1080
   samplesPerPixel: 32
   maxDepth: 5000
+  minDepth: 5
   environmentMap: "skyboxes/arches.jpg"
   environmentDistance: 30.0
 

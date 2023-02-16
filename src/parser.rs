@@ -33,6 +33,7 @@ pub fn parse_yaml_constants(filename: &str) -> utility::Constants {
         let height = hashconsts[&yaml_rust::Yaml::String("height".to_string())].as_i64().unwrap() as u32;
         let samples_per_pixel = hashconsts[&yaml_rust::Yaml::String("samplesPerPixel".to_string())].as_i64().unwrap() as u32;
         let max_depth = hashconsts[&yaml_rust::Yaml::String("maxDepth".to_string())].as_i64().unwrap() as u32;
+        let min_depth = hashconsts[&yaml_rust::Yaml::String("minDepth".to_string())].as_i64().unwrap() as u32;
         let environment_map = {
             if hashconsts.contains_key(&yaml_rust::Yaml::String("environmentMap".to_string())) {
                 Some(hashconsts[&yaml_rust::Yaml::String("environmentMap".to_string())].as_str().unwrap().to_string())
@@ -44,7 +45,7 @@ pub fn parse_yaml_constants(filename: &str) -> utility::Constants {
             } else { None }
         };
         let aspect_ratio = width as f32 / height as f32;
-        utility::Constants { width, height, aspect_ratio, samples_per_pixel, max_depth, environment_map, environment_distance }
+        utility::Constants { width, height, aspect_ratio, samples_per_pixel, max_depth, min_depth, environment_map, environment_distance }
     }
 }
 

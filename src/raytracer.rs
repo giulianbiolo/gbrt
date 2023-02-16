@@ -88,7 +88,16 @@ pub fn ray_color(r: &Ray, world: &HittableList, envmap: &Box<dyn Hittable + Sync
         let mut attenuation: Vec3A = Vec3A::new(0.0, 0.0, 0.0);
         let emitted: Vec3A = rec.mat_ptr.emitted(0.0, 0.0, &rec.p);
         if !rec.mat_ptr.scatter(r, &rec, &mut attenuation, &mut scattered) { emitted }
-        else { emitted + attenuation * ray_color(&scattered, world, envmap, depth + 1) }
+        else {
+            // Russian roulette
+            let p = attenuation.max_element();
+            if depth > utility::CONSTS.min_depth {
+                if utility::random_f32() < p { return emitted; }
+                attenuation *= 1.0 / p;
+            }
+
+            emitted + attenuation * ray_color(&scattered, world, envmap, depth + 1)
+        }
     } else {
         // We will hit the environment map sphere
         if let Some(rec) = envmap.hit(r, utility::NEAR_ZERO, utility::INFINITY) {
