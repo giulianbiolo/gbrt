@@ -3,7 +3,6 @@ constants:
   height: 1080
   samplesPerPixel: 8
   maxDepth: 5000
-  environmentMap: "skyboxes/arches/Arches_E_PineTree_8k.jpg" # Optional parameter, will fallback to a blue default skybox if not set
 
 camera:
   lookFrom: [0.0, 6.0, 14.0]
