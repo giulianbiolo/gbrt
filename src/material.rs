@@ -128,25 +128,33 @@ impl Material for DiffuseLight {
     fn emitted(&self, u: f32, v: f32, p: &Vec3A) -> Color { self.emit.value(u, v, p) * self.intensity }
 }
 
-/****************** Plastic Material ******************/
+/****************** Lucid Lambertian Material ******************/
 #[derive(Clone, Debug)]
 pub struct Plastic {
+    // The Plastic material is a Lambertian material that is also partially reflective.
     albedo: Box<dyn Texture>,
-    roughness: f32,
+    reflectivity: f32,
+    fuzz: f32,
 }
-
 impl Plastic {
-    pub fn new(albedo: Color, roughness: f32) -> Plastic { Plastic { albedo: Box::new(SolidColor::new(albedo)), roughness: roughness.clamp(0.0, 1.0), } }
-    pub fn new_texture(albedo: Box<dyn Texture>, roughness: f32) -> Plastic { Plastic { albedo, roughness: roughness.clamp(0.0, 1.0), } }
+    pub fn new(albedo: Color, reflectivity: f32, fuzz: f32) -> Plastic { Plastic { albedo: Box::new(SolidColor::new(albedo)), reflectivity: reflectivity.max(0.0).min(1.0), fuzz: fuzz.max(0.0).min(1.0) } }
+    pub fn new_texture(albedo: Box<dyn Texture>, reflectivity: f32, fuzz: f32) -> Plastic { Plastic { albedo, reflectivity: reflectivity.max(0.0).min(1.0), fuzz: fuzz.max(0.0).min(1.0) } }
 }
-
 impl Material for Plastic {
-    fn scatter(&self, ray_in: &Ray, rec: &HitRecord, attenuation: &mut Color, scattered: &mut Ray) -> bool {
-        let reflected: Vec3A = reflect(&ray_in.direction().normalize(), &rec.normal);
-        let mut scatter_direction: Vec3A = reflected + self.roughness * utility::random_in_unit_sphere();
-        if scatter_direction.dot(rec.normal) < 0.0 { scatter_direction = reflected - self.roughness * utility::random_in_unit_sphere(); }
-        *scattered = Ray::new(rec.p, scatter_direction);
-        *attenuation = self.albedo.value(rec.u, rec.v, &rec.p);
+    fn scatter(&self, ray: &Ray, rec: &HitRecord, attenuation: &mut Color, scattered: &mut Ray) -> bool {
+        *attenuation = self.albedo.value(rec.u, rec.v, &rec.p); // The attenuation is the albedo
+        let scattered_direction: Vec3A = {
+            if utility::random_f32() < self.reflectivity {
+                // Scatter direction will be the reflected ray ( Perfect Mirror )
+                reflect(&ray.direction(), &rec.normal) + utility::random_in_unit_sphere() * self.fuzz
+            } else {
+                // Scatter direction will be the normal plus a random vector in the unit sphere ( Standard Diffuse )
+                let mut scatter_direction = rec.normal + utility::random_unit_vector();
+                if unlikely(scatter_direction.length_squared() < utility::NEAR_ZERO) { scatter_direction = rec.normal; }
+                scatter_direction
+            }
+        };
+        *scattered = Ray::new(rec.p, scattered_direction);
         true
     }
 }
@@ -180,8 +188,10 @@ mod tests {
     }
     #[test]
     fn test_plastic() -> Result<(), std::fmt::Error> {
-        let material: Plastic = Plastic::new(Color::new(0.5, 0.5, 0.5), 0.5);
-        assert_eq!(material.roughness, 0.5);
+        let material: Plastic = Plastic::new(Color::new(0.5, 0.5, 0.5), 0.5, 0.5);
+        assert_eq!(material.albedo.value(0.0, 0.0, &Vec3A::ZERO), Color::new(0.5, 0.5, 0.5));
+        assert_eq!(material.reflectivity, 0.5);
+        assert_eq!(material.fuzz, 0.5);
         Ok(())
     }
 }

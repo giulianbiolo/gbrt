@@ -47,7 +47,7 @@ world: [
     material: {
       matType: "Dielectric",
       texType: "SolidColor",
-      texture: { albedo: [1.0, 1.0, 1.0] }
+      texture: { albedo: [1.0, 1.0, 1.0] },
       refractionIdx: 1.5
     }
   }

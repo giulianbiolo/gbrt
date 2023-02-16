@@ -17,7 +17,7 @@ use crate::hittable_list::HittableList;
 use crate::hittable_list::Hittable;
 use crate::sphere::Sphere;
 use crate::mesh::Mesh;
-use crate::material::{Lambertian, Metal, Dielectric, Plastic};
+use crate::material::{Lambertian, Metal, Dielectric};
 use crate::camera::Camera;
 use crate::sphere_array::SphereArray;
 use crate::texture;
@@ -180,16 +180,10 @@ fn _add_random_world_spheres(world: &mut HittableList) -> Result<(), std::io::Er
             let choose_mat: f32 = utility::random_f32();
             let center: Point3 = Vec3A::new(a as f32 + 0.9 * utility::random_f32(), 0.2, b as f32 + 0.9 * utility::random_f32());
             if (center - Vec3A::new(4.0, 0.2, 0.0)).length() > 0.9 {
-                if choose_mat < 0.55 {
+                if choose_mat < 0.7 {
                     // Lambertian
                     let albedo: Color = Vec3A::new(utility::random_f32(), utility::random_f32(), utility::random_f32()) * Vec3A::new(utility::random_f32(), utility::random_f32(), utility::random_f32());
                     let sphere_material: Lambertian = Lambertian::new(albedo);
-                    spheres.push(Sphere::new(center, 0.2, Box::new(sphere_material), 0));
-                } else if choose_mat < 0.8 {
-                    // Plastic
-                    let albedo: Color = Vec3A::new(utility::random_f32_range(0.5, 1.0), utility::random_f32_range(0.5, 1.0), utility::random_f32_range(0.5, 1.0));
-                    let roughness: f32 = utility::random_f32_range(0.0, 1.0);
-                    let sphere_material: Plastic = Plastic::new(albedo, roughness);
                     spheres.push(Sphere::new(center, 0.2, Box::new(sphere_material), 0));
                 } else if choose_mat < 0.95 {
                     // Metal

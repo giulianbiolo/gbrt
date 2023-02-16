@@ -50,14 +50,14 @@ impl Mesh {
         let mut model: Obj = load_obj(input).expect("Failed to load obj");
         // model.vertices, model.indices
         // println!("Model: {:?}", model);
-        let (center, min, max) = model.vertices.iter().fold(
-            (Vec3A::ZERO, Vec3A::new(INFINITY, INFINITY, INFINITY), Vec3A::new(NEG_INFINITY, NEG_INFINITY, NEG_INFINITY)),
-            |(acc, min, max), v| {
+        let (/*center,*/ min, max) = model.vertices.iter().fold(
+            (/*Vec3A::ZERO,*/ Vec3A::new(INFINITY, INFINITY, INFINITY), Vec3A::new(NEG_INFINITY, NEG_INFINITY, NEG_INFINITY)),
+            |(/*acc,*/ min, max), v| {
                 let ve = Vec3A::new(v.position[0], v.position[1], v.position[2]);
-                (acc + ve, min.min(ve), max.max(ve))
+                (/*acc + ve,*/ min.min(ve), max.max(ve))
             }
         );
-        let center: Vec3A = center / model.vertices.len() as f32;
+        // let center: Vec3A = center / model.vertices.len() as f32;
         // We want to find the greatest difference between the dimensions
         let diff = (max - min).max_element(); // This is the greatest difference
         // We will scale the object so that the greatest difference is 1
@@ -65,7 +65,7 @@ impl Mesh {
         for vertex in model.vertices.iter_mut() {
             let mut v: Vec3A = Vec3A::new(vertex.position[0], vertex.position[1], vertex.position[2]);
             // v = v - center;
-            // v = v * scaling_factor;
+            v = v * scaling_factor;
             v = v + position;
             vertex.position = [v.x, v.y, v.z];
         }
@@ -89,19 +89,19 @@ impl Mesh {
         let mut stlfile = std::fs::OpenOptions::new().read(true).open(filename).unwrap();
         let mut stl = stl_io::read_stl(&mut stlfile).unwrap();
         let mut triangles: Vec<Triangle> = Vec::new();
-        let (center, min, max) = stl.vertices.iter().fold(
-            (Vec3A::ZERO, Vec3A::new(INFINITY, INFINITY, INFINITY), Vec3A::new(NEG_INFINITY, NEG_INFINITY, NEG_INFINITY)),
-            |(acc, min, max), v| {
+        let (/*center,*/ min, max) = stl.vertices.iter().fold(
+            (/*Vec3A::ZERO,*/ Vec3A::new(INFINITY, INFINITY, INFINITY), Vec3A::new(NEG_INFINITY, NEG_INFINITY, NEG_INFINITY)),
+            |(/*acc,*/ min, max), v| {
                 let v = Vec3A::new(v[0], v[1], v[2]);
-                (acc + v, min.min(v), max.max(v))
+                (/*acc + v,*/ min.min(v), max.max(v))
             }
         );
-        let center: Vec3A = center / stl.vertices.len() as f32;
+        // let center: Vec3A = center / stl.vertices.len() as f32;
         let diff = (max - min).max_element(); // This is the greatest difference
         let scaling_factor: Vec3A = Vec3A::splat(diff).recip() * Vec3A::splat(scaling_factor);
         for vertex in stl.vertices.iter_mut() {
             let mut v: Vec3A = Vec3A::new(vertex[0], vertex[1], vertex[2]);
-            v = v - center;
+            // v = v - center;
             v = v * scaling_factor;
             v = v + position;
             *vertex = Vector::new([v.x, v.y, v.z]);

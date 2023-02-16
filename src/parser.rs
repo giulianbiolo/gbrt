@@ -120,16 +120,17 @@ fn _parse_material(hashobj: &yaml_rust::yaml::Hash) -> Box<dyn Material + Send +
             let ior = objmat[&yaml_rust::Yaml::String("refractionIdx".to_string())].as_f64().unwrap();
             Box::new(Dielectric::new_texture(_parse_texture(objmat), ior as f32))
         },
+        "Plastic" => {
+            // has an albedo, a reflectivity and a fuzz
+            let fuzz = objmat[&yaml_rust::Yaml::String("fuzz".to_string())].as_f64().unwrap();
+            let reflectivity = objmat[&yaml_rust::Yaml::String("reflectivity".to_string())].as_f64().unwrap();
+            Box::new(Plastic::new_texture(_parse_texture(objmat), reflectivity as f32, fuzz as f32))
+        },
         "DiffuseLight" => {
             // has just an emittance
             let intensity = objmat[&yaml_rust::Yaml::String("intensity".to_string())].as_f64().unwrap();
             Box::new(DiffuseLight::new_texture(_parse_texture(objmat), intensity as f32))
         },
-        "Plastic" => {
-            // has an albedo and a roughness
-            let roughness = objmat[&yaml_rust::Yaml::String("roughness".to_string())].as_f64().unwrap();
-            Box::new(Plastic::new_texture(_parse_texture(objmat), roughness as f32))
-        }
         _ => { panic!("Unknown material type: {:?}", objmat); }
     }
 }
