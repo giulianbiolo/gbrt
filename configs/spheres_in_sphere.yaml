@@ -1,7 +1,7 @@
 constants:
   width: 1920
   height: 1080
-  samplesPerPixel: 8
+  samplesPerPixel: 64
   maxDepth: 5000
 
 camera:
@@ -44,6 +44,8 @@ world: [
     radius: 5.0,
     material: {
       matType: "Dielectric",
+      texType: "SolidColor",
+      texture: { albedo: [1.0, 1.0, 1.0] },
       refractionIdx: 1.4
     }
   },

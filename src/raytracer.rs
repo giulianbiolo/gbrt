@@ -143,7 +143,7 @@ pub fn init_random_scene() -> HittableList {
     let mut world: HittableList = HittableList::new();
     _add_random_world_spheres(&mut world).expect("Failed to add random world spheres");
 
-    let mat1: Dielectric = Dielectric::new(1.5);
+    let mat1: Dielectric = Dielectric::new(Vec3A::ONE, 1.5);
     world.push(Box::new(Sphere::new(Point3::new(0.0, 1.0, 0.0), 1.0, Box::new(mat1), 0)));
     let mat2: Lambertian = Lambertian::new(Color::new(0.4, 0.2, 0.1));
     world.push(Box::new(Sphere::new(Point3::new(-4.0, 1.0, 0.0), 1.0, Box::new(mat2), 0)));
@@ -176,7 +176,7 @@ fn _add_random_world_spheres(world: &mut HittableList) -> Result<(), std::io::Er
                     spheres.push(Sphere::new(center, 0.2, Box::new(sphere_material), 0));
                 } else {
                     // Glass
-                    let sphere_material: Dielectric = Dielectric::new(1.5);
+                    let sphere_material: Dielectric = Dielectric::new(Vec3A::ONE, 1.5);
                     spheres.push(Sphere::new(center, 0.2, Box::new(sphere_material), 0));
                 }
             }

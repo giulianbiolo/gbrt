@@ -117,7 +117,7 @@ fn _parse_material(hashobj: &yaml_rust::yaml::Hash) -> Box<dyn Material + Send +
         "Dielectric" => {
             // has just an index of refraction
             let ior = objmat[&yaml_rust::Yaml::String("refractionIdx".to_string())].as_f64().unwrap();
-            Box::new(Dielectric::new(ior as f32))
+            Box::new(Dielectric::new_texture(_parse_texture(objmat), ior as f32))
         },
         "DiffuseLight" => {
             // has just an emittance

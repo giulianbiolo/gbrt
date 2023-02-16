@@ -68,10 +68,12 @@ impl Material for Metal {
 #[derive(Clone, Debug)]
 pub struct Dielectric {
     // The Dielectric material is a transparent material that refracts light.
+    albedo: Box<dyn Texture>,
     refr_idx: f32,
 }
 impl Dielectric {
-    pub fn new(refr_idx: f32) -> Dielectric { Dielectric { refr_idx } }
+    pub fn new(albedo: Color, refr_idx: f32) -> Dielectric { Dielectric { albedo: Box::new(SolidColor::new(albedo)), refr_idx } }
+    pub fn new_texture(albedo: Box<dyn Texture>, refr_idx: f32) -> Dielectric { Dielectric { albedo, refr_idx } }
     fn reflectance(&self, cos: f32, ref_idx: f32) -> f32 {
         // Schlick's approximation for reflectance
         let r0: f32 = ((1.0 - ref_idx) / (1.0 + ref_idx)).powi(2);
@@ -80,7 +82,8 @@ impl Dielectric {
 }
 impl Material for Dielectric {
     fn scatter(&self, ray_in: &Ray, rec: &HitRecord, attenuation: &mut Color, scattered: &mut Ray) -> bool {
-        *attenuation = Color::new(1.0, 1.0, 1.0); // The attenuation is white
+        // The attenuation is the albedo
+        *attenuation = self.albedo.value(rec.u, rec.v, &rec.p);
         let refraction_rate = if rec.front_face { 1.0 / self.refr_idx } else { self.refr_idx };
         let unit_direction: Vec3A = ray_in.direction().normalize();
         
@@ -138,7 +141,7 @@ mod tests {
     }
     #[test]
     fn test_dielectric() -> Result<(), std::fmt::Error> {
-        let material: Dielectric = Dielectric::new(1.5);
+        let material: Dielectric = Dielectric::new(Vec3A::ONE, 1.5);
         assert_eq!(material.refr_idx, 1.5);
         Ok(())
     }
