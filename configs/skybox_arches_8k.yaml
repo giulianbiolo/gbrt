@@ -1,0 +1,31 @@
+constants:
+  width: 800
+  height: 800
+  samplesPerPixel: 32
+  maxDepth: 5000
+  environmentMap: "skyboxes/arches/Arches_E_PineTree_8k.jpg"
+  environmentDistance: 100.0
+
+camera:
+  lookFrom: [0.0, 2.5, -10.0]
+  lookAt: [0.0, 2.5, 0.0]
+  vup: [0.0, 1.0, 0.0]
+  vfov: 40.0
+  aspectRatio: 1.0
+  aperture: 0.1
+  focusDistance: 10.0
+
+world: [
+  {
+    # A Box in the Room
+    objType: "Sphere",
+    center: [0.0, 2.5, 1.0],
+    radius: 2.5,
+    material: {
+      matType: "Metal",
+      texType: "SolidColor",
+      albedo: [0.7, 0.6, 0.5],
+      fuzz: 0.0
+    }
+  },
+]

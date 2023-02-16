@@ -16,7 +16,7 @@ use crate::utility;
 
 pub trait Material: DynClone + Send {
     fn scatter(&self, ray_in: &Ray, rec: &HitRecord, attenuation: &mut Color, scattered: &mut Ray) -> bool;
-    fn emitted(&self) -> Color { Color::new(0.0, 0.0, 0.0) }
+    fn emitted(&self, u: f32, v: f32, p: &Vec3A) -> Color { Color::new(0.0, 0.0, 0.0) }
 }
 
 dyn_clone::clone_trait_object!(Material);
@@ -109,14 +109,16 @@ fn refract(vec: &Vec3A, normal: &Vec3A, etai_over_etat: f32) -> Vec3A {
 #[derive(Clone, Debug)]
 pub struct DiffuseLight {
     // The DiffuseLight material is a light source that emits light equally in all directions.
-    emit: Color,
+    emit: Box<dyn Texture>,
+    intensity: f32,
 }
 impl DiffuseLight {
-    pub fn new(emit: Color) -> DiffuseLight { DiffuseLight { emit } }
+    pub fn new(emit: Color, intensity: f32) -> DiffuseLight { DiffuseLight { emit: Box::new(SolidColor::new(emit)), intensity } }
+    pub fn new_texture(emit: Box<dyn Texture>, intensity: f32) -> DiffuseLight { DiffuseLight { emit, intensity } }
 }
 impl Material for DiffuseLight {
     fn scatter(&self, _: &Ray, _: &HitRecord, _: &mut Color, _: &mut Ray) -> bool { false }
-    fn emitted(&self) -> Color { self.emit }
+    fn emitted(&self, u: f32, v: f32, p: &Vec3A) -> Color { self.emit.value(u, v, p) * self.intensity }
 }
 
 #[cfg(test)]
@@ -142,8 +144,8 @@ mod tests {
     }
     #[test]
     fn test_diffuse_light() -> Result<(), std::fmt::Error> {
-        let material: DiffuseLight = DiffuseLight::new(Color::new(0.5, 0.5, 0.5));
-        assert_eq!(material.emit, Color::new(0.5, 0.5, 0.5));
+        let material: DiffuseLight = DiffuseLight::new(Color::new(0.5, 0.5, 0.5), 1.0);
+        assert_eq!(material.emit.value(0.0, 0.0, &Vec3A::ZERO), Color::new(0.5, 0.5, 0.5));
         Ok(())
     }
 }

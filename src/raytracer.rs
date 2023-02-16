@@ -20,6 +20,7 @@ use crate::mesh::Mesh;
 use crate::material::{Lambertian, Metal, Dielectric};
 use crate::camera::Camera;
 use crate::sphere_array::SphereArray;
+use crate::texture;
 use crate::utility;
 use crate::utility::CONSTS;
 use crate::color::{Color, to_rgb};
@@ -31,6 +32,8 @@ use crate::parser;
 #[allow(dead_code)]
 pub fn render_to_image(world: &HittableList, cam: &Camera, filename: &str) {
     // Render function
+    let environment_map: Box<dyn Hittable + Send + Sync> = _load_environment();
+    let envmap = environment_map;
     let mut img: ImageBuffer<Rgb<u8>, Vec<u8>> = ImageBuffer::new(CONSTS.width, CONSTS.height);
     for (x, y, pixel) in img.enumerate_pixels_mut() {
         let mut pixel_color: Color = Color::new(0.0, 0.0, 0.0);
@@ -38,7 +41,7 @@ pub fn render_to_image(world: &HittableList, cam: &Camera, filename: &str) {
             let u: f32 = (x as f32 + utility::random_f32()) / (CONSTS.width - 1) as f32;
             let v: f32 = (CONSTS.height - y - 1) as f32 / (CONSTS.height - 1) as f32;
             let r: Ray = cam.get_ray(u, v);
-            pixel_color = pixel_color + ray_color(&r, world, 0);
+            pixel_color = pixel_color + ray_color(&r, world, &envmap, 0);
         }
         *pixel = to_rgb(pixel_color, CONSTS.samples_per_pixel);
     }
@@ -50,6 +53,9 @@ pub fn render_to_image_multithreaded(world: &HittableList, cam: Camera, filename
     let img: ImageBuffer<Rgb<u8>, Vec<u8>> = ImageBuffer::new(CONSTS.width, CONSTS.height);
     let safe_img = Arc::new(Mutex::new(img));
     let safe_world = Arc::new(world.clone());
+    let environment_map: Box<dyn Hittable + Send + Sync> = _load_environment();
+    let safe_env = Arc::new(environment_map);
+
     let total_rows = CONSTS.height as f32;
     let completed_rows = AtomicU32::new(0);
     (0..CONSTS.height).into_par_iter().for_each(|y| {
@@ -59,7 +65,7 @@ pub fn render_to_image_multithreaded(world: &HittableList, cam: Camera, filename
                 let u: f32 = (x as f32 + utility::random_f32()) / (CONSTS.width - 1) as f32;
                 let v: f32 = (CONSTS.height - y as u32 - 1) as f32 / (CONSTS.height - 1) as f32;
                 let r: Ray = cam.get_ray(u, v);
-                pixel_color += ray_color(&r, &*safe_world, 0);
+                pixel_color += ray_color(&r, &*safe_world, &*safe_env, 0);
             }
             let rgb: Rgb<u8> = to_rgb(pixel_color, CONSTS.samples_per_pixel);
             let mut img = safe_img.lock().unwrap();
@@ -73,17 +79,44 @@ pub fn render_to_image_multithreaded(world: &HittableList, cam: Camera, filename
 }
 
 // Returns the color of a ray
-pub fn ray_color(r: &Ray, world: &HittableList, depth: u32) -> Color {
+pub fn ray_color(r: &Ray, world: &HittableList, envmap: &Box<dyn Hittable + Sync + Send>, depth: u32) -> Color {
     // If we've exceeded the ray bounce limit, no more light is gathered
     if unlikely(depth >= CONSTS.max_depth) { return Color::new(0.0, 0.0, 0.0); }
     // Check for ray-sphere intersection
     if let Some(rec) = world.hit(r, utility::NEAR_ZERO, utility::INFINITY) {
         let mut scattered: Ray = Ray::empty();
         let mut attenuation: Vec3A = Vec3A::new(0.0, 0.0, 0.0);
-        let emitted: Vec3A = rec.mat_ptr.emitted();
+        let emitted: Vec3A = rec.mat_ptr.emitted(0.0, 0.0, &rec.p);
         if !rec.mat_ptr.scatter(r, &rec, &mut attenuation, &mut scattered) { emitted }
-        else { emitted + attenuation * ray_color(&scattered, world, depth + 1) }
-    } else { Vec3A::ONE.lerp(utility::BLUE_SKY, 0.5 * (r.direction().normalize().y + 1.0)) }
+        else { emitted + attenuation * ray_color(&scattered, world, envmap, depth + 1) }
+    } else {
+        // We will hit the environment map sphere
+        if let Some(rec) = envmap.hit(r, utility::NEAR_ZERO, utility::INFINITY) {
+            // Find u and v coordinates of the hit point
+            // Give normalized unit_p
+            let unit_p = rec.p.normalize();
+            return rec.mat_ptr.emitted(rec.u, rec.v, &unit_p);
+        } else { Vec3A::ONE.lerp(utility::BLUE_SKY, 0.5 * (r.direction().normalize().y + 1.0)) }
+    }
+}
+
+fn _load_environment() -> Box<dyn Hittable + Send + Sync> {
+    let env_dist = if utility::CONSTS.environment_distance.is_some() { utility::CONSTS.environment_distance.unwrap() } else { 1000.0 };
+    println!("Environment distance: {}", env_dist);
+    println!("Environment map: {:?}", utility::CONSTS.environment_map);
+    if utility::CONSTS.environment_map.is_some() {
+        // environment map is just a textured sphere with a diffuse light material
+        let env_tex = texture::EnvironmentMapTexture::new(utility::CONSTS.environment_map.as_ref().unwrap());
+        let env_mat = DiffuseLight::new_texture(Box::new(env_tex), 1.0);
+        let env_sphere = Sphere::new(Point3::new(0.0, 0.0, 0.0), env_dist, Box::new(env_mat), 0);
+        Box::new(env_sphere)
+    } else {
+        let env_tex = texture::GradientColor::new(
+            Box::new(texture::SolidColor::new(utility::BLUE_SKY)),
+            Box::new(texture::SolidColor::new(Vec3A::ONE))
+        );
+        // Box::new(Sphere::new(Vec3A::new(0.0, 0.0, 0.0), env_dist, Box::new(DiffuseLight::new_texture(Box::new(env_tex), 1.0)), 0))
+        Box::new(Sphere::new(Vec3A::new(0.0, 0.0, 0.0), env_dist, Box::new(DiffuseLight::new_texture(Box::new(env_tex), 1.0)), 0)) }
 }
 
 // Inits the scene and returns it as a HittableList
@@ -93,7 +126,7 @@ pub fn init_scene() -> HittableList {
     let material_ground: Lambertian = Lambertian::new(Color::new(0.5, 0.5, 0.5));
     let material_left: Metal = Metal::new(Color::new(0.3, 0.3, 0.3), 0.1);
     let material_right: Metal = Metal::new(Color::new(0.8, 0.6, 0.2), 0.0);
-    let material_high: DiffuseLight = DiffuseLight::new(Color::new(8.0, 8.0, 8.0));
+    let material_high: DiffuseLight = DiffuseLight::new(Color::new(1.0, 1.0, 1.0), 8.0);
 
     // World
     let mut world: HittableList = HittableList::new();

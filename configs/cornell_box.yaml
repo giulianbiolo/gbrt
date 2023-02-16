@@ -46,7 +46,9 @@ world: [
     height: 115.0,
     material: {
       matType: "DiffuseLight",
-      emittance: [15.0, 15.0, 15.0]
+      texType: "SolidColor",
+      albedo: [1.0, 1.0, 1.0],
+      intensity: 15.0
     }
   },
   {

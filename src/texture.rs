@@ -68,6 +68,34 @@ impl Texture for ChessBoard {
     }
 }
 
+/****************** Gradient Color ******************/
+pub struct GradientColor {
+    top: Box<dyn Texture>,
+    bottom: Box<dyn Texture>,
+}
+
+impl GradientColor {
+    pub fn new(top: Box<dyn Texture>, bottom: Box<dyn Texture>) -> GradientColor { GradientColor { top, bottom } }
+}
+
+impl Debug for GradientColor {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("GradientColor")
+            .field("top", &self.top)
+            .field("bottom", &self.bottom)
+            .finish()
+    }
+}
+
+impl Clone for GradientColor { fn clone(&self) -> Self { GradientColor { top: self.top.clone(), bottom: self.bottom.clone() } } }
+
+impl Texture for GradientColor {
+    fn value(&self, u: f32, v: f32, p: &Point3) -> Color {
+        let t = 0.5 * (p.y + 1.0);
+        (1.0 - t) * self.bottom.value(u, v, p) + t * self.top.value(u, v, p)
+    }
+}
+
 /****************** Image Texture ******************/
 pub struct ImageTexture {
     image: Arc<DynamicImage>,
@@ -104,6 +132,55 @@ impl Clone for ImageTexture {
 }
 
 impl Texture for ImageTexture {
+    fn value(&self, u: f32, v: f32, _p: &Point3) -> Color {
+        //println!("Input: u={}, v={}", u, v);
+        let u = u.clamp(0.0, 1.0);
+        let v = 1.0 - v.clamp(0.0, 1.0);
+        let i = ((u * self.width as f32) as u32).min(self.width - 1);
+        let j = ((v * self.height as f32) as u32).min(self.height - 1);
+        let color_scale = 1.0 / 255.0;
+        let pixel = self.image.get_pixel(i, j);
+        //println!("Pixel: {:?} at position [{}, {}]", pixel, i, j);
+        Color::new(pixel[0] as f32 * color_scale, pixel[1] as f32 * color_scale, pixel[2] as f32 * color_scale)
+    }
+}
+
+/****************** Environment Map Texture ******************/
+pub struct EnvironmentMapTexture {
+    image: Arc<DynamicImage>,
+    width: u32,
+    height: u32,
+}
+
+impl EnvironmentMapTexture {
+    pub fn new(filename: &str) -> EnvironmentMapTexture {
+        println!("Loading environment map texture from file: {}", filename);
+        let image = image::open(filename).unwrap();
+        let (width, height) = image.dimensions();
+        EnvironmentMapTexture { image: Arc::new(image), width, height }
+    }
+}
+
+impl Debug for EnvironmentMapTexture {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("EnvironmentMapTexture")
+            .field("width", &self.width)
+            .field("height", &self.height)
+            .finish()
+    }
+}
+
+impl Clone for EnvironmentMapTexture {
+    fn clone(&self) -> Self {
+        EnvironmentMapTexture {
+            image: self.image.clone(),
+            width: self.width,
+            height: self.height
+        }
+    }
+}
+
+impl Texture for EnvironmentMapTexture {
     fn value(&self, u: f32, v: f32, _p: &Point3) -> Color {
         //println!("Input: u={}, v={}", u, v);
         let u = u.clamp(0.0, 1.0);

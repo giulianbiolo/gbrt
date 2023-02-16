@@ -33,8 +33,18 @@ pub fn parse_yaml_constants(filename: &str) -> utility::Constants {
         let height = hashconsts[&yaml_rust::Yaml::String("height".to_string())].as_i64().unwrap() as u32;
         let samples_per_pixel = hashconsts[&yaml_rust::Yaml::String("samplesPerPixel".to_string())].as_i64().unwrap() as u32;
         let max_depth = hashconsts[&yaml_rust::Yaml::String("maxDepth".to_string())].as_i64().unwrap() as u32;
+        let environment_map = {
+            if hashconsts.contains_key(&yaml_rust::Yaml::String("environmentMap".to_string())) {
+                Some(hashconsts[&yaml_rust::Yaml::String("environmentMap".to_string())].as_str().unwrap().to_string())
+            } else { None }
+        };
+        let environment_distance = {
+            if hashconsts.contains_key(&yaml_rust::Yaml::String("environmentDistance".to_string())) {
+                Some(hashconsts[&yaml_rust::Yaml::String("environmentDistance".to_string())].as_f64().unwrap() as f32)
+            } else { None }
+        };
         let aspect_ratio = width as f32 / height as f32;
-        utility::Constants {width, height, aspect_ratio, samples_per_pixel, max_depth}
+        utility::Constants { width, height, aspect_ratio, samples_per_pixel, max_depth, environment_map, environment_distance }
     }
 }
 
@@ -111,8 +121,8 @@ fn _parse_material(hashobj: &yaml_rust::yaml::Hash) -> Box<dyn Material + Send +
         },
         "DiffuseLight" => {
             // has just an emittance
-            let emittance = objmat[&yaml_rust::Yaml::String("emittance".to_string())].as_vec().unwrap();
-            Box::new(DiffuseLight::new(Color::new(emittance[0].as_f64().unwrap() as f32, emittance[1].as_f64().unwrap() as f32, emittance[2].as_f64().unwrap() as f32)))
+            let intensity = objmat[&yaml_rust::Yaml::String("intensity".to_string())].as_f64().unwrap();
+            Box::new(DiffuseLight::new_texture(_parse_texture(hashobj), intensity as f32))
         }
         _ => { panic!("Unknown material type: {:?}", objmat); }
     }

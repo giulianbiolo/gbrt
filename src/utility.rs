@@ -11,13 +11,15 @@ use glam::Vec3A;
 use crate::parser;
 
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct Constants {
     pub width: u32,
     pub height: u32,
     pub aspect_ratio: f32,
     pub samples_per_pixel: u32,
-    pub max_depth: u32
+    pub max_depth: u32,
+    pub environment_map: Option<String>,
+    pub environment_distance: Option<f32>,
 }
 
 impl Default for Constants {
@@ -27,7 +29,9 @@ impl Default for Constants {
             height: 1080,
             aspect_ratio: 1920.0 / 1080.0,
             samples_per_pixel: 64,
-            max_depth: 5000
+            max_depth: 5000,
+            environment_map: None,
+            environment_distance: None,
         }
     }
 }

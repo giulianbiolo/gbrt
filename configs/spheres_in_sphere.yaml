@@ -1,8 +1,9 @@
 constants:
   width: 1920
   height: 1080
-  samplesPerPixel: 64
+  samplesPerPixel: 8
   maxDepth: 5000
+  environmentMap: "skyboxes/arches/Arches_E_PineTree_8k.jpg" # Optional parameter, will fallback to a blue default skybox if not set
 
 camera:
   lookFrom: [0.0, 6.0, 14.0]
@@ -33,10 +34,9 @@ world: [
     radius: 2.0,
     material: {
       matType: "DiffuseLight",
-      # Basically like a Lambertian but has an emittance instead of an albedo
-      # Albedo : [r, g, b] => r ∈ [0.0, 1.0), g ∈ [0.0, 1.0), b ∈ [0.0, 1.0)
-      # Emit : [r, g, b] => r ∈ [0.0, +∞), g ∈ [0.0, +∞), g ∈ [0.0, +∞)
-      emittance: [9.2, 9.2, 9.2]
+      texType: "SolidColor",
+      albedo: [1.0, 1.0, 1.0], # Property of SolidColor
+      intensity: 9.2 # Property of DiffuseLight
     }
   },
   { # A Glass Sphere

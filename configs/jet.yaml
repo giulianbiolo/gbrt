@@ -32,10 +32,9 @@ world: [
     radius: 2.0,
     material: {
       matType: "DiffuseLight",
-      # Basically like a Lambertian but has an emittance instead of an albedo
-      # Albedo : [r, g, b] => r ∈ [0.0, 1.0), g ∈ [0.0, 1.0), b ∈ [0.0, 1.0)
-      # Emit : [r, g, b] => r ∈ [0.0, +∞), g ∈ [0.0, +∞), g ∈ [0.0, +∞)
-      emittance: [9.2, 9.2, 9.2]
+      texType: "SolidColor",
+      albedo: [1.0, 1.0, 1.0],
+      intensity: 9.2
     }
   },
   {
