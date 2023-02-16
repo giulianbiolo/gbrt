@@ -17,7 +17,7 @@ use crate::hittable_list::HittableList;
 use crate::hittable_list::Hittable;
 use crate::sphere::Sphere;
 use crate::mesh::Mesh;
-use crate::material::{Lambertian, Metal, Dielectric};
+use crate::material::{Lambertian, Metal, Dielectric, Plastic};
 use crate::camera::Camera;
 use crate::sphere_array::SphereArray;
 use crate::texture;
@@ -134,16 +134,24 @@ pub fn init_scene() -> HittableList {
     // Materials
     let material_ground: Lambertian = Lambertian::new(Color::new(0.5, 0.5, 0.5));
     let material_left: Metal = Metal::new(Color::new(0.3, 0.3, 0.3), 0.1);
-    let material_right: Metal = Metal::new(Color::new(0.8, 0.6, 0.2), 0.0);
+    // let material_right: Metal = Metal::new(Color::new(0.8, 0.6, 0.2), 0.0);
     let material_high: DiffuseLight = DiffuseLight::new(Color::new(1.0, 1.0, 1.0), 8.0);
 
     // World
     let mut world: HittableList = HittableList::new();
     world.push(Box::new(Sphere::new(Point3::new(0.0, -1000.0, 0.0), 1000.0, Box::new(material_ground), 0)));
     world.push(Box::new(Mesh::new(Point3::new(-1.0, 1.0, 8.0), 2.5, Vec3A::new(90.0, 90.0, 220.0), "models/jet/jet2.obj", Box::new(material_left))));
-    world.push(Box::new(Sphere::new(Point3::new(1.5, 0.5, -1.0), 0.5, Box::new(material_right), 0)));
-    world.push(Box::new(Sphere::new(Point3::new(0.0, 2.0, 0.0), 0.5, Box::new(material_high), 0)));
+    //world.push(Box::new(Sphere::new(Point3::new(1.5, 0.5, -1.0), 0.5, Box::new(material_right), 0)));
+    world.push(Box::new(Sphere::new(Point3::new(0.0, 4.0, 0.0), 0.5, Box::new(material_high), 0)));
     _add_random_world_spheres(&mut world).expect("Failed to add random world spheres");
+
+    let mat1: Dielectric = Dielectric::new(Vec3A::ONE, 1.5);
+    world.push(Box::new(Sphere::new(Point3::new(0.0, 1.0, 0.0), 1.0, Box::new(mat1), 0)));
+    let mat2: Lambertian = Lambertian::new(Color::new(0.4, 0.2, 0.1));
+    world.push(Box::new(Sphere::new(Point3::new(-4.0, 1.0, 0.0), 1.0, Box::new(mat2), 0)));
+    let mat3: Metal = Metal::new(Color::new(0.7, 0.6, 0.5), 0.0);
+    world.push(Box::new(Sphere::new(Point3::new(4.0, 1.0, 0.0), 1.0, Box::new(mat3), 0)));
+
     world
 }
 
@@ -172,10 +180,16 @@ fn _add_random_world_spheres(world: &mut HittableList) -> Result<(), std::io::Er
             let choose_mat: f32 = utility::random_f32();
             let center: Point3 = Vec3A::new(a as f32 + 0.9 * utility::random_f32(), 0.2, b as f32 + 0.9 * utility::random_f32());
             if (center - Vec3A::new(4.0, 0.2, 0.0)).length() > 0.9 {
-                if choose_mat < 0.8 {
-                    // Diffuse
+                if choose_mat < 0.55 {
+                    // Lambertian
                     let albedo: Color = Vec3A::new(utility::random_f32(), utility::random_f32(), utility::random_f32()) * Vec3A::new(utility::random_f32(), utility::random_f32(), utility::random_f32());
                     let sphere_material: Lambertian = Lambertian::new(albedo);
+                    spheres.push(Sphere::new(center, 0.2, Box::new(sphere_material), 0));
+                } else if choose_mat < 0.8 {
+                    // Plastic
+                    let albedo: Color = Vec3A::new(utility::random_f32_range(0.5, 1.0), utility::random_f32_range(0.5, 1.0), utility::random_f32_range(0.5, 1.0));
+                    let roughness: f32 = utility::random_f32_range(0.0, 1.0);
+                    let sphere_material: Plastic = Plastic::new(albedo, roughness);
                     spheres.push(Sphere::new(center, 0.2, Box::new(sphere_material), 0));
                 } else if choose_mat < 0.95 {
                     // Metal

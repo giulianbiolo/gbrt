@@ -21,6 +21,7 @@ pub trait Material: DynClone + Send {
 
 dyn_clone::clone_trait_object!(Material);
 
+/****************** Lambertian Material ******************/
 #[derive(Clone, Debug)]
 pub struct Lambertian {
     // The Lambertian material is a diffuse material that reflects light equally in all directions.
@@ -42,6 +43,7 @@ impl Material for Lambertian {
     }
 }
 
+/****************** Metal Material ******************/
 #[derive(Clone, Debug)]
 pub struct Metal {
     // The Metal material is a shiny material that reflects light in a specular way.
@@ -49,8 +51,8 @@ pub struct Metal {
     fuzz: f32,
 }
 impl Metal {
-    pub fn new(albedo: Color, fuzz: f32) -> Metal { Metal { albedo: Box::new(SolidColor::new(albedo)), fuzz: fuzz.min(1.0) } }
-    pub fn new_texture(albedo: Box<dyn Texture>, fuzz: f32) -> Metal { Metal { albedo, fuzz: fuzz.min(1.0) } }
+    pub fn new(albedo: Color, fuzz: f32) -> Metal { Metal { albedo: Box::new(SolidColor::new(albedo)), fuzz: fuzz.clamp(0.0, 1.0) } }
+    pub fn new_texture(albedo: Box<dyn Texture>, fuzz: f32) -> Metal { Metal { albedo, fuzz: fuzz.clamp(0.0, 1.0) } }
 }
 impl Material for Metal {
     fn scatter(&self, ray_in: &Ray, rec: &HitRecord, attenuation: &mut Color, scattered: &mut Ray) -> bool {
@@ -65,6 +67,7 @@ impl Material for Metal {
     }
 }
 
+/****************** Dielectric Material ******************/
 #[derive(Clone, Debug)]
 pub struct Dielectric {
     // The Dielectric material is a transparent material that refracts light.
@@ -72,8 +75,8 @@ pub struct Dielectric {
     refr_idx: f32,
 }
 impl Dielectric {
-    pub fn new(albedo: Color, refr_idx: f32) -> Dielectric { Dielectric { albedo: Box::new(SolidColor::new(albedo)), refr_idx } }
-    pub fn new_texture(albedo: Box<dyn Texture>, refr_idx: f32) -> Dielectric { Dielectric { albedo, refr_idx } }
+    pub fn new(albedo: Color, refr_idx: f32) -> Dielectric { Dielectric { albedo: Box::new(SolidColor::new(albedo)), refr_idx: refr_idx.max(0.0) } }
+    pub fn new_texture(albedo: Box<dyn Texture>, refr_idx: f32) -> Dielectric { Dielectric { albedo, refr_idx: refr_idx.max(0.0) } }
     fn reflectance(&self, cos: f32, ref_idx: f32) -> f32 {
         // Schlick's approximation for reflectance
         let r0: f32 = ((1.0 - ref_idx) / (1.0 + ref_idx)).powi(2);
@@ -109,6 +112,7 @@ fn refract(vec: &Vec3A, normal: &Vec3A, etai_over_etat: f32) -> Vec3A {
     r_out_perp + r_out_parallel
 }
 
+/****************** Diffuse Light Material ******************/
 #[derive(Clone, Debug)]
 pub struct DiffuseLight {
     // The DiffuseLight material is a light source that emits light equally in all directions.
@@ -116,12 +120,35 @@ pub struct DiffuseLight {
     intensity: f32,
 }
 impl DiffuseLight {
-    pub fn new(emit: Color, intensity: f32) -> DiffuseLight { DiffuseLight { emit: Box::new(SolidColor::new(emit)), intensity } }
-    pub fn new_texture(emit: Box<dyn Texture>, intensity: f32) -> DiffuseLight { DiffuseLight { emit, intensity } }
+    pub fn new(emit: Color, intensity: f32) -> DiffuseLight { DiffuseLight { emit: Box::new(SolidColor::new(emit)), intensity: intensity.max(0.0) } }
+    pub fn new_texture(emit: Box<dyn Texture>, intensity: f32) -> DiffuseLight { DiffuseLight { emit, intensity: intensity.max(0.0) } }
 }
 impl Material for DiffuseLight {
     fn scatter(&self, _: &Ray, _: &HitRecord, _: &mut Color, _: &mut Ray) -> bool { false }
     fn emitted(&self, u: f32, v: f32, p: &Vec3A) -> Color { self.emit.value(u, v, p) * self.intensity }
+}
+
+/****************** Plastic Material ******************/
+#[derive(Clone, Debug)]
+pub struct Plastic {
+    albedo: Box<dyn Texture>,
+    roughness: f32,
+}
+
+impl Plastic {
+    pub fn new(albedo: Color, roughness: f32) -> Plastic { Plastic { albedo: Box::new(SolidColor::new(albedo)), roughness: roughness.clamp(0.0, 1.0), } }
+    pub fn new_texture(albedo: Box<dyn Texture>, roughness: f32) -> Plastic { Plastic { albedo, roughness: roughness.clamp(0.0, 1.0), } }
+}
+
+impl Material for Plastic {
+    fn scatter(&self, ray_in: &Ray, rec: &HitRecord, attenuation: &mut Color, scattered: &mut Ray) -> bool {
+        let reflected: Vec3A = reflect(&ray_in.direction().normalize(), &rec.normal);
+        let mut scatter_direction: Vec3A = reflected + self.roughness * utility::random_in_unit_sphere();
+        if scatter_direction.dot(rec.normal) < 0.0 { scatter_direction = reflected - self.roughness * utility::random_in_unit_sphere(); }
+        *scattered = Ray::new(rec.p, scatter_direction);
+        *attenuation = self.albedo.value(rec.u, rec.v, &rec.p);
+        true
+    }
 }
 
 #[cfg(test)]
@@ -149,6 +176,12 @@ mod tests {
     fn test_diffuse_light() -> Result<(), std::fmt::Error> {
         let material: DiffuseLight = DiffuseLight::new(Color::new(0.5, 0.5, 0.5), 1.0);
         assert_eq!(material.emit.value(0.0, 0.0, &Vec3A::ZERO), Color::new(0.5, 0.5, 0.5));
+        Ok(())
+    }
+    #[test]
+    fn test_plastic() -> Result<(), std::fmt::Error> {
+        let material: Plastic = Plastic::new(Color::new(0.5, 0.5, 0.5), 0.5);
+        assert_eq!(material.roughness, 0.5);
         Ok(())
     }
 }

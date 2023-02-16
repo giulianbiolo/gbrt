@@ -15,7 +15,7 @@ use crate::triangle::Triangle;
 use crate::rectangle::{XYRectangle, XZRectangle, YZRectangle};
 use crate::bbox::BBox;
 use crate::mesh::Mesh;
-use crate::material::{Material, Lambertian, Metal, Dielectric};
+use crate::material::{Material, Lambertian, Metal, Dielectric, Plastic};
 use crate::camera::Camera;
 use crate::sphere_array::SphereArray;
 use crate::utility;
@@ -124,6 +124,11 @@ fn _parse_material(hashobj: &yaml_rust::yaml::Hash) -> Box<dyn Material + Send +
             // has just an emittance
             let intensity = objmat[&yaml_rust::Yaml::String("intensity".to_string())].as_f64().unwrap();
             Box::new(DiffuseLight::new_texture(_parse_texture(objmat), intensity as f32))
+        },
+        "Plastic" => {
+            // has an albedo and a roughness
+            let roughness = objmat[&yaml_rust::Yaml::String("roughness".to_string())].as_f64().unwrap();
+            Box::new(Plastic::new_texture(_parse_texture(objmat), roughness as f32))
         }
         _ => { panic!("Unknown material type: {:?}", objmat); }
     }
