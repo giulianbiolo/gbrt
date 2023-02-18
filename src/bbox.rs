@@ -49,6 +49,7 @@ impl Hittable for BBox {
 
         hit_faces_aabb.iter()
         .filter_map(|face| face.hit(ray, t_min, t_max))
+        .filter(|hit| hit.t > t_min && hit.t < t_max)
         .min_by(|hit1, hit2| { hit1.t.partial_cmp(&hit2.t).unwrap() })
     }
 }

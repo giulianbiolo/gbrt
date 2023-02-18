@@ -131,31 +131,32 @@ impl Material for DiffuseLight {
 /****************** Lucid Lambertian Material ******************/
 #[derive(Clone, Debug)]
 pub struct Plastic {
-    // The Plastic material is a Lambertian material that is also partially reflective.
+    // The Plastic material is a Lambertian material that is also partially reflective, like lucid plastic.
     albedo: Box<dyn Texture>,
     reflectivity: f32,
     fuzz: f32,
 }
 impl Plastic {
+    #[allow(dead_code)]
     pub fn new(albedo: Color, reflectivity: f32, fuzz: f32) -> Plastic { Plastic { albedo: Box::new(SolidColor::new(albedo)), reflectivity: reflectivity.max(0.0).min(1.0), fuzz: fuzz.max(0.0).min(1.0) } }
     pub fn new_texture(albedo: Box<dyn Texture>, reflectivity: f32, fuzz: f32) -> Plastic { Plastic { albedo, reflectivity: reflectivity.max(0.0).min(1.0), fuzz: fuzz.max(0.0).min(1.0) } }
 }
 impl Material for Plastic {
     fn scatter(&self, ray: &Ray, rec: &HitRecord, attenuation: &mut Color, scattered: &mut Ray) -> bool {
         *attenuation = self.albedo.value(rec.u, rec.v, &rec.p); // The attenuation is the albedo
-        let scattered_direction: Vec3A = {
-            if utility::random_f32() < self.reflectivity {
-                // Scatter direction will be the reflected ray ( Perfect Mirror )
-                reflect(&ray.direction(), &rec.normal) + utility::random_in_unit_sphere() * self.fuzz
-            } else {
-                // Scatter direction will be the normal plus a random vector in the unit sphere ( Standard Diffuse )
-                let mut scatter_direction = rec.normal + utility::random_unit_vector();
-                if unlikely(scatter_direction.length_squared() < utility::NEAR_ZERO) { scatter_direction = rec.normal; }
-                scatter_direction
-            }
-        };
-        *scattered = Ray::new(rec.p, scattered_direction);
-        true
+        if utility::random_f32() < self.reflectivity {
+            // Scatter direction will be the reflected ray ( Perfect Mirror )
+            let scattered_direction: Vec3A = reflect(&ray.direction(), &rec.normal) + utility::random_in_unit_sphere() * self.fuzz;
+            *scattered = Ray::new(rec.p, scattered_direction);
+            scattered.direction().dot(rec.normal) > 0.0
+        } else {
+            // Scatter direction will be the normal plus a random vector in the unit sphere ( Standard Diffuse )
+            let mut scattered_direction = rec.normal + utility::random_unit_vector();
+            // if unlikely(scattered_direction.dot(rec.normal) < 0.0) { scattered_direction = -rec.normal + utility::random_unit_vector(); }
+            if unlikely(scattered_direction.length_squared() < utility::NEAR_ZERO) { scattered_direction = rec.normal; }
+            *scattered = Ray::new(rec.p, scattered_direction);
+            true
+        }
     }
 }
 

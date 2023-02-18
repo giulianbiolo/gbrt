@@ -3,7 +3,7 @@ constants:
   height: 1080
   samplesPerPixel: 32
   maxDepth: 5000
-  minDepth: 50
+  minDepth: 500
   environmentMap: "skyboxes/starblack.jpg"
   environmentDistance: 100.0
 
@@ -61,7 +61,20 @@ world: [
   {
     # Lights on top of the Stormtroopers
     objType: "XZRectangle",
-    position: [0.0, 10.0, 2.0],
+    position: [0.0, 10.0, 5.0],
+    width: 1.0,
+    height: 50.0,
+    material: {
+      matType: "DiffuseLight",
+      texType: "SolidColor",
+      texture: { albedo: [0.0, 0.5, 1.0] },
+      intensity: 5.0,
+    }
+  },
+  {
+    # Lights on top of the Stormtroopers
+    objType: "XZRectangle",
+    position: [-5.0, 10.0, 5.0],
     width: 1.0,
     height: 50.0,
     material: {

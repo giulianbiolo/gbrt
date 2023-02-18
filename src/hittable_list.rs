@@ -17,6 +17,7 @@ impl Hittable for HittableList {
     fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         self.iter()
         .filter_map(|object| object.hit(ray, t_min, t_max))
+        .filter(|hit| hit.t > t_min && hit.t < t_max)
         .min_by(|hit1, hit2| { hit1.t.partial_cmp(&hit2.t).unwrap() })
     }
 }

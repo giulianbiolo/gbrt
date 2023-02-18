@@ -13,12 +13,13 @@ use crate::hit_record::HitRecord;
 use crate::hittable_list::Hittable;
 use crate::material::Material;
 use crate::point3::Point3;
-use crate::utility::EPSILON;
+use crate::utility::{NEAR_ZERO, EPSILON};
 
 
 #[derive(Clone)]
 pub struct Triangle {
-    vertices: [Point3; 3],
+    vertices: Box<[Point3; 3]>,
+    normals: Box<[Vec3A; 3]>,
     material: Box<dyn Material>,
     node_index: usize,
 }
@@ -28,8 +29,48 @@ unsafe impl Send for Triangle {}
 
 impl Triangle {
     #[allow(dead_code)]
-    pub fn new(vertices: [Point3; 3], material: Box<dyn Material>, node_index: usize) -> Triangle { Triangle { vertices, material, node_index } }
-    fn _get_triangle_uv(&self, p: &Vec3A) -> (f32, f32) { ((p.x - self.vertices[0].x) / (self.vertices[1].x - self.vertices[0].x), (p.y - self.vertices[0].y) / (self.vertices[2].y - self.vertices[0].y)) }
+    pub fn new(mut vertices: Box<[Point3; 3]>, mut normals: Box<[Vec3A; 3]>, material: Box<dyn Material>, node_index: usize) -> Triangle {
+        // We repair the normals if they are not pointing in the right direction
+        _check_repair_normals(&mut vertices, &mut normals);
+        Triangle { vertices, normals, material, node_index }
+    }
+    // fn _get_triangle_uv(&self, p: &Vec3A) -> (f32, f32) { ((p.x - self.vertices[0].x) / (self.vertices[1].x - self.vertices[0].x), (p.y - self.vertices[0].y) / (self.vertices[2].y - self.vertices[0].y)) }
+    fn _get_triangle_uv(&self, p: &Vec3A) -> (f32, f32) {
+        let e1 = self.vertices[1] - self.vertices[0];
+        let e2 = self.vertices[2] - self.vertices[0];
+        let q = *p - self.vertices[0];
+        let denominator = e1.x * e2.y - e1.y * e2.x;
+        let u = (q.x * e2.y - q.y * e2.x) / denominator;
+        let v = (q.y * e1.x - q.x * e1.y) / denominator;
+        (u, v)
+    }
+    fn _get_triangle_normal(&self, u: f32, v: f32) -> Vec3A { self.normals[0] * (1.0 - u - v) + self.normals[1] * u + self.normals[2] * v }
+    pub fn check_not_degenerate(&self) -> bool {
+        (self.vertices[0] - self.vertices[1]).length() > NEAR_ZERO &&
+        (self.vertices[1] - self.vertices[2]).length() > NEAR_ZERO &&
+        (self.vertices[2] - self.vertices[0]).length() > NEAR_ZERO
+    }
+}
+
+fn _check_repair_normals(vertices: &mut Box<[Point3; 3]>, normals: &mut Box<[Vec3A; 3]>) {
+    let n = (vertices[1] - vertices[0]).cross(vertices[2] - vertices[0]).normalize();
+    if normals[0].length_squared() < NEAR_ZERO { normals[0] = n; }
+    if normals[1].length_squared() < NEAR_ZERO { normals[1] = n; }
+    if normals[2].length_squared() < NEAR_ZERO { normals[2] = n; }
+    _fix_winding_order(vertices, normals);
+}
+fn _fix_winding_order(vertices: &mut Box<[Point3; 3]>, normals: &mut Box<[Vec3A; 3]>) {
+    let n = (vertices[1] - vertices[0]).cross(vertices[2] - vertices[0]).normalize();
+    let all_normals_have_wrong_orientation = normals[0].dot(n) < 0.0 && normals[1].dot(n) < 0.0 && normals[2].dot(n) < 0.0;
+    if all_normals_have_wrong_orientation {
+        // Swap vertices 1 and 2 and normals 1 and 2
+        let temp_vertex: Vec3A = vertices[1];
+        vertices[1] = vertices[2];
+        vertices[2] = temp_vertex;
+        let temp_normal: Vec3A = normals[1];
+        normals[1] = normals[2];
+        normals[2] = temp_normal;
+    }
 }
 
 impl Bounded for Triangle {
@@ -54,35 +95,33 @@ impl Hittable for Triangle {
     fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         // This is a simple implementation of the Moller-Trumbore algorithm for ray-triangle intersection
         let v0: Vec3A = self.vertices[0];
-        let v1: Vec3A = self.vertices[1];
-        let v2: Vec3A = self.vertices[2];
 
-        let e1: Vec3A = v1 - v0;
-        let e2: Vec3A = v2 - v0;
+        let e1: Vec3A = self.vertices[1] - v0;
+        let e2: Vec3A = self.vertices[2] - v0;
 
-        let h: Vec3A = ray.direction.cross(e2);
-        let a: f32 = e1.dot(h);
+        let p: Vec3A = ray.direction.cross(e2);
+        let det: f32 = e1.dot(p);
 
-        if a > -EPSILON && a < EPSILON { return None; }
+        if det.abs() < EPSILON { return None; }
 
-        let f: f32 = 1.0 / a;
+        let inv_det: f32 = 1.0 / det;
         let s: Vec3A = ray.origin - v0;
-        let u: f32 = f * s.dot(h);
+        let u: f32 = inv_det * s.dot(p);
 
         if u < 0.0 || u > 1.0 { return None; }
 
         let q: Vec3A = s.cross(e1);
-        let v: f32 = f * ray.direction.dot(q);
+        let v: f32 = inv_det * ray.direction.dot(q);
 
         if v < 0.0 || u + v > 1.0 { return None; }
 
-        let t: f32 = f * e2.dot(q);
+        let t: f32 = inv_det * e2.dot(q);
 
         if t > t_min && t < t_max {
-            let (u, v) = self._get_triangle_uv(&ray.at(t));
+            // let (u, v) = self._get_triangle_uv(&ray.at(t));
             let mut rec: HitRecord = HitRecord::new(
                 ray.at(t),
-                e2.cross(e1).normalize(),
+                self._get_triangle_normal(u, v).normalize(),
                 self.material.clone(),
                 t,
                 u,
@@ -105,7 +144,8 @@ mod tests {
     fn test_triangle_hit() -> Result<(), std::fmt::Error> {
         let vertices: [Point3; 3] = [Point3::new(0.0, 0.0, 0.0), Point3::new(1.0, 0.0, 0.0), Point3::new(0.0, 1.0, 0.0)];
         let material: Box<dyn Material> = Box::new(Lambertian::new(Color::new(0.0, 0.0, 0.0)));
-        let triangle: Triangle = Triangle::new(vertices, material, 0);
+        let normals = Box::new([Vec3A::new(0.0, 0.0, 1.0), Vec3A::new(0.0, 0.0, 1.0), Vec3A::new(0.0, 0.0, 1.0)]);
+        let triangle: Triangle = Triangle::new(Box::new(vertices), normals, material, 0);
         let ray: Ray = Ray::new(Point3::new(0.0, 0.0, -1.0), Vec3A::new(0.0, 0.0, 1.0));
         assert!(triangle.hit(&ray, 0.0, 100.0).is_some());
         Ok(())

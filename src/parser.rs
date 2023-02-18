@@ -11,7 +11,6 @@ use crate::hittable_list::HittableList;
 use crate::hittable_list::Hittable;
 use crate::sphere::Sphere;
 use crate::texture::{Texture, SolidColor, ChessBoard, ImageTexture};
-use crate::triangle::Triangle;
 use crate::rectangle::{XYRectangle, XZRectangle, YZRectangle};
 use crate::bbox::BBox;
 use crate::mesh::Mesh;
@@ -167,25 +166,6 @@ fn _parse_geometry(hashobj: &yaml_rust::yaml::Hash, material: Box<dyn Material>)
             let center = hashobj[&yaml_rust::Yaml::String("center".to_string())].as_vec().unwrap();
             let radius = hashobj[&yaml_rust::Yaml::String("radius".to_string())].as_f64().unwrap();
             Box::new(Sphere::new(Point3::new(center[0].as_f64().unwrap() as f32, center[1].as_f64().unwrap() as f32, center[2].as_f64().unwrap() as f32), radius as f32, material, 0))
-        },
-        "Triangle" => {
-            // has an array of 3 arrays (the vertices)
-            let vertices = hashobj[&yaml_rust::Yaml::String("vertices".to_string())].as_vec().unwrap();
-            let v0 = vertices[0].as_vec().unwrap();
-            let v1 = vertices[1].as_vec().unwrap();
-            let v2 = vertices[2].as_vec().unwrap();
-            // obj = Box::new(Triangle::new(Point3::new(v0[0].as_f64().unwrap() as f32, v0[1].as_f64().unwrap() as f32, v0[2].as_f64().unwrap() as f32), Point3::new(v1[0].as_f64().unwrap() as f32, v1[1].as_f64().unwrap() as f32, v1[2].as_f64().unwrap() as f32), Point3::new(v2[0].as_f64().unwrap() as f32, v2[1].as_f64().unwrap() as f32, v2[2].as_f64().unwrap() as f32), material, 0));
-            Box::new(
-                Triangle::new(
-                    [
-                        Vec3A::new(v0[0].as_f64().unwrap() as f32, v0[1].as_f64().unwrap() as f32, v0[2].as_f64().unwrap() as f32),
-                        Vec3A::new(v1[0].as_f64().unwrap() as f32, v1[1].as_f64().unwrap() as f32, v1[2].as_f64().unwrap() as f32),
-                        Vec3A::new(v2[0].as_f64().unwrap() as f32, v2[1].as_f64().unwrap() as f32, v2[2].as_f64().unwrap() as f32)
-                    ],
-                    material,
-                    0
-                )
-            )
         },
         "XYRectangle" => {
             // has a position, width and height
