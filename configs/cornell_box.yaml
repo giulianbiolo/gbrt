@@ -23,6 +23,10 @@ world: [
     height: 555.0,
     material: {
       matType: "Lambertian",
+      texType: "ImageTexture",
+      texture: {
+        filename: ""
+      }
       texType: "SolidColor",
       texture: { albedo: [0.12, 0.45, 0.15] }
     }

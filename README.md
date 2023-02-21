@@ -3,6 +3,12 @@ This is a project which aims to build an efficient photorealistic software rende
 The project aims to provide a simple and efficient implementation of the algorithms described in the website, with a focus on code readability and maintainability.
 This project takes a lot of inspiration from ["Ray Tracing in One Weekend"](https://raytracing.github.io/books/RayTracingInOneWeekend.html) and the other books of the trilogy.
 
+<p float="left">
+    <img width="49%" src="https://raw.githubusercontent.com/giulianbiolo/gbrt/master/outputs/spheres_in_sphere.png">
+    <img width="49%" src="https://raw.githubusercontent.com/giulianbiolo/gbrt/master/outputs/spheres_jet.png">
+    <img width="49%" src="https://raw.githubusercontent.com/giulianbiolo/gbrt/master/outputs/stormtroopers.png">
+</p>
+
 Features
 ========
 

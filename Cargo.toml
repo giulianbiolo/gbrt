@@ -10,7 +10,7 @@ bvh = "0.7.1"
 dyn-clone = "1.0.10"
 fastrand = "1.9.0"
 glam = { version = "0.22.0", features = ["fast-math"] }
-# Compile with "cargo run --release --target x86_64-unknown-linux-gnu" or "x86_64-pc-windows-msvc" to gain ~7% performance
+# Compile with "cargo run --release --target "x86_64-unknown-linux-gnu" or "x86_64-pc-windows-msvc" to gain ~7% performance
 image = "0.24.5"
 lazy_static = "1.4.0"
 likely_stable = "0.1.2"
