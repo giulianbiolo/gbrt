@@ -1,7 +1,7 @@
 constants:
   width: 1920
   height: 1080
-  samplesPerPixel: 32
+  samplesPerPixel: 256
   maxDepth: 5000
   minDepth: 5
   environmentMap: "skyboxes/winter_forest.jpg"

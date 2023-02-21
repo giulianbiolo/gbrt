@@ -6,6 +6,7 @@ This project takes a lot of inspiration from ["Ray Tracing in One Weekend"](http
 <p float="left">
     <img width="49%" src="https://raw.githubusercontent.com/giulianbiolo/gbrt/master/outputs/spheres_in_sphere.png">
     <img width="49%" src="https://raw.githubusercontent.com/giulianbiolo/gbrt/master/outputs/spheres_jet.png">
+    <img width="49%" src="https://raw.githubusercontent.com/giulianbiolo/gbrt/master/outputs/skybox_winter.png">
     <img width="49%" src="https://raw.githubusercontent.com/giulianbiolo/gbrt/master/outputs/stormtroopers.png">
 </p>
 
