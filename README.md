@@ -1,6 +1,6 @@
 # GBRT
 This is a project which aims to build an efficient photorealistic software renderer in Rust.  
-The project aims to provide a simple and efficient implementation of a raytracing algorithm, with a focus on code readability and maintainability.  
+The project aims to provide an efficient implementation of a raytracing algorithm, with a focus on code readability and maintainability.  
 Here, I took a load of inspiration from ["Ray Tracing in One Weekend"](https://raytracing.github.io/books/RayTracingInOneWeekend.html) and the other books of the trilogy and as such, if you're interested in the topic of raytracing, I really suggest you to read them.
 
 <p float="left">
