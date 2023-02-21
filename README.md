@@ -1,23 +1,81 @@
-# gbrt
-----------------
-This is an implementation of ["Ray Tracing in One Weekend"](https://raytracing.github.io/books/RayTracingInOneWeekend.html#outputanimage) written in Rust. The project aims to provide a simple and efficient implementation of the algorithms described in the website, with a focus on code readability and maintainability.
+# GBRT
+This is a project which aims to build an efficient photorealistic software renderer in Rust.
+The project aims to provide a simple and efficient implementation of the algorithms described in the website, with a focus on code readability and maintainability.
+This project takes a lot of inspiration from ["Ray Tracing in One Weekend"](https://raytracing.github.io/books/RayTracingInOneWeekend.html) and the other books of the trilogy.
 
-## Getting Started
+Features
+========
+
+General
+---------
+
+* Written in Rust
+* Developed for any OS
+* Highly optimized using SSE and AVX intrinsics
+* Parsing scene description from a YAML file
+  
+Geometry
+--------
+
+* Bounding Volume Hierarchy (BVH) used for scene and mesh traversal
+* Supported shape types: triangle meshes, sphere, box, rectangle
+
+Lighting
+--------
+
+* Supported light types: diffuse lights of any supported geometry
+
+Materials
+---------
+
+* Default materials supported: Metal, Lambertian, Dielectric, Plastic
+* Transparency and refraction
+* Normal mapping support
+
+Textures
+--------
+
+* Some very basic procedural textures
+* 2D bitmap textures
+* Supported file formats: all formats supported by the image-rs crate
+
+Getting Started
+===============
+
 To get started, clone the repository and run the following command in the root directory:
 
-    $ cargo run
+    $ cargo run --release
 
-This will build and run the project, and output a PNG image of the rendered scene.
+This will build and run the project, and output a PNG image of the rendered basic scene.
+To render a custom scene defined by a yaml config file run the following:
 
-## Features
-- Simple and efficient ray tracing algorithm
-- Support for spheres and planes
-- Support for diffuse, metal and dielectric materials
-- Support for anti-aliasing
-Output in PNG format
+    $ cargo run --release -- configs/your_config.yaml
 
-## Contributing
-If you're interested in contributing to this project, please feel free to open a pull request or issue.
+To build a more optimized version of the code you can also specify:
 
-## License
+    $ cargo run --release --target x86_64-pc-windows-msvc -- configs/your_config.yaml   # If you're running on Windows
+    $ cargo run --release --target x86_64-unknown-linux-gnu -- configs/your_config.yaml # If you're running on Linux
+
+TODO list
+=========
+
+* Working now on implementing support of light transport algorithms:
+  * Naive Path Tracing (sampling only BSDF)
+  * Path Tracing with multiple importance sampling (sampling both lights and material BSDF)
+  * Bidirectional Path Tracing (with MIS)
+* Working now on implementing support for:
+  * Physically based BSDFs: diffuse, metal, dielectric, plastic
+  * Cook-Torrance BSDF for specular reflection with GGX normal distribution
+* Better material model and multilayer materials (e.g. introduce Disney-like "principled" material)
+* Volumetric rendering
+* Optimize traversal and shading with SSE/AVX [ Would probably mean a complete rewrite and as such is a very long term goal ]
+
+Contributing
+------------
+
+If you're interested in contributing to this project, please feel free to open a pull request or an issue regarding your ideas.
+
+License
+-------
+
 This project is licensed under the MIT License.
