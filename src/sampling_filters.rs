@@ -3,7 +3,7 @@
 // Description: This file implements various Filters used to generate rays to sample each pixel of the image
 
 use crate::utility::NEAR_ZERO;
-use crate::utility::random_f32;
+
 
 pub trait Filter : std::fmt::Display { fn sample(&self, x: f32) -> f32; }
 
@@ -38,6 +38,7 @@ impl std::fmt::Display for LanczosFilter { fn fmt(&self, f: &mut std::fmt::Forma
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::utility::random_f32;
 
     #[test]
     fn test_uniform_filter() {
