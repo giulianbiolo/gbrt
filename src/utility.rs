@@ -8,7 +8,13 @@ use fastrand;
 
 use glam::Vec3A;
 
+use crate::hittable_list::Hittable;
+use crate::material::DiffuseLight;
 use crate::parser;
+use crate::point3::Point3;
+use crate::sphere::Sphere;
+use crate::texture;
+use crate::sampling_filters::{Filter, TentFilter, UniformFilter, LanczosFilter};
 
 
 #[derive(Debug, Clone)]
@@ -54,6 +60,35 @@ pub const NEAR_ZERO: f32 = 0.001;
 pub const BLUE_SKY: Vec3A = Vec3A::new(0.5, 0.7, 1.0);
 
 // Utility functions
+pub fn load_environment() -> Box<dyn Hittable + Send + Sync> {
+    let env_dist = if CONSTS.environment_distance.is_some() { CONSTS.environment_distance.unwrap() } else { 1000.0 };
+    println!("Environment distance: {}", env_dist);
+    println!("Environment map: {:?}", CONSTS.environment_map);
+    if CONSTS.environment_map.is_some() {
+        // environment map is just a textured sphere with a diffuse light material
+        let env_tex = texture::EnvironmentMapTexture::new(CONSTS.environment_map.as_ref().unwrap());
+        let env_mat = DiffuseLight::new_texture(Box::new(env_tex), 1.0);
+        let env_sphere = Sphere::new(Point3::new(0.0, 0.0, 0.0), env_dist, Box::new(env_mat), 0);
+        Box::new(env_sphere)
+    } else {
+        let env_tex = texture::GradientColor::new(
+            Box::new(texture::SolidColor::new(BLUE_SKY)),
+            Box::new(texture::SolidColor::new(Vec3A::ONE))
+        );
+        // Box::new(Sphere::new(Vec3A::new(0.0, 0.0, 0.0), env_dist, Box::new(DiffuseLight::new_texture(Box::new(env_tex), 1.0)), 0))
+        Box::new(Sphere::new(Vec3A::new(0.0, 0.0, 0.0), env_dist, Box::new(DiffuseLight::new_texture(Box::new(env_tex), 1.0)), 0)) }
+}
+pub fn load_filter() -> Box<dyn Filter + Send + Sync> {
+    if CONSTS.filter.is_some() {
+        match CONSTS.filter.as_ref().unwrap().as_str() {
+            "UniformFilter" => Box::new(UniformFilter::new()),
+            "TentFilter" => Box::new(TentFilter::new()),
+            "LanczosFilter" => Box::new(LanczosFilter::new()),
+            _ => Box::new(UniformFilter::new())
+        }
+    } else { Box::new(UniformFilter::new()) }
+}
+
 pub fn random_f32() -> f32 { fastrand::f32() }
 pub fn random_f32_range(min: f32, max: f32) -> f32 { fastrand::f32() * (max - min) + min }
 

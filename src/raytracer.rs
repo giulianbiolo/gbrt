@@ -20,23 +20,21 @@ use crate::mesh::Mesh;
 use crate::material::{Lambertian, Metal, Dielectric};
 use crate::camera::Camera;
 use crate::sphere_array::SphereArray;
-use crate::texture;
 use crate::utility;
-use crate::utility::CONSTS;
+use crate::utility::{CONSTS, random_f32, load_environment, load_filter};
 use crate::color::{Color, to_rgb};
 use crate::point3::Point3;
 use crate::parser;
-use crate::sampling_filters::{Filter, TentFilter, UniformFilter, LanczosFilter};
-use crate::utility::random_f32;
+use crate::sampling_filters::Filter;
 
 
 // Renders the scene to an image
 #[allow(dead_code)]
 pub fn render_to_image(world: &HittableList, cam: &Camera, filename: &str) {
     // Render function
-    let environment_map: Box<dyn Hittable + Send + Sync> = _load_environment();
+    let environment_map: Box<dyn Hittable + Send + Sync> = load_environment();
     let envmap = environment_map;
-    let filter: Box<dyn Filter + Send + Sync> = _load_filter();
+    let filter: Box<dyn Filter + Send + Sync> = load_filter();
     println!("Chosen Filter: {}", filter);
     let mut img: ImageBuffer<Rgb<u8>, Vec<u8>> = ImageBuffer::new(CONSTS.width, CONSTS.height);
     for (x, y, pixel) in img.enumerate_pixels_mut() {
@@ -57,9 +55,9 @@ pub fn render_to_image_multithreaded(world: &HittableList, cam: Camera, filename
     let img: ImageBuffer<Rgb<u8>, Vec<u8>> = ImageBuffer::new(CONSTS.width, CONSTS.height);
     let safe_img = Arc::new(Mutex::new(img));
     let safe_world = Arc::new(world.clone());
-    let environment_map: Box<dyn Hittable + Send + Sync> = _load_environment();
+    let environment_map: Box<dyn Hittable + Send + Sync> = load_environment();
     let safe_env = Arc::new(environment_map);
-    let filter: Box<dyn Filter + Send + Sync> = _load_filter();
+    let filter: Box<dyn Filter + Send + Sync> = load_filter();
     println!("Chosen Filter: {}", filter);
 
     let total_rows = CONSTS.height as f32;
@@ -113,36 +111,6 @@ pub fn ray_color(r: &Ray, world: &HittableList, envmap: &Box<dyn Hittable + Sync
             return rec.mat_ptr.emitted(rec.u, rec.v, &unit_p);
         } else { Vec3A::ONE.lerp(utility::BLUE_SKY, 0.5 * (r.direction().normalize().y + 1.0)) }
     }
-}
-
-fn _load_environment() -> Box<dyn Hittable + Send + Sync> {
-    let env_dist = if utility::CONSTS.environment_distance.is_some() { utility::CONSTS.environment_distance.unwrap() } else { 1000.0 };
-    println!("Environment distance: {}", env_dist);
-    println!("Environment map: {:?}", utility::CONSTS.environment_map);
-    if utility::CONSTS.environment_map.is_some() {
-        // environment map is just a textured sphere with a diffuse light material
-        let env_tex = texture::EnvironmentMapTexture::new(utility::CONSTS.environment_map.as_ref().unwrap());
-        let env_mat = DiffuseLight::new_texture(Box::new(env_tex), 1.0);
-        let env_sphere = Sphere::new(Point3::new(0.0, 0.0, 0.0), env_dist, Box::new(env_mat), 0);
-        Box::new(env_sphere)
-    } else {
-        let env_tex = texture::GradientColor::new(
-            Box::new(texture::SolidColor::new(utility::BLUE_SKY)),
-            Box::new(texture::SolidColor::new(Vec3A::ONE))
-        );
-        // Box::new(Sphere::new(Vec3A::new(0.0, 0.0, 0.0), env_dist, Box::new(DiffuseLight::new_texture(Box::new(env_tex), 1.0)), 0))
-        Box::new(Sphere::new(Vec3A::new(0.0, 0.0, 0.0), env_dist, Box::new(DiffuseLight::new_texture(Box::new(env_tex), 1.0)), 0)) }
-}
-
-fn _load_filter() -> Box<dyn Filter + Send + Sync> {
-    if utility::CONSTS.filter.is_some() {
-        match utility::CONSTS.filter.as_ref().unwrap().as_str() {
-            "UniformFilter" => Box::new(UniformFilter::new()),
-            "TentFilter" => Box::new(TentFilter::new()),
-            "LanczosFilter" => Box::new(LanczosFilter::new()),
-            _ => Box::new(UniformFilter::new())
-        }
-    } else { Box::new(UniformFilter::new()) }
 }
 
 // Inits the scene and returns it as a HittableList
