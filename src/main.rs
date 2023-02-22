@@ -20,6 +20,8 @@ mod raytracer;
 mod parser;
 mod texture;
 mod sampling_filters;
+mod onb;
+mod pdf;
 
 use std::env::args;
 

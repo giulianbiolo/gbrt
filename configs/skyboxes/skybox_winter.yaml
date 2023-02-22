@@ -1,7 +1,7 @@
 constants:
   width: 1920
   height: 1080
-  samplesPerPixel: 256
+  samplesPerPixel: 32
   maxDepth: 5000
   minDepth: 5
   environmentMap: "skyboxes/winter_forest.jpg"
@@ -24,10 +24,11 @@ world: [
     center: [0.0, 2.5, 1.0],
     radius: 2.5,
     material: {
-      matType: "Metal",
+      matType: "Dielectric",
       texType: "SolidColor",
-      texture: { albedo: [0.7, 0.6, 0.5] },
-      fuzz: 0.0
+      texture: { albedo: [0.9, 0.9, 0.9] },
+      fuzz: 0.0,
+      refractionIdx: 1.5,
     }
   },
   {

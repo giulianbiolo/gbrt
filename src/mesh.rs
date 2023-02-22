@@ -20,7 +20,7 @@ use crate::hittable_list::Hittable;
 use crate::material::Material;
 use crate::point3::Point3;
 use crate::triangle::Triangle;
-use crate::utility::{INFINITY, NEG_INFINITY};
+use crate::utility::{INFINITY, NEG_INFINITY, self};
 
 
 #[derive(Clone)]
@@ -167,4 +167,10 @@ impl Hittable for Mesh {
         .filter(|hit| hit.t > t_min && hit.t < t_max)
         .min_by(|hit1, hit2| { hit1.t.partial_cmp(&hit2.t).unwrap() })
     }
+    fn is_light(&self) -> bool { self.triangles.iter().any(|triangle| triangle.is_light()) }
+    fn pdf_value(&self, origin: &Point3, v: &Vec3A) -> f32 {
+        let weight: f32 = 1.0 / self.triangles.len() as f32;
+        self.triangles.iter().map(|triangle| triangle.pdf_value(origin, v) * weight).sum()
+    }
+    fn random(&self, o: &Point3) -> Vec3A { self.triangles[utility::random_usize_range(0, self.triangles.len())].random(o) }
 }

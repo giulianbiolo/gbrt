@@ -14,6 +14,7 @@ use crate::hittable_list::Hittable;
 use crate::material::Material;
 use crate::point3::Point3;
 use crate::rectangle::{XZRectangle, YZRectangle, Rectangle, XYRectangle};
+use crate::utility;
 
 
 pub struct BBox {
@@ -52,6 +53,12 @@ impl Hittable for BBox {
         .filter(|hit| hit.t > t_min && hit.t < t_max)
         .min_by(|hit1, hit2| { hit1.t.partial_cmp(&hit2.t).unwrap() })
     }
+    fn is_light(&self) -> bool { self.faces.iter().any(|face| face.is_light()) }
+    fn pdf_value(&self, origin: &Point3, v: &Vec3A) -> f32 {
+        let weight: f32 = 1.0 / self.faces.len() as f32;
+        self.faces.iter().map(|triangle| triangle.pdf_value(origin, v) * weight).sum()
+    }
+    fn random(&self, o: &Point3) -> Vec3A { self.faces[utility::random_usize_range(0, self.faces.len())].random(o) }
 }
 
 #[cfg(test)]

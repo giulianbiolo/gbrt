@@ -2,6 +2,8 @@
 // Date: 24/01/2023
 // Description: This file implements the Material trait and its implementations
 
+use std::sync::Arc;
+
 use likely_stable::unlikely;
 use dyn_clone::DynClone;
 
@@ -11,15 +13,37 @@ use crate::color::Color;
 use crate::ray::Ray;
 use crate::hit_record::HitRecord;
 use crate::texture::{Texture, SolidColor};
+use crate::pdf::{PDF, CosinePDF};
 use crate::utility;
 
 
+pub struct ScatterRecord {
+    pub specular_ray: Ray,
+    pub is_specular: bool,
+    pub attenuation: Color,
+    pub pdf_ptr: Option<Arc<dyn PDF>>,
+}
+
+impl ScatterRecord {
+    pub fn new() -> Self {
+        ScatterRecord {
+            specular_ray: Ray::empty(),
+            is_specular: false,
+            attenuation: Color::new(0.0, 0.0, 0.0),
+            pdf_ptr: None,
+        }
+    }
+}
+
 pub trait Material: DynClone + Send {
-    fn scatter(&self, ray_in: &Ray, rec: &HitRecord, attenuation: &mut Color, scattered: &mut Ray) -> bool;
+    fn scatter(&self, ray_in: &Ray, rec: &HitRecord, srec: &mut ScatterRecord) -> bool;
+    fn scattering_pdf(&self, _: &Ray, _: &HitRecord, _: &mut Ray) -> f32 { 0.0 }
     fn emitted(&self, _: f32, _: f32, _: &Vec3A) -> Color { Color::new(0.0, 0.0, 0.0) }
+    fn is_light(&self) -> bool { false }
 }
 
 dyn_clone::clone_trait_object!(Material);
+
 
 /****************** Lambertian Material ******************/
 #[derive(Clone, Debug)]
@@ -32,14 +56,15 @@ impl Lambertian {
     pub fn new_texture(albedo: Box<dyn Texture>) -> Lambertian { Lambertian { albedo } }
 }
 impl Material for Lambertian {
-    fn scatter(&self, _: &Ray, rec: &HitRecord, attenuation: &mut Color, scattered: &mut Ray) -> bool {
-        // Scatter direction will be the normal plus a random vector in the unit sphere
-        let mut scatter_direction: Vec3A = rec.normal + utility::random_unit_vector();
-        // If the scatter direction is too close to zero, we set it to the normal
-        if unlikely(scatter_direction.length_squared() < utility::NEAR_ZERO) { scatter_direction = rec.normal; }
-        *scattered = Ray::new(rec.p, scatter_direction);
-        *attenuation = self.albedo.value(rec.u, rec.v, &rec.p); // The attenuation is the albedo
+    fn scatter(&self, _: &Ray, rec: &HitRecord, srec: &mut ScatterRecord) -> bool {
+        srec.is_specular = false;
+        srec.attenuation = self.albedo.value(rec.u, rec.v, &rec.p);
+        srec.pdf_ptr = Some(Arc::new(CosinePDF::new(&rec.normal)));
         true
+    }
+    fn scattering_pdf(&self, _: &Ray, rec: &HitRecord, scattered: &mut Ray) -> f32 {
+        let cosine: f32 = rec.normal.dot(scattered.direction());
+        if cosine < 0.0 { 0.0 } else { cosine / utility::PI }
     }
 }
 
@@ -55,15 +80,14 @@ impl Metal {
     pub fn new_texture(albedo: Box<dyn Texture>, fuzz: f32) -> Metal { Metal { albedo, fuzz: fuzz.clamp(0.0, 1.0) } }
 }
 impl Material for Metal {
-    fn scatter(&self, ray_in: &Ray, rec: &HitRecord, attenuation: &mut Color, scattered: &mut Ray) -> bool {
+    fn scatter(&self, ray_in: &Ray, rec: &HitRecord, srec: &mut ScatterRecord) -> bool {
         // The scattered ray is the reflected ray plus a random vector in the unit sphere times the fuzz factor
         let reflected: Vec3A = reflect(&ray_in.direction().normalize(), &rec.normal);
-        *scattered = Ray::new(rec.p, reflected + utility::random_in_unit_sphere() * self.fuzz);
-        *attenuation = self.albedo.value(rec.u, rec.v, &rec.p); // The attenuation is the albedo
-        // The ray is scattered only if the dot product is positive
-        // If the dot product is negative, the ray would be reflected backwards, inside the object
-        // If the dot product is zero, the ray would be reflected in the same direction, might result in infinite loops
-        scattered.direction().dot(rec.normal) > 0.0
+        srec.specular_ray = Ray::new(rec.p, reflected + utility::random_in_unit_sphere() * self.fuzz);
+        srec.is_specular = true;
+        srec.attenuation = self.albedo.value(rec.u, rec.v, &rec.p);
+        srec.pdf_ptr = None;
+        true
     }
 }
 
@@ -84,9 +108,7 @@ impl Dielectric {
     }
 }
 impl Material for Dielectric {
-    fn scatter(&self, ray_in: &Ray, rec: &HitRecord, attenuation: &mut Color, scattered: &mut Ray) -> bool {
-        // The attenuation is the albedo
-        *attenuation = self.albedo.value(rec.u, rec.v, &rec.p);
+    fn scatter(&self, ray_in: &Ray, rec: &HitRecord, srec: &mut ScatterRecord) -> bool {
         let refraction_rate = if rec.front_face { 1.0 / self.refr_idx } else { self.refr_idx };
         let unit_direction: Vec3A = ray_in.direction().normalize();
         
@@ -96,12 +118,14 @@ impl Material for Dielectric {
         let direction: Vec3A;
         if refraction_rate * sin_theta > 1.0 || self.reflectance(cos_theta, refraction_rate) > utility::random_f32() {
             direction = reflect(&unit_direction, &rec.normal);
-        } else {
-            direction = refract(&unit_direction, &rec.normal, refraction_rate);
-        }
-        *scattered = Ray::new(rec.p, direction);
+        } else { direction = refract(&unit_direction, &rec.normal, refraction_rate); }
+        srec.specular_ray = Ray::new(rec.p, direction);
+        srec.is_specular = true;
+        srec.attenuation = self.albedo.value(rec.u, rec.v, &rec.p);
+        srec.pdf_ptr = None;
         true
     }
+    fn scattering_pdf(&self, _: &Ray, _: &HitRecord, _: &mut Ray) -> f32 { 1.0 }
 }
 
 fn reflect(vec: &Vec3A, normal: &Vec3A) -> Vec3A { *vec - *normal * vec.dot(*normal) * 2.0 }
@@ -124,8 +148,9 @@ impl DiffuseLight {
     pub fn new_texture(emit: Box<dyn Texture>, intensity: f32) -> DiffuseLight { DiffuseLight { emit, intensity: intensity.max(0.0) } }
 }
 impl Material for DiffuseLight {
-    fn scatter(&self, _: &Ray, _: &HitRecord, _: &mut Color, _: &mut Ray) -> bool { false }
+    fn scatter(&self, _: &Ray, _: &HitRecord, _: &mut ScatterRecord) -> bool { false }
     fn emitted(&self, u: f32, v: f32, p: &Vec3A) -> Color { self.emit.value(u, v, p) * self.intensity }
+    fn is_light(&self) -> bool { true }
 }
 
 /****************** Lucid Lambertian Material ******************/
@@ -142,20 +167,29 @@ impl Plastic {
     pub fn new_texture(albedo: Box<dyn Texture>, reflectivity: f32, fuzz: f32) -> Plastic { Plastic { albedo, reflectivity: reflectivity.max(0.0).min(1.0), fuzz: fuzz.max(0.0).min(1.0) } }
 }
 impl Material for Plastic {
-    fn scatter(&self, ray: &Ray, rec: &HitRecord, attenuation: &mut Color, scattered: &mut Ray) -> bool {
-        *attenuation = self.albedo.value(rec.u, rec.v, &rec.p); // The attenuation is the albedo
+    fn scatter(&self, ray: &Ray, rec: &HitRecord, srec: &mut ScatterRecord) -> bool {
+        srec.attenuation = self.albedo.value(rec.u, rec.v, &rec.p);
         if utility::random_f32() < self.reflectivity {
             // Scatter direction will be the reflected ray ( Perfect Mirror )
             let scattered_direction: Vec3A = reflect(&ray.direction(), &rec.normal) + utility::random_in_unit_sphere() * self.fuzz;
-            *scattered = Ray::new(rec.p, scattered_direction);
-            scattered.direction().dot(rec.normal) > 0.0
+            srec.is_specular = true;
+            srec.specular_ray = Ray::new(rec.p, scattered_direction);
+            srec.pdf_ptr = None;
+            srec.specular_ray.direction().dot(rec.normal) > 0.0
+            // true
         } else {
             // Scatter direction will be the normal plus a random vector in the unit sphere ( Standard Diffuse )
             let mut scattered_direction = rec.normal + utility::random_unit_vector();
-            // if unlikely(scattered_direction.dot(rec.normal) < 0.0) { scattered_direction = -rec.normal + utility::random_unit_vector(); }
             if unlikely(scattered_direction.length_squared() < utility::NEAR_ZERO) { scattered_direction = rec.normal; }
-            *scattered = Ray::new(rec.p, scattered_direction);
+            srec.is_specular = false;
+            srec.pdf_ptr = Some(Arc::new(CosinePDF::new(&scattered_direction)));
             true
+        }
+    }
+    fn scattering_pdf(&self, _: &Ray, rec: &HitRecord, scattered: &mut Ray) -> f32 {
+        if scattered.direction().dot(rec.normal) < 0.0 { 0.0 } else {
+            let cosine: f32 = rec.normal.dot(scattered.direction()) / scattered.direction().length();
+            if cosine < 0.0 { 0.0 } else { cosine / utility::PI }
         }
     }
 }

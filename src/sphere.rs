@@ -8,6 +8,7 @@ use bvh::Point3 as BVHPoint3;
 
 use glam::Vec3A;
 
+use crate::onb::ONB;
 use crate::ray::Ray;
 use crate::hit_record::HitRecord;
 use crate::hittable_list::Hittable;
@@ -78,6 +79,23 @@ impl Hittable for Sphere {
         );
         rec.set_face_normal(ray, &rec.normal.clone());
         Some(rec)
+    }
+    fn is_light(&self) -> bool { self.material.is_light() }
+    fn pdf_value(&self, origin: &Point3, v: &Vec3A) -> f32 {
+        if let Some(_) = self.hit(&Ray::new(*origin, *v), 0.001, utility::INFINITY) {
+            let cos_theta_max: f32 = (1.0 - self.radius.powi(2) / (self.center - *origin).length_squared()).sqrt();
+            let solid_angle: f32 = 2.0 * utility::PI * (1.0 - cos_theta_max);
+            1.0 / solid_angle
+        } else {
+            0.0
+        }
+    }
+    fn random(&self, o: &Point3) -> Vec3A {
+        let direction: Vec3A = self.center - *o;
+        let distance_squared: f32 = direction.length_squared();
+        let mut uvw: ONB = ONB::new();
+        uvw.build_from_w(&direction);
+        uvw.local_vec(&utility::random_to_sphere(self.radius, distance_squared))
     }
 }
 

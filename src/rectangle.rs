@@ -8,6 +8,7 @@ use bvh::Point3 as BVHPoint3;
 
 use glam::Vec3A;
 
+use crate::point3::Point3;
 use crate::ray::Ray;
 use crate::hit_record::HitRecord;
 use crate::hittable_list::Hittable;
@@ -57,6 +58,27 @@ impl Hittable for Rectangle {
             Rectangle::XYRectangle(xy_rectangle) => xy_rectangle.hit(ray, t_min, t_max),
         }
     }
+    fn is_light(&self) -> bool {
+        match self {
+            Rectangle::XZRectangle(xz_rectangle) => xz_rectangle.is_light(),
+            Rectangle::YZRectangle(yz_rectangle) => yz_rectangle.is_light(),
+            Rectangle::XYRectangle(xy_rectangle) => xy_rectangle.is_light(),
+        }
+    }
+    fn pdf_value(&self, o: &crate::point3::Point3, v: &Vec3A) -> f32 {
+        match self {
+            Rectangle::XZRectangle(xz_rectangle) => xz_rectangle.pdf_value(o, v),
+            Rectangle::YZRectangle(yz_rectangle) => yz_rectangle.pdf_value(o, v),
+            Rectangle::XYRectangle(xy_rectangle) => xy_rectangle.pdf_value(o, v),
+        }
+    }
+    fn random(&self, o: &crate::point3::Point3) -> Vec3A {
+        match self {
+            Rectangle::XZRectangle(xz_rectangle) => xz_rectangle.random(o),
+            Rectangle::YZRectangle(yz_rectangle) => yz_rectangle.random(o),
+            Rectangle::XYRectangle(xy_rectangle) => xy_rectangle.random(o),
+        }
+    }
 }
 
 
@@ -77,7 +99,7 @@ unsafe impl Send for XYRectangle {}
 
 impl XYRectangle {
     #[allow(dead_code)]
-    pub fn new(x0: f32, x1: f32, y0: f32, y1: f32, k: f32, material: Box<dyn Material>, node_index: usize) -> XYRectangle { XYRectangle { x0, x1, y0, y1, k, material, node_index } }
+    pub fn new(x0: f32, x1: f32, y0: f32, y1: f32, k: f32, material: Box<dyn Material>, node_index: usize) -> Self { XYRectangle { x0, x1, y0, y1, k, material, node_index } }
     fn _get_xyrect_uv(&self, p: &Vec3A) -> (f32, f32) { ((p.x - self.x0) / (self.x1 - self.x0), (p.y - self.y0) / (self.y1 - self.y0)) }
 }
 
@@ -100,8 +122,6 @@ impl Hittable for XYRectangle {
         if t < t_min || t > t_max { return None; }
         let xyz: Vec3A = ray.origin() + t * ray.direction();
         if xyz.x < self.x0 || xyz.x > self.x1 || xyz.y < self.y0 || xyz.y > self.y1 { return None; }
-        //rec.u = (x - self.x0) / (self.x1 - self.x0);
-        //rec.v = (y - self.y0) / (self.y1 - self.y0);
         let (u, v) = self._get_xyrect_uv(&xyz);
         let mut rec: HitRecord = HitRecord::new(
             ray.at(t),
@@ -114,6 +134,22 @@ impl Hittable for XYRectangle {
         );
         rec.set_face_normal(ray, &rec.normal.clone());
         Some(rec)
+    }
+    fn is_light(&self) -> bool { self.material.is_light() }
+    fn pdf_value(&self, origin: &Point3, v: &Vec3A) -> f32 {
+        if let Some(rec) = self.hit(&Ray::new(*origin, *v), utility::NEAR_ZERO, f32::INFINITY) {
+            let area: f32 = (self.x1 - self.x0) * (self.y1 - self.y0);
+            let distance_squared: f32 = rec.t * rec.t * v.length_squared();
+            let cosine: f32 = (v.dot(rec.normal) / v.length()).abs();
+            distance_squared / (cosine * area)
+        } else { 0.0 }
+    }
+    fn random(&self, origin: &Point3) -> Vec3A {
+        Point3::new(
+            utility::random_f32_range(self.x0, self.x1),
+            utility::random_f32_range(self.y0, self.y1),
+            self.k
+        ) - *origin
     }
 }
 
@@ -135,7 +171,7 @@ unsafe impl Send for XZRectangle {}
 
 impl XZRectangle {
     #[allow(dead_code)]
-    pub fn new(x0: f32, x1: f32, z0: f32, z1: f32, k: f32, material: Box<dyn Material>, node_index: usize) -> XZRectangle { XZRectangle { x0, x1, z0, z1, k, material, node_index } }
+    pub fn new(x0: f32, x1: f32, z0: f32, z1: f32, k: f32, material: Box<dyn Material>, node_index: usize) -> Self { XZRectangle { x0, x1, z0, z1, k, material, node_index } }
     fn _get_xzrect_uv(&self, p: &Vec3A) -> (f32, f32) { ((p.x - self.x0) / (self.x1 - self.x0), (p.z - self.z0) / (self.z1 - self.z0)) }
 }
 
@@ -158,8 +194,6 @@ impl Hittable for XZRectangle {
         if t < t_min || t > t_max { return None; }
         let xyz: Vec3A = ray.origin() + t * ray.direction();
         if xyz.x < self.x0 || xyz.x > self.x1 || xyz.z < self.z0 || xyz.z > self.z1 { return None; }
-        //rec.u = (x - self.x0) / (self.x1 - self.x0);
-        //rec.v = (z - self.z0) / (self.z1 - self.z0);
         let (u, v) = self._get_xzrect_uv(&xyz);
         let mut rec: HitRecord = HitRecord::new(
             ray.at(t),
@@ -172,6 +206,22 @@ impl Hittable for XZRectangle {
         );
         rec.set_face_normal(ray, &rec.normal.clone());
         Some(rec)
+    }
+    fn is_light(&self) -> bool { self.material.is_light() }
+    fn pdf_value(&self, origin: &Point3, v: &Vec3A) -> f32 {
+        if let Some(rec) = self.hit(&Ray::new(*origin, *v), utility::NEAR_ZERO, f32::INFINITY) {
+            let area: f32 = (self.x1 - self.x0) * (self.z1 - self.z0);
+            let distance_squared: f32 = rec.t * rec.t * v.length_squared();
+            let cosine: f32 = (v.dot(rec.normal) / v.length()).abs();
+            distance_squared / (cosine * area)
+        } else { 0.0 }
+    }
+    fn random(&self, origin: &Point3) -> Vec3A {
+        Point3::new(
+            utility::random_f32_range(self.x0, self.x1),
+            self.k,
+            utility::random_f32_range(self.z0, self.z1)
+        ) - *origin
     }
 }
 
@@ -193,7 +243,7 @@ unsafe impl Send for YZRectangle {}
 
 impl YZRectangle {
     #[allow(dead_code)]
-    pub fn new(y0: f32, y1: f32, z0: f32, z1: f32, k: f32, material: Box<dyn Material>, node_index: usize) -> YZRectangle { YZRectangle { y0, y1, z0, z1, k, material, node_index } }
+    pub fn new(y0: f32, y1: f32, z0: f32, z1: f32, k: f32, material: Box<dyn Material>, node_index: usize) -> Self { YZRectangle { y0, y1, z0, z1, k, material, node_index } }
     fn _get_yzrect_uv(&self, p: &Vec3A) -> (f32, f32) { ((p.y - self.y0) / (self.y1 - self.y0), (p.z - self.z0) / (self.z1 - self.z0)) }
 }
 
@@ -216,8 +266,6 @@ impl Hittable for YZRectangle {
         if t < t_min || t > t_max { return None; }
         let xyz: Vec3A = ray.origin() + t * ray.direction();
         if xyz.y < self.y0 || xyz.y > self.y1 || xyz.z < self.z0 || xyz.z > self.z1 { return None; }
-        //rec.u = (y - self.y0) / (self.y1 - self.y0);
-        //rec.v = (z - self.z0) / (self.z1 - self.z0);
         let (u, v) = self._get_yzrect_uv(&xyz);
         let mut rec: HitRecord = HitRecord::new(
             ray.at(t),
@@ -230,6 +278,22 @@ impl Hittable for YZRectangle {
         );
         rec.set_face_normal(ray, &rec.normal.clone());
         Some(rec)
+    }
+    fn is_light(&self) -> bool { self.material.is_light() }
+    fn pdf_value(&self, origin: &Point3, v: &Vec3A) -> f32 {
+        if let Some(rec) = self.hit(&Ray::new(*origin, *v), utility::NEAR_ZERO, f32::INFINITY) {
+            let area: f32 = (self.y1 - self.y0) * (self.z1 - self.z0);
+            let distance_squared: f32 = rec.t * rec.t * v.length_squared();
+            let cosine: f32 = (v.dot(rec.normal) / v.length()).abs();
+            distance_squared / (cosine * area)
+        } else { 0.0 }
+    }
+    fn random(&self, origin: &Point3) -> Vec3A {
+        Point3::new(
+            self.k,
+            utility::random_f32_range(self.y0, self.y1),
+            utility::random_f32_range(self.z0, self.z1)
+        ) - *origin
     }
 }
 

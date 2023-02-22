@@ -6,10 +6,14 @@ use bvh::bvh::BVH;
 use bvh::{Point3 as BVHPoint3, Vector3 as BVHVector3};
 use bvh::ray::Ray as BVHRay;
 
+use glam::Vec3A;
+
 use crate::ray::Ray;
 use crate::hit_record::HitRecord;
 use crate::hittable_list::Hittable;
 use crate::sphere::Sphere;
+use crate::point3::Point3;
+use crate::utility;
 
 
 #[derive(Clone)]
@@ -40,6 +44,12 @@ impl Hittable for SphereArray {
         .filter(|hit| hit.t > t_min && hit.t < t_max)
         .min_by(|hit1, hit2| { hit1.t.partial_cmp(&hit2.t).unwrap() })
     }
+    fn is_light(&self) -> bool { false }
+    fn pdf_value(&self, origin: &Point3, v: &Vec3A) -> f32 {
+        let weight: f32 = 1.0 / self.spheres.len() as f32;
+        self.spheres.iter().map(|triangle| triangle.pdf_value(origin, v) * weight).sum()
+    }
+    fn random(&self, o: &Point3) -> Vec3A { self.spheres[utility::random_usize_range(0, self.spheres.len())].random(o) }
 }
 
 #[cfg(test)]

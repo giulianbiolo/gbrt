@@ -2,6 +2,8 @@
 // Date: 09/02/2023
 // Description: This file implements the parsing of YAML config files
 
+use std::sync::Arc;
+
 use yaml_rust::{YamlLoader, Yaml};
 
 use glam::Vec3A;
@@ -43,13 +45,18 @@ pub fn parse_yaml_constants(filename: &str) -> utility::Constants {
                 Some(hashconsts[&yaml_rust::Yaml::String("environmentDistance".to_string())].as_f64().unwrap() as f32)
             } else { None }
         };
+        let environment_intensity = {
+            if hashconsts.contains_key(&yaml_rust::Yaml::String("environmentIntensity".to_string())) {
+                Some(hashconsts[&yaml_rust::Yaml::String("environmentIntensity".to_string())].as_f64().unwrap() as f32)
+            } else { None }
+        };
         let filter: Option<String> = {
             if hashconsts.contains_key(&yaml_rust::Yaml::String("filter".to_string())) {
                 Some(hashconsts[&yaml_rust::Yaml::String("filter".to_string())].as_str().unwrap().to_string())
             } else { None }
         };
         let aspect_ratio = width as f32 / height as f32;
-        utility::Constants { width, height, aspect_ratio, samples_per_pixel, max_depth, min_depth, environment_map, environment_distance, filter }
+        utility::Constants { width, height, aspect_ratio, samples_per_pixel, max_depth, min_depth, environment_map, environment_distance, environment_intensity, filter }
     }
 }
 
@@ -85,7 +92,7 @@ pub fn parse_yaml_scene(filename: &str) -> HittableList {
         let objtype = hashobj[&yaml_rust::Yaml::String("objType".to_string())].as_str().unwrap();
         if !objtype.contains("Array") {
             let material: Box<dyn Material + Send + Sync> = _parse_material(hashobj);
-            let obj: Box<dyn Hittable + Send + Sync> = _parse_geometry(hashobj, material);
+            let obj: Arc<dyn Hittable + Send + Sync> = _parse_geometry(hashobj, material);
             world.push(obj);
         } else if objtype.contains("Sphere") {
             // * SphereArray *
@@ -103,7 +110,7 @@ pub fn parse_yaml_scene(filename: &str) -> HittableList {
                 }
             }
             let spherearray = SphereArray::new(&mut spheres);
-            world.push(Box::new(spherearray));
+            world.push(Arc::new(spherearray));
         } else { panic!("Unsupported object type: {}", objtype) }
     }
     world
@@ -163,21 +170,21 @@ fn _parse_texture(objmat: &yaml_rust::yaml::Hash) -> Box<dyn Texture + Send + Sy
     }
 }
 
-fn _parse_geometry(hashobj: &yaml_rust::yaml::Hash, material: Box<dyn Material>) -> Box<dyn Hittable + Send + Sync> {
+fn _parse_geometry(hashobj: &yaml_rust::yaml::Hash, material: Box<dyn Material>) -> Arc<dyn Hittable + Send + Sync> {
     let objtype = hashobj[&yaml_rust::Yaml::String("objType".to_string())].as_str().unwrap();
     match objtype {
         "Sphere" => {
             // has a center and radius
             let center = hashobj[&yaml_rust::Yaml::String("center".to_string())].as_vec().unwrap();
             let radius = hashobj[&yaml_rust::Yaml::String("radius".to_string())].as_f64().unwrap();
-            Box::new(Sphere::new(Point3::new(center[0].as_f64().unwrap() as f32, center[1].as_f64().unwrap() as f32, center[2].as_f64().unwrap() as f32), radius as f32, material, 0))
+            Arc::new(Sphere::new(Point3::new(center[0].as_f64().unwrap() as f32, center[1].as_f64().unwrap() as f32, center[2].as_f64().unwrap() as f32), radius as f32, material, 0))
         },
         "XYRectangle" => {
             // has a position, width and height
             let position = hashobj[&yaml_rust::Yaml::String("position".to_string())].as_vec().unwrap();
             let width = hashobj[&yaml_rust::Yaml::String("width".to_string())].as_f64().unwrap();
             let height = hashobj[&yaml_rust::Yaml::String("height".to_string())].as_f64().unwrap();
-            Box::new(XYRectangle::new(
+            Arc::new(XYRectangle::new(
                 position[0].as_f64().unwrap() as f32 - width as f32 / 2.0,
                 position[0].as_f64().unwrap() as f32 + width as f32 / 2.0,
                 position[1].as_f64().unwrap() as f32 - height as f32 / 2.0,
@@ -192,7 +199,7 @@ fn _parse_geometry(hashobj: &yaml_rust::yaml::Hash, material: Box<dyn Material>)
             let position = hashobj[&yaml_rust::Yaml::String("position".to_string())].as_vec().unwrap();
             let width = hashobj[&yaml_rust::Yaml::String("width".to_string())].as_f64().unwrap();
             let height = hashobj[&yaml_rust::Yaml::String("height".to_string())].as_f64().unwrap();
-            Box::new(XZRectangle::new(
+            Arc::new(XZRectangle::new(
                 position[0].as_f64().unwrap() as f32 - width as f32 / 2.0,
                 position[0].as_f64().unwrap() as f32 + width as f32 / 2.0,
                 position[2].as_f64().unwrap() as f32 - height as f32 / 2.0,
@@ -207,7 +214,7 @@ fn _parse_geometry(hashobj: &yaml_rust::yaml::Hash, material: Box<dyn Material>)
             let position = hashobj[&yaml_rust::Yaml::String("position".to_string())].as_vec().unwrap();
             let width = hashobj[&yaml_rust::Yaml::String("width".to_string())].as_f64().unwrap();
             let height = hashobj[&yaml_rust::Yaml::String("height".to_string())].as_f64().unwrap();
-            Box::new(YZRectangle::new(
+            Arc::new(YZRectangle::new(
                 position[1].as_f64().unwrap() as f32 - width as f32 / 2.0,
                 position[1].as_f64().unwrap() as f32 + width as f32 / 2.0,
                 position[2].as_f64().unwrap() as f32 - height as f32 / 2.0,
@@ -223,7 +230,7 @@ fn _parse_geometry(hashobj: &yaml_rust::yaml::Hash, material: Box<dyn Material>)
             let width = hashobj[&yaml_rust::Yaml::String("width".to_string())].as_f64().unwrap();
             let height = hashobj[&yaml_rust::Yaml::String("height".to_string())].as_f64().unwrap();
             let depth = hashobj[&yaml_rust::Yaml::String("depth".to_string())].as_f64().unwrap();
-            Box::new(BBox::new(
+            Arc::new(BBox::new(
                 Vec3A::new(position[0].as_f64().unwrap() as f32, position[1].as_f64().unwrap() as f32, position[2].as_f64().unwrap() as f32),
                 Vec3A::new(width as f32, height as f32, depth as f32),
                 material
@@ -235,7 +242,7 @@ fn _parse_geometry(hashobj: &yaml_rust::yaml::Hash, material: Box<dyn Material>)
             let position = hashobj[&yaml_rust::Yaml::String("position".to_string())].as_vec().unwrap();
             let rotation = hashobj[&yaml_rust::Yaml::String("rotation".to_string())].as_vec().unwrap();
             let scale = hashobj[&yaml_rust::Yaml::String("scalingFactor".to_string())].as_f64().unwrap();
-            Box::new(
+            Arc::new(
                 Mesh::new(
                     Vec3A::new(position[0].as_f64().unwrap() as f32, position[1].as_f64().unwrap() as f32, position[2].as_f64().unwrap() as f32),
                     scale as f32,
