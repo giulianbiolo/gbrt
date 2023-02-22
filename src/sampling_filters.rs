@@ -18,7 +18,6 @@ pub struct TentFilter { }
 impl TentFilter { pub fn new() -> Self { TentFilter { } } }
 impl Filter for TentFilter {
     fn sample(&self) -> f32 {
-        // This function returns a random number in the range [-1, 1] following a tent distribution
         let x: f32 = random_f32();
         if x < 0.5 { 2.0 * x } else { 2.0 * (1.0 - x) }
     }
@@ -30,7 +29,6 @@ pub struct LanczosFilter { }
 impl LanczosFilter { pub fn new() -> Self { LanczosFilter { } } }
 impl Filter for LanczosFilter {
     fn sample(&self) -> f32 {
-        // This function returns a random number in the range [-1, 1] following a Lanczos distribution
         let x: f32 = 2.0 * random_f32() - 1.0;
         if x < NEAR_ZERO { 1.0 }
         else if x < 2.0 {
