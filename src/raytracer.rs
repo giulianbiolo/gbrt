@@ -62,8 +62,8 @@ pub fn render_to_image_multithreaded(world: &HittableList, cam: Camera, filename
         for x in 0..CONSTS.width {
             let mut pixel_color: Color = Color::new(0.0, 0.0, 0.0);
             for _s in 0..CONSTS.samples_per_pixel {
-                let u: f32 = (x as f32 + utility::random_f32()) / (CONSTS.width - 1) as f32;
-                let v: f32 = (CONSTS.height - y as u32 - 1) as f32 / (CONSTS.height - 1) as f32;
+                let u: f32 = (x as f32 + utility::random_f32()) / (CONSTS.width as f32 - 1.0);
+                let v: f32 = (CONSTS.height as f32 - (y as f32 + utility::random_f32()) as f32) / (CONSTS.height as f32 - 1.0);
                 let r: Ray = cam.get_ray(u, v);
                 pixel_color += ray_color(&r, &*safe_world, &*safe_env, 0);
             }

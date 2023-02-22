@@ -12,13 +12,13 @@ use crate::parser;
 
 #[derive(Clone, Copy, Debug)]
 pub struct Camera {
-    origin: Point3,
+    pub origin: Point3,
     lower_left_corner: Point3,
-    horizontal: Vec3A,
-    vertical: Vec3A,
-    u: Vec3A,
-    v: Vec3A,
-    //w: Vec3A,
+    pub horizontal: Vec3A,
+    pub vertical: Vec3A,
+    pub u: Vec3A,
+    pub v: Vec3A,
+    pub w: Vec3A,
     lens_radius: f32,
 }
 
@@ -46,7 +46,7 @@ impl Camera {
             vertical,
             u,
             v,
-            //w,
+            w,
             lens_radius,
         }
     }
