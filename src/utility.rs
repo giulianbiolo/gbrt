@@ -21,6 +21,7 @@ pub struct Constants {
     pub min_depth: u32,
     pub environment_map: Option<String>,
     pub environment_distance: Option<f32>,
+    pub filter: Option<String>,
 }
 
 impl Default for Constants {
@@ -34,6 +35,7 @@ impl Default for Constants {
             min_depth: 5,
             environment_map: None,
             environment_distance: None,
+            filter: None,
         }
     }
 }

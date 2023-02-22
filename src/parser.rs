@@ -43,8 +43,13 @@ pub fn parse_yaml_constants(filename: &str) -> utility::Constants {
                 Some(hashconsts[&yaml_rust::Yaml::String("environmentDistance".to_string())].as_f64().unwrap() as f32)
             } else { None }
         };
+        let filter: Option<String> = {
+            if hashconsts.contains_key(&yaml_rust::Yaml::String("filter".to_string())) {
+                Some(hashconsts[&yaml_rust::Yaml::String("filter".to_string())].as_str().unwrap().to_string())
+            } else { None }
+        };
         let aspect_ratio = width as f32 / height as f32;
-        utility::Constants { width, height, aspect_ratio, samples_per_pixel, max_depth, min_depth, environment_map, environment_distance }
+        utility::Constants { width, height, aspect_ratio, samples_per_pixel, max_depth, min_depth, environment_map, environment_distance, filter }
     }
 }
 

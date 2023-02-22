@@ -19,6 +19,7 @@ mod sphere_array;
 mod raytracer;
 mod parser;
 mod texture;
+mod sampling_filters;
 
 use std::env::args;
 

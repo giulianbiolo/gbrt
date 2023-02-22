@@ -26,6 +26,7 @@ use crate::utility::CONSTS;
 use crate::color::{Color, to_rgb};
 use crate::point3::Point3;
 use crate::parser;
+use crate::sampling_filters::{Filter, TentFilter, UniformFilter, LanczosFilter};
 
 
 // Renders the scene to an image
@@ -34,16 +35,18 @@ pub fn render_to_image(world: &HittableList, cam: &Camera, filename: &str) {
     // Render function
     let environment_map: Box<dyn Hittable + Send + Sync> = _load_environment();
     let envmap = environment_map;
+    let filter: Box<dyn Filter + Send + Sync> = _load_filter();
+    println!("Chosen Filter: {}", filter);
     let mut img: ImageBuffer<Rgb<u8>, Vec<u8>> = ImageBuffer::new(CONSTS.width, CONSTS.height);
     for (x, y, pixel) in img.enumerate_pixels_mut() {
         let mut pixel_color: Color = Color::new(0.0, 0.0, 0.0);
         for _s in 0..CONSTS.samples_per_pixel {
-            let u: f32 = (x as f32 + utility::random_f32()) / (CONSTS.width - 1) as f32;
-            let v: f32 = (CONSTS.height - y - 1) as f32 / (CONSTS.height - 1) as f32;
+            let u: f32 = (x as f32 + filter.sample()) / (CONSTS.width as f32 - 1.0);
+            let v: f32 = (CONSTS.height as f32 - (y as f32 + filter.sample())) as f32 / (CONSTS.height as f32 - 1.0);
             let r: Ray = cam.get_ray(u, v);
             pixel_color = pixel_color + ray_color(&r, world, &envmap, 0);
         }
-        *pixel = to_rgb(pixel_color, CONSTS.samples_per_pixel);
+        *pixel = to_rgb(pixel_color, CONSTS.samples_per_pixel as f32);
     }
     // Save the image
     img.save(filename).unwrap();
@@ -55,6 +58,8 @@ pub fn render_to_image_multithreaded(world: &HittableList, cam: Camera, filename
     let safe_world = Arc::new(world.clone());
     let environment_map: Box<dyn Hittable + Send + Sync> = _load_environment();
     let safe_env = Arc::new(environment_map);
+    let filter: Box<dyn Filter + Send + Sync> = _load_filter();
+    println!("Chosen Filter: {}", filter);
 
     let total_rows = CONSTS.height as f32;
     let completed_rows = AtomicU32::new(0);
@@ -62,12 +67,12 @@ pub fn render_to_image_multithreaded(world: &HittableList, cam: Camera, filename
         for x in 0..CONSTS.width {
             let mut pixel_color: Color = Color::new(0.0, 0.0, 0.0);
             for _s in 0..CONSTS.samples_per_pixel {
-                let u: f32 = (x as f32 + utility::random_f32()) / (CONSTS.width as f32 - 1.0);
-                let v: f32 = (CONSTS.height as f32 - (y as f32 + utility::random_f32()) as f32) / (CONSTS.height as f32 - 1.0);
+                let u: f32 = (x as f32 + filter.sample()) / (CONSTS.width as f32 - 1.0);
+                let v: f32 = (CONSTS.height as f32 - (y as f32 + filter.sample())) / (CONSTS.height as f32 - 1.0);
                 let r: Ray = cam.get_ray(u, v);
                 pixel_color += ray_color(&r, &*safe_world, &*safe_env, 0);
             }
-            let rgb: Rgb<u8> = to_rgb(pixel_color, CONSTS.samples_per_pixel);
+            let rgb: Rgb<u8> = to_rgb(pixel_color, CONSTS.samples_per_pixel as f32);
             let mut img = safe_img.lock().unwrap();
             img.put_pixel(x, y as u32, rgb);
         }
@@ -126,6 +131,17 @@ fn _load_environment() -> Box<dyn Hittable + Send + Sync> {
         );
         // Box::new(Sphere::new(Vec3A::new(0.0, 0.0, 0.0), env_dist, Box::new(DiffuseLight::new_texture(Box::new(env_tex), 1.0)), 0))
         Box::new(Sphere::new(Vec3A::new(0.0, 0.0, 0.0), env_dist, Box::new(DiffuseLight::new_texture(Box::new(env_tex), 1.0)), 0)) }
+}
+
+fn _load_filter() -> Box<dyn Filter + Send + Sync> {
+    if utility::CONSTS.filter.is_some() {
+        match utility::CONSTS.filter.as_ref().unwrap().as_str() {
+            "UniformFilter" => Box::new(UniformFilter::new()),
+            "TentFilter" => Box::new(TentFilter::new()),
+            "LanczosFilter" => Box::new(LanczosFilter::new()),
+            _ => Box::new(UniformFilter::new())
+        }
+    } else { Box::new(UniformFilter::new()) }
 }
 
 // Inits the scene and returns it as a HittableList

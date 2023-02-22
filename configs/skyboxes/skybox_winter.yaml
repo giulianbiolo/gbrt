@@ -6,6 +6,7 @@ constants:
   minDepth: 5
   environmentMap: "skyboxes/winter_forest.jpg"
   environmentDistance: 30.0
+  filter: "LanczosFilter"
 
 camera:
   lookFrom: [0.0, 2.5, -20.0]

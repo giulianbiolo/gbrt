@@ -19,3 +19,4 @@ pub mod mesh;
 pub mod sphere_array;
 pub mod parser;
 pub mod texture;
+pub mod sampling_filters;
