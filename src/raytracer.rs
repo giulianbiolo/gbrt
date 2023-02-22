@@ -27,6 +27,7 @@ use crate::color::{Color, to_rgb};
 use crate::point3::Point3;
 use crate::parser;
 use crate::sampling_filters::{Filter, TentFilter, UniformFilter, LanczosFilter};
+use crate::utility::random_f32;
 
 
 // Renders the scene to an image
@@ -41,8 +42,8 @@ pub fn render_to_image(world: &HittableList, cam: &Camera, filename: &str) {
     for (x, y, pixel) in img.enumerate_pixels_mut() {
         let mut pixel_color: Color = Color::new(0.0, 0.0, 0.0);
         for _s in 0..CONSTS.samples_per_pixel {
-            let u: f32 = (x as f32 + filter.sample()) / (CONSTS.width as f32 - 1.0);
-            let v: f32 = (CONSTS.height as f32 - (y as f32 + filter.sample())) as f32 / (CONSTS.height as f32 - 1.0);
+            let u: f32 = (x as f32 + filter.sample(random_f32())) / (CONSTS.width as f32 - 1.0);
+            let v: f32 = (CONSTS.height as f32 - (y as f32 + filter.sample(random_f32()))) as f32 / (CONSTS.height as f32 - 1.0);
             let r: Ray = cam.get_ray(u, v);
             pixel_color = pixel_color + ray_color(&r, world, &envmap, 0);
         }
@@ -67,8 +68,8 @@ pub fn render_to_image_multithreaded(world: &HittableList, cam: Camera, filename
         for x in 0..CONSTS.width {
             let mut pixel_color: Color = Color::new(0.0, 0.0, 0.0);
             for _s in 0..CONSTS.samples_per_pixel {
-                let u: f32 = (x as f32 + filter.sample()) / (CONSTS.width as f32 - 1.0);
-                let v: f32 = (CONSTS.height as f32 - (y as f32 + filter.sample())) / (CONSTS.height as f32 - 1.0);
+                let u: f32 = (x as f32 + filter.sample(random_f32())) / (CONSTS.width as f32 - 1.0);
+                let v: f32 = (CONSTS.height as f32 - (y as f32 + filter.sample(random_f32()))) / (CONSTS.height as f32 - 1.0);
                 let r: Ray = cam.get_ray(u, v);
                 pixel_color += ray_color(&r, &*safe_world, &*safe_env, 0);
             }
