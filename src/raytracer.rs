@@ -60,6 +60,7 @@ pub fn render_to_image_multithreaded(world: &HittableList, cam: Camera, filename
     let environment_map: Arc<dyn Hittable + Send + Sync> = load_environment();
     let lights = if get_lights(world).len() > 0 { get_lights(world) } else { Vec::from([environment_map.clone()]) };
     let filter: Box<dyn Filter + Send + Sync> = load_filter();
+    println!("Lights: {}", lights.len());
     println!("Chosen Filter: {}", filter);
 
     let total_rows = CONSTS.height as f32;
@@ -99,6 +100,7 @@ pub fn ray_color(r: &Ray, world: &HittableList, lights: &HittableList, envmap: &
             else {
                 // If the material is specular, we can just return the color of the specular ray
                 if srec.is_specular { return srec.attenuation * ray_color(&srec.specular_ray, world, lights, envmap, depth + 1); }
+                // TODO: Fix bug where Lambertian Sphere is completely black if using ImageTexture
                 // We hit an object, so we need to compute the light
                 let light_pdf: HittablePDF = HittablePDF::new(rec.p, Arc::new(lights.clone()));
                 let mut scattered: Ray;
