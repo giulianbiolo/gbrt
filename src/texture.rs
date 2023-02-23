@@ -88,9 +88,9 @@ impl Debug for GradientColor {
 impl Clone for GradientColor { fn clone(&self) -> Self { GradientColor { top: self.top.clone(), bottom: self.bottom.clone() } } }
 
 impl Texture for GradientColor {
-    fn value(&self, u: f32, v: f32, p: &Point3) -> Color {
-        let t = 0.5 * (p.y + 1.0);
-        (1.0 - t) * self.bottom.value(u, v, p) + t * self.top.value(u, v, p)
+    fn value(&self, _u: f32, v: f32, _p: &Point3) -> Color {
+        // We implement a vertical linear gradient
+        glam::Vec3A::ONE.lerp(crate::utility::BLUE_SKY, v)
     }
 }
 

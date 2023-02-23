@@ -2,6 +2,8 @@
 // Date: 24/01/2023
 // Description: This file implements the BBox struct
 
+use bvh::aabb::Bounded;
+use bvh::bounding_hierarchy::BHShape;
 use bvh::bvh::BVH;
 use bvh::{Point3 as BVHPoint3, Vector3 as BVHVector3};
 use bvh::ray::Ray as BVHRay;
@@ -20,6 +22,7 @@ use crate::utility;
 pub struct BBox {
     faces: Vec<Rectangle>,
     bvh: BVH,
+    node_index: usize,
 }
 
 unsafe impl Sync for BBox {}
@@ -38,9 +41,25 @@ impl BBox {
         let bvh: BVH = BVH::build(&mut faces);
         BBox {
             faces,
-            bvh
+            bvh,
+            node_index: 0,
         }
     }
+}
+
+impl Bounded for BBox {
+    fn aabb(&self) -> bvh::aabb::AABB {
+        let (min, max) = self.faces.iter().fold((BVHPoint3::new(f32::INFINITY, f32::INFINITY, f32::INFINITY), BVHPoint3::new(f32::NEG_INFINITY, f32::NEG_INFINITY, f32::NEG_INFINITY)), |(min, max), face| {
+            let face_aabb: bvh::aabb::AABB = face.aabb();
+            (min.min(face_aabb.min), max.max(face_aabb.max))    
+        });
+        bvh::aabb::AABB::with_bounds(min, max)
+    }
+}
+
+impl BHShape for BBox {
+    fn set_bh_node_index(&mut self, index: usize) { self.node_index = index; }
+    fn bh_node_index(&self) -> usize { self.node_index }
 }
 
 impl Hittable for BBox {

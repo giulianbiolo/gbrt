@@ -38,6 +38,8 @@ world: [
     radius: 30.0,
     material: {
       matType: "Lambertian",
+      #texType: "SolidColor",
+      #texture: { albedo: [0.5, 0.5, 0.5] },
       texType: "ImageTexture",
       texture: { filename: "skyboxes/winter_forest.jpg" }
     }

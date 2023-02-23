@@ -34,11 +34,13 @@ use crate::pdf::{PDF, HittablePDF, MixturePDF};
 #[allow(dead_code)]
 pub fn render_to_image(world: &HittableList, cam: &Camera, filename: &str) {
     // Render function
-    let envmap: Arc<dyn Hittable + Send + Sync> = load_environment();
-    let lights = if get_lights(world).len() > 0 { get_lights(world) } else { Vec::from([envmap.clone()]) };
-    let filter: Box<dyn Filter + Send + Sync> = load_filter();
-    println!("Chosen Filter: {}", filter);
     let mut img: ImageBuffer<Rgb<u8>, Vec<u8>> = ImageBuffer::new(CONSTS.width, CONSTS.height);
+    let envmap: Arc<dyn Hittable + Send + Sync> = load_environment();
+    let mut lights = get_lights(world);
+    lights.push(envmap.clone());
+    let filter: Box<dyn Filter + Send + Sync> = load_filter();
+    println!("Lights: {}", lights.len());
+    println!("Chosen Filter: {}", filter);
     for (x, y, pixel) in img.enumerate_pixels_mut() {
         let mut pixel_color: Color = Color::new(0.0, 0.0, 0.0);
         for _s in 0..CONSTS.samples_per_pixel {
@@ -56,13 +58,13 @@ pub fn render_to_image(world: &HittableList, cam: &Camera, filename: &str) {
 pub fn render_to_image_multithreaded(world: &HittableList, cam: Camera, filename: &str) {
     let img: ImageBuffer<Rgb<u8>, Vec<u8>> = ImageBuffer::new(CONSTS.width, CONSTS.height);
     let safe_img = Arc::new(Mutex::new(img));
-    let safe_world = Arc::new(world.clone());
     let environment_map: Arc<dyn Hittable + Send + Sync> = load_environment();
-    let lights = if get_lights(world).len() > 0 { get_lights(world) } else { Vec::from([environment_map.clone()]) };
+    let safe_world = Arc::new(world.clone());
+    let mut lights = get_lights(&world);
+    lights.push(environment_map.clone());
     let filter: Box<dyn Filter + Send + Sync> = load_filter();
     println!("Lights: {}", lights.len());
     println!("Chosen Filter: {}", filter);
-
     let total_rows = CONSTS.height as f32;
     let completed_rows = AtomicU32::new(0);
     (0..CONSTS.height).into_par_iter().for_each(|y| {
@@ -91,39 +93,38 @@ pub fn ray_color(r: &Ray, world: &HittableList, lights: &HittableList, envmap: &
     if unlikely(depth >= CONSTS.max_depth) { return Color::new(0.0, 0.0, 0.0); }
     // Check for ray-sphere intersection
     if let Some(rec) = world.hit(r, utility::NEAR_ZERO, utility::INFINITY) {
-        let mut srec = ScatterRecord::new();
         let emitted: Vec3A = rec.mat_ptr.emitted(rec.u, rec.v, &rec.p);
-        if !rec.mat_ptr.scatter(r, &rec, &mut srec) { emitted }
-        else {
-            // Russian roulette
-            if depth > utility::CONSTS.min_depth && utility::random_f32() < srec.attenuation.max_element() { emitted }
-            else {
-                // If the material is specular, we can just return the color of the specular ray
-                if srec.is_specular { return srec.attenuation * ray_color(&srec.specular_ray, world, lights, envmap, depth + 1); }
-                // TODO: Fix bug where Lambertian Sphere is completely black if using ImageTexture
-                // We hit an object, so we need to compute the light
-                let light_pdf: HittablePDF = HittablePDF::new(rec.p, Arc::new(lights.clone()));
-                let mut scattered: Ray;
-                let pdf: f32;
-                if srec.pdf_ptr.is_some() {
-                    let mixture_pdf: MixturePDF = MixturePDF::new(srec.pdf_ptr.unwrap(), Arc::new(light_pdf));
-                    scattered = Ray::new(rec.p, mixture_pdf.generate().normalize());
-                    pdf = mixture_pdf.value(&scattered.direction());
-                } else {
-                    scattered = Ray::new(rec.p, light_pdf.generate().normalize());
-                    pdf = light_pdf.value(&scattered.direction());
-                }
-
-                emitted
-                + srec.attenuation * rec.mat_ptr.scattering_pdf(r, &rec, &mut scattered)
-                * ray_color(&scattered, world, lights, envmap, depth + 1) / pdf
-            }
+        // If the material is light, return the emittance
+        if rec.mat_ptr.is_light() { return emitted; }
+        // If the material is not light, we first need to scatter the ray
+        let mut srec: ScatterRecord = ScatterRecord::new();
+        // If the ray doesn't scatter, we return the emittance of the object
+        if !rec.mat_ptr.scatter(r, &rec, &mut srec) { return emitted; }
+        // We Russian Roulette some of the rays that are old enough
+        if depth > utility::CONSTS.min_depth && utility::random_f32() < srec.attenuation.max_element() { return emitted; }
+        // If the material is specular, we can just return the color of the specular ray
+        if srec.is_specular { return srec.attenuation * ray_color(&srec.specular_ray, world, lights, envmap, depth + 1); }
+        // We are now in the realm of diffuse materials, we work with PDFs
+        let light_pdf: HittablePDF = HittablePDF::new(rec.p, Arc::new(lights.clone()));
+        let mut scattered: Ray;
+        let pdf: f32;
+        if srec.pdf_ptr.is_some() {
+            // If the material has a PDF, we mix the PDFs
+            let mixture_pdf: MixturePDF = MixturePDF::new(srec.pdf_ptr.unwrap(), Arc::new(light_pdf));
+            scattered = Ray::new(rec.p, mixture_pdf.generate().normalize());
+            pdf = mixture_pdf.value(&scattered.direction());
+        } else {
+            // Else, we just use the light PDF
+            scattered = Ray::new(rec.p, light_pdf.generate().normalize());
+            pdf = light_pdf.value(&scattered.direction());
         }
+        // Finally, we return the color of the scattered ray
+        return emitted
+        + srec.attenuation * rec.mat_ptr.scattering_pdf(r, &rec, &mut scattered)
+        * ray_color(&scattered, world, lights, envmap, depth + 1) / pdf;
     } else {
-        // We will hit the environment map sphere
         if let Some(rec) = envmap.hit(r, utility::NEAR_ZERO, utility::INFINITY) {
-            let unit_p: Vec3A = rec.p.normalize();
-            return rec.mat_ptr.emitted(rec.u, rec.v, &unit_p);
+            rec.mat_ptr.emitted(rec.u, rec.v, &rec.p)
         } else { Vec3A::ONE.lerp(utility::BLUE_SKY, 0.5 * (r.direction().normalize().y + 1.0)) }
     }
 }

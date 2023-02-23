@@ -1,7 +1,7 @@
 constants:
   width: 1920
   height: 1080
-  samplesPerPixel: 64
+  samplesPerPixel: 32
   maxDepth: 5000
   minDepth: 5
 
@@ -24,7 +24,7 @@ world: [
       matType: "Lambertian",
       texType: "SolidColor",
       texture: { albedo: [0.2, 0.2, 0.2] },
-      scale: 2.0,
+      # scale: 2.0,
     }
   },
   {

@@ -5,6 +5,8 @@
 use std::collections::HashMap;
 use std::ops::Mul;
 
+use bvh::aabb::Bounded;
+use bvh::bounding_hierarchy::BHShape;
 use stl_io::{self, Vector};
 use obj::{load_obj, Obj};
 
@@ -27,6 +29,7 @@ use crate::utility::{INFINITY, NEG_INFINITY, self};
 pub struct Mesh {
     triangles: Vec<Triangle>,
     bvh: BVH,
+    node_index: usize,
 }
 
 unsafe impl Sync for Mesh {}
@@ -42,7 +45,7 @@ impl Mesh {
             _ => panic!("File format not supported for: {}", filename),
         };
         let bvh: BVH = BVH::build(&mut triangles);
-        Mesh { triangles, bvh }
+        Mesh { triangles, bvh, node_index: 0 }
     }
     fn _load_obj_triangles(position: Point3, scaling_factor: f32, rotation: Vec3A, filename: &str, material: Box<dyn Material>) -> Vec<Triangle> {
         // let mut triangles: Vec<Triangle> = Vec::new();
@@ -156,6 +159,21 @@ impl Mesh {
         .filter(|triangle| triangle.check_not_degenerate())
         .collect()
     }
+}
+
+impl Bounded for Mesh {
+    fn aabb(&self) -> bvh::aabb::AABB {
+        let (cmin, cmax) = self.triangles.iter().fold((self.triangles[0].aabb().center(), self.triangles[0].aabb().center()), |(cmin, cmax), triangle| {
+            let traabb = triangle.aabb();
+            (cmin.min(traabb.min), cmax.max(traabb.max))
+        });
+        bvh::aabb::AABB::with_bounds(cmin, cmax)
+    }
+}
+
+impl BHShape for Mesh {
+    fn set_bh_node_index(&mut self, index: usize) { self.node_index = index; }
+    fn bh_node_index(&self) -> usize { self.node_index }
 }
 
 impl Hittable for Mesh {

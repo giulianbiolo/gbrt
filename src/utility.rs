@@ -14,7 +14,7 @@ use crate::material::DiffuseLight;
 use crate::parser;
 use crate::point3::Point3;
 use crate::sphere::Sphere;
-use crate::texture;
+use crate::texture::{self, GradientColor, ImageTexture};
 use crate::sampling_filters::{Filter, TentFilter, UniformFilter, LanczosFilter};
 
 
@@ -64,23 +64,24 @@ pub const BLUE_SKY: Vec3A = Vec3A::new(0.5, 0.7, 1.0);
 
 // Utility functions
 pub fn load_environment() -> Arc<dyn Hittable + Send + Sync> {
-    let env_dist = if CONSTS.environment_distance.is_some() { CONSTS.environment_distance.unwrap() } else { 1000.0 };
-    let env_intensity = if CONSTS.environment_intensity.is_some() { CONSTS.environment_intensity.unwrap() } else { 1.0 };
+    let env_dist: f32 = if CONSTS.environment_distance.is_some() { CONSTS.environment_distance.unwrap() } else { 1000.0 };
+    let env_intensity: f32 = if CONSTS.environment_intensity.is_some() { CONSTS.environment_intensity.unwrap() } else { 1.0 };
     println!("Environment distance: {}", env_dist);
     println!("Environment map: {:?}", CONSTS.environment_map);
     if CONSTS.environment_map.is_some() {
         // environment map is just a textured sphere with a diffuse light material
-        let env_tex = texture::EnvironmentMapTexture::new(CONSTS.environment_map.as_ref().unwrap());
-        let env_mat = DiffuseLight::new_texture(Box::new(env_tex), env_intensity);
-        let env_sphere = Sphere::new(Point3::new(0.0, 0.0, 0.0), env_dist, Box::new(env_mat), 0);
+        let env_tex: ImageTexture = texture::EnvironmentMapTexture::new(CONSTS.environment_map.as_ref().unwrap());
+        let env_mat: DiffuseLight = DiffuseLight::new_texture(Box::new(env_tex), env_intensity);
+        let env_sphere: Sphere = Sphere::new(Point3::new(0.0, 0.0, 0.0), env_dist, Box::new(env_mat), 0);
         Arc::new(env_sphere)
     } else {
-        let env_tex = texture::GradientColor::new(
+        let env_tex: GradientColor = texture::GradientColor::new(
             Box::new(texture::SolidColor::new(BLUE_SKY)),
             Box::new(texture::SolidColor::new(Vec3A::ONE))
         );
         // Box::new(Sphere::new(Vec3A::new(0.0, 0.0, 0.0), env_dist, Box::new(DiffuseLight::new_texture(Box::new(env_tex), 1.0)), 0))
-        Arc::new(Sphere::new(Vec3A::new(0.0, 0.0, 0.0), env_dist, Box::new(DiffuseLight::new_texture(Box::new(env_tex), env_intensity)), 0)) }
+        Arc::new(Sphere::new(Vec3A::new(0.0, 0.0, 0.0), env_dist, Box::new(DiffuseLight::new_texture(Box::new(env_tex), env_intensity)), 0))
+    }
 }
 pub fn load_filter() -> Box<dyn Filter + Send + Sync> {
     if CONSTS.filter.is_some() {
@@ -119,7 +120,7 @@ pub fn random_in_unit_sphere() -> Vec3A {
         if p.length_squared() < 1.0 { return p; }
     }
 }
-
+/*
 pub fn random_to_sphere(radius: f32, distance_squared: f32) -> Vec3A {
     let r1: f32 = random_f32();
     let r2: f32 = random_f32();
@@ -129,6 +130,7 @@ pub fn random_to_sphere(radius: f32, distance_squared: f32) -> Vec3A {
     let y: f32 = phi.sin() * (1.0 - z * z).sqrt();
     Vec3A::new(x, y, z)
 }
+*/
 
 pub fn random_cosine_direction() -> Vec3A {
     let r1: f32 = random_f32();

@@ -133,20 +133,17 @@ impl Hittable for Triangle {
         } else { None }
     }
     fn is_light(&self) -> bool { self.material.is_light() }
-    fn pdf_value(&self, origin: &Point3, v: &Vec3A) -> f32 {
-        if let Some(rec) = self.hit(&Ray::new(*origin, *v), utility::NEAR_ZERO, f32::INFINITY) {
-            let area: f32 = (self.vertices[1] - self.vertices[0]).cross(self.vertices[2] - self.vertices[0]).length() / 2.0;
-            let distance_squared: f32 = rec.t * rec.t * v.length_squared();
-            let cosine: f32 = (v.dot(rec.normal) / v.length()).abs();
-            distance_squared / (cosine * area)
-        } else { 0.0 }
+    fn pdf_value(&self, origin: &Point3, _v: &Vec3A) -> f32 {
+        let area: f32 = (self.vertices[1] - self.vertices[0]).cross(self.vertices[2] - self.vertices[0]).length() / 2.0;
+        let distance_squared: f32 = (self.vertices[0] - *origin).length_squared();
+        let cosine: f32 = (self.vertices[0] - *origin).dot(self._get_triangle_normal(0.0, 0.0).normalize()) / (self.vertices[0] - *origin).length();
+        distance_squared / (cosine * area)
     }
     fn random(&self, origin: &Point3) -> Vec3A {
         let u: f32 = utility::random_f32();
         let v: f32 = utility::random_f32();
         let w: f32 = 1.0 - u - v;
-        let p: Vec3A = self.vertices[0] * w + self.vertices[1] * u + self.vertices[2] * v;
-        p - *origin
+        (self.vertices[0] * w + self.vertices[1] * u + self.vertices[2] * v) - *origin
     }
 }
 

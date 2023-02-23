@@ -148,9 +148,15 @@ impl DiffuseLight {
     pub fn new_texture(emit: Box<dyn Texture>, intensity: f32) -> DiffuseLight { DiffuseLight { emit, intensity: intensity.max(0.0) } }
 }
 impl Material for DiffuseLight {
-    fn scatter(&self, _: &Ray, _: &HitRecord, _: &mut ScatterRecord) -> bool { false }
+    fn scatter(&self, _: &Ray, _: &HitRecord, srec: &mut ScatterRecord) -> bool {
+        srec.is_specular = false;
+        srec.attenuation = Color::new(0.0, 0.0, 0.0);
+        srec.pdf_ptr = None;
+        false
+    }
     fn emitted(&self, u: f32, v: f32, p: &Vec3A) -> Color { self.emit.value(u, v, p) * self.intensity }
     fn is_light(&self) -> bool { true }
+    fn scattering_pdf(&self, _: &Ray, _: &HitRecord, _: &mut Ray) -> f32 { 0.0 }
 }
 
 /****************** Lucid Lambertian Material ******************/

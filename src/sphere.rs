@@ -19,8 +19,8 @@ use crate::utility;
 
 #[derive(Clone)]
 pub struct Sphere {
-    center: Point3,
-    radius: f32,
+    pub center: Point3,
+    pub radius: f32,
     material: Box<dyn Material>,
     node_index: usize,
 }
@@ -81,21 +81,26 @@ impl Hittable for Sphere {
         Some(rec)
     }
     fn is_light(&self) -> bool { self.material.is_light() }
-    fn pdf_value(&self, origin: &Point3, v: &Vec3A) -> f32 {
-        if let Some(_) = self.hit(&Ray::new(*origin, *v), 0.001, utility::INFINITY) {
-            let cos_theta_max: f32 = (1.0 - self.radius.powi(2) / (self.center - *origin).length_squared()).sqrt();
-            let solid_angle: f32 = 2.0 * utility::PI * (1.0 - cos_theta_max);
-            1.0 / solid_angle
-        } else {
-            0.0
-        }
+    fn pdf_value(&self, origin: &Point3, _: &Vec3A) -> f32 {
+        let sphere_center_to_camera: Vec3A = *origin - self.center;
+        let distance_to_camera_squared: f32 = sphere_center_to_camera.length_squared();
+        let cos_theta_max: f32 = ((1.0 - (self.radius * self.radius)) / distance_to_camera_squared).max(0.0);
+        let solid_angle: f32 = 2.0 * utility::PI * (1.0 - cos_theta_max);
+        1.0 / solid_angle
     }
-    fn random(&self, o: &Point3) -> Vec3A {
-        let direction: Vec3A = self.center - *o;
-        let distance_squared: f32 = direction.length_squared();
-        let mut uvw: ONB = ONB::new();
-        uvw.build_from_w(&direction);
-        uvw.local_vec(&utility::random_to_sphere(self.radius, distance_squared))
+    fn random(&self, origin: &Point3) -> Vec3A {
+        let sphere_center_to_camera: Vec3A = *origin - self.center;
+        let distance_to_camera_squared: f32 = sphere_center_to_camera.length_squared();
+        let cos_theta_max: f32 = (1.0 - (self.radius * self.radius) / (distance_to_camera_squared)).max(0.0);
+        // let sin_theta_max: f32 = (1.0 - cos_theta_max*cos_theta_max).sqrt();
+        let phi: f32 = utility::random_f32_range(0.0, 2.0 * utility::PI);
+        let cos_theta: f32 = utility::random_f32_range(cos_theta_max, 1.0);
+        let sin_theta: f32 = (1.0 - (cos_theta * cos_theta)).sqrt();
+        let direction: Vec3A = Vec3A::new(sin_theta * phi.cos(), sin_theta * phi.sin(), cos_theta);
+        let sphere_center_to_camera_unit: Vec3A = sphere_center_to_camera.normalize();
+        let mut onb: ONB = ONB::new();
+        onb.build_from_w(&sphere_center_to_camera_unit);
+        onb.local_vec(&direction)
     }
 }
 

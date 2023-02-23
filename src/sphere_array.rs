@@ -2,6 +2,8 @@
 // Date: 24/01/2023
 // Description: This file implements the Sphere Array struct
 
+use bvh::aabb::Bounded;
+use bvh::bounding_hierarchy::BHShape;
 use bvh::bvh::BVH;
 use bvh::{Point3 as BVHPoint3, Vector3 as BVHVector3};
 use bvh::ray::Ray as BVHRay;
@@ -20,6 +22,7 @@ use crate::utility;
 pub struct SphereArray {
     spheres: Vec<Sphere>,
     bvh: BVH,
+    node_index: usize,
 }
 
 unsafe impl Sync for SphereArray {}
@@ -30,8 +33,23 @@ impl SphereArray {
     pub fn new(spheres: &mut Vec<Sphere>) -> SphereArray {
         let mut spheres: Vec<Sphere> = spheres.clone();
         let bvh: BVH = BVH::build(&mut spheres);
-        SphereArray { spheres, bvh }
+        SphereArray { spheres, bvh, node_index: 0 }
     }
+}
+
+impl Bounded for SphereArray {
+    fn aabb(&self) -> bvh::aabb::AABB {
+        let (cmin, cmax) = self.spheres.iter().fold((self.spheres[0].aabb().min, self.spheres[0].aabb().max), |(cmin, cmax), sphere| {
+            let sphereaabb = sphere.aabb();
+            (cmin.min(sphereaabb.min), cmax.max(sphereaabb.max))
+        });
+        bvh::aabb::AABB::with_bounds(cmin, cmax)
+    }
+}
+
+impl BHShape for SphereArray {
+    fn set_bh_node_index(&mut self, index: usize) { self.node_index = index; }
+    fn bh_node_index(&self) -> usize { self.node_index }
 }
 
 impl Hittable for SphereArray {
@@ -46,8 +64,8 @@ impl Hittable for SphereArray {
     }
     fn is_light(&self) -> bool { false }
     fn pdf_value(&self, origin: &Point3, v: &Vec3A) -> f32 {
-        let weight: f32 = 1.0 / self.spheres.len() as f32;
-        self.spheres.iter().map(|triangle| triangle.pdf_value(origin, v) * weight).sum()
+        let weight: f32 = 1.0 / (self.spheres.len() as f32);
+        self.spheres.iter().map(|sphere| sphere.pdf_value(origin, v) * weight).sum()
     }
     fn random(&self, o: &Point3) -> Vec3A { self.spheres[utility::random_usize_range(0, self.spheres.len())].random(o) }
 }
