@@ -20,7 +20,8 @@ General
 * Developed for any OS
 * Highly optimized using SSE and AVX intrinsics
 * Parsing scene description from a YAML file
-  
+* Path Tracing with naive importance sampling (sampling both lights and material BSDF)
+
 Geometry
 --------
 
@@ -67,8 +68,6 @@ TODO list
 =========
 
 * Working now on implementing support of light transport algorithms:
-  * Naive Path Tracing (sampling only BSDF)
-  * Path Tracing with multiple importance sampling (sampling both lights and material BSDF)
   * Bidirectional Path Tracing (with MIS)
 * Working now on implementing support for:
   * Physically based BSDFs: diffuse, metal, dielectric, plastic
