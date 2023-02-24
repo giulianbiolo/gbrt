@@ -2,9 +2,8 @@ constants:
   width: 1920
   height: 1080
   samplesPerPixel: 32
-  maxDepth: 5000
-  minDepth: 50
-  environmentMap: "skyboxes/starblack.jpg"
+  maxDepth: 500
+  minDepth: 5
   environmentDistance: 100.0
   environmentIntensity: 0.0
 

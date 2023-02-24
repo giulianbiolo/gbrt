@@ -4,7 +4,6 @@ constants:
   samplesPerPixel: 32
   maxDepth: 5000
   minDepth: 50
-  environmentMap: "skyboxes/starblack.jpg"
   environmentIntensity: 0.0
 
 camera:

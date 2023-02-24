@@ -27,7 +27,7 @@ use crate::color::{Color, to_rgb};
 use crate::point3::Point3;
 use crate::parser;
 use crate::sampling_filters::Filter;
-use crate::pdf::{PDF, HittablePDF, MixturePDF};
+// use crate::pdf::{PDF, HittablePDF};
 
 
 // Renders the scene to an image
@@ -37,7 +37,7 @@ pub fn render_to_image(world: &HittableList, cam: &Camera, filename: &str) {
     let mut img: ImageBuffer<Rgb<u8>, Vec<u8>> = ImageBuffer::new(CONSTS.width, CONSTS.height);
     let envmap: Arc<dyn Hittable + Send + Sync> = load_environment();
     let mut lights = get_lights(world);
-    lights.push(envmap.clone());
+    if CONSTS.environment_intensity.unwrap_or(1.0) > 0.0 { lights.push(envmap.clone()); }
     let filter: Box<dyn Filter + Send + Sync> = load_filter();
     println!("Lights: {}", lights.len());
     println!("Chosen Filter: {}", filter);
@@ -61,7 +61,7 @@ pub fn render_to_image_multithreaded(world: &HittableList, cam: Camera, filename
     let environment_map: Arc<dyn Hittable + Send + Sync> = load_environment();
     let safe_world = Arc::new(world.clone());
     let mut lights = get_lights(&world);
-    lights.push(environment_map.clone());
+    if CONSTS.environment_intensity.unwrap_or(1.0) > 0.0 { lights.push(environment_map.clone()); }
     let filter: Box<dyn Filter + Send + Sync> = load_filter();
     println!("Lights: {}", lights.len());
     println!("Chosen Filter: {}", filter);
@@ -91,33 +91,23 @@ pub fn render_to_image_multithreaded(world: &HittableList, cam: Camera, filename
 pub fn ray_color(r: &Ray, world: &HittableList, lights: &HittableList, envmap: &Arc<dyn Hittable + Sync + Send>, depth: u32) -> Color {
     // If we've exceeded the ray bounce limit, no more light is gathered
     if unlikely(depth >= CONSTS.max_depth) { return Color::new(0.0, 0.0, 0.0); }
-    // Check for ray-sphere intersection
+    // Check for ray-object intersection
     if let Some(rec) = world.hit(r, utility::NEAR_ZERO, utility::INFINITY) {
         let emitted: Vec3A = rec.mat_ptr.emitted(rec.u, rec.v, &rec.p);
         // If the material is light, return the emittance
         if rec.mat_ptr.is_light() { return emitted; }
         // If the material is not light, we first need to scatter the ray
         let mut srec: ScatterRecord = ScatterRecord::new();
-        // If the ray doesn't scatter, we return the emittance of the object
+        // If the ray doesn't scatter, we return the emittance of the object, not scattering means the ray is absorbed by the object
         if !rec.mat_ptr.scatter(r, &rec, &mut srec) { return emitted; }
         // We Russian Roulette some of the rays that are old enough
         if depth > utility::CONSTS.min_depth && utility::random_f32() < srec.attenuation.max_element() { return emitted; }
         // If the material is specular, we can just return the color of the specular ray
         if srec.is_specular { return srec.attenuation * ray_color(&srec.specular_ray, world, lights, envmap, depth + 1); }
         // We are now in the realm of diffuse materials, we work with PDFs
-        let light_pdf: HittablePDF = HittablePDF::new(rec.p, Arc::new(lights.clone()));
-        let mut scattered: Ray;
-        let pdf: f32;
-        if srec.pdf_ptr.is_some() {
-            // If the material has a PDF, we mix the PDFs
-            let mixture_pdf: MixturePDF = MixturePDF::new(srec.pdf_ptr.unwrap(), Arc::new(light_pdf));
-            scattered = Ray::new(rec.p, mixture_pdf.generate().normalize());
-            pdf = mixture_pdf.value(&scattered.direction());
-        } else {
-            // Else, we just use the light PDF
-            scattered = Ray::new(rec.p, light_pdf.generate().normalize());
-            pdf = light_pdf.value(&scattered.direction());
-        }
+        // Not using the PDF classes to improve performance, altough those classes are implemented in the pdf.rs file for reference
+        let mut scattered: Ray = Ray::new(rec.p, if utility::random_f32() < 0.5 {srec.pdf_ptr.clone().unwrap().generate()} else {lights.random(&rec.p).normalize()});
+        let pdf: f32 = 0.5 * srec.pdf_ptr.unwrap().value(&scattered.direction()) + 0.5 * lights.pdf_value(&rec.p, &scattered.direction());
         // Finally, we return the color of the scattered ray
         return emitted
         + srec.attenuation * rec.mat_ptr.scattering_pdf(r, &rec, &mut scattered)

@@ -125,7 +125,7 @@ impl Hittable for XYRectangle {
         let (u, v) = self._get_xyrect_uv(&xyz);
         let mut rec: HitRecord = HitRecord::new(
             ray.at(t),
-            Vec3A::new(0.0, 0.0, 1.0),
+            Vec3A::Z,
             self.material.clone(),
             t,
             u,
@@ -137,12 +137,14 @@ impl Hittable for XYRectangle {
     }
     fn is_light(&self) -> bool { self.material.is_light() }
     fn pdf_value(&self, origin: &Point3, v: &Vec3A) -> f32 {
-        if let Some(rec) = self.hit(&Ray::new(*origin, *v), utility::NEAR_ZERO, f32::INFINITY) {
-            let area: f32 = (self.x1 - self.x0) * (self.y1 - self.y0);
-            let distance_squared: f32 = rec.t * rec.t * v.length_squared();
-            let cosine: f32 = (v.dot(rec.normal) / v.length()).abs();
-            distance_squared / (cosine * area)
-        } else { 0.0 }
+        let t: f32 = (self.k - origin.z) / v.z;
+        if t < utility::NEAR_ZERO || t > f32::INFINITY { return 0.0; }
+        let xyz: Vec3A = *origin + t * *v;
+        if xyz.x < self.x0 || xyz.x > self.x1 || xyz.y < self.y0 || xyz.y > self.y1 { return 0.0; }
+        let area: f32 = (self.x1 - self.x0) * (self.y1 - self.y0);
+        let distance_squared: f32 = t * t * v.length_squared();
+        let cosine: f32 = (v.dot(Vec3A::Z) / v.length()).abs();
+        distance_squared / (cosine * area)
     }
     fn random(&self, origin: &Point3) -> Vec3A {
         Point3::new(
@@ -197,7 +199,7 @@ impl Hittable for XZRectangle {
         let (u, v) = self._get_xzrect_uv(&xyz);
         let mut rec: HitRecord = HitRecord::new(
             ray.at(t),
-            Vec3A::new(0.0, 1.0, 0.0),
+            Vec3A::Y,
             self.material.clone(),
             t,
             u,
@@ -209,12 +211,14 @@ impl Hittable for XZRectangle {
     }
     fn is_light(&self) -> bool { self.material.is_light() }
     fn pdf_value(&self, origin: &Point3, v: &Vec3A) -> f32 {
-        if let Some(rec) = self.hit(&Ray::new(*origin, *v), utility::NEAR_ZERO, f32::INFINITY) {
-            let area: f32 = (self.x1 - self.x0) * (self.z1 - self.z0);
-            let distance_squared: f32 = rec.t * rec.t * v.length_squared();
-            let cosine: f32 = (v.dot(rec.normal) / v.length()).abs();
-            distance_squared / (cosine * area)
-        } else { 0.0 }
+        let t: f32 = (self.k - origin.y) / v.y;
+        if t < utility::NEAR_ZERO || t > f32::INFINITY { return 0.0; }
+        let xyz: Vec3A = *origin + t * *v;
+        if xyz.x < self.x0 || xyz.x > self.x1 || xyz.z < self.z0 || xyz.z > self.z1 { return 0.0; }
+        let area: f32 = (self.x1 - self.x0) * (self.z1 - self.z0);
+        let distance_squared: f32 = t * t * v.length_squared();
+        let cosine: f32 = (v.dot(Vec3A::Y) / v.length()).abs();
+        distance_squared / (cosine * area)
     }
     fn random(&self, origin: &Point3) -> Vec3A {
         Point3::new(
@@ -269,7 +273,7 @@ impl Hittable for YZRectangle {
         let (u, v) = self._get_yzrect_uv(&xyz);
         let mut rec: HitRecord = HitRecord::new(
             ray.at(t),
-            Vec3A::new(1.0, 0.0, 0.0),
+            Vec3A::X,
             self.material.clone(),
             t,
             u,
@@ -281,12 +285,14 @@ impl Hittable for YZRectangle {
     }
     fn is_light(&self) -> bool { self.material.is_light() }
     fn pdf_value(&self, origin: &Point3, v: &Vec3A) -> f32 {
-        if let Some(rec) = self.hit(&Ray::new(*origin, *v), utility::NEAR_ZERO, f32::INFINITY) {
-            let area: f32 = (self.y1 - self.y0) * (self.z1 - self.z0);
-            let distance_squared: f32 = rec.t * rec.t * v.length_squared();
-            let cosine: f32 = (v.dot(rec.normal) / v.length()).abs();
-            distance_squared / (cosine * area)
-        } else { 0.0 }
+        let t: f32 = (self.k - origin.x) / v.x;
+        if t < utility::NEAR_ZERO || t > f32::INFINITY { return 0.0; }
+        let xyz: Vec3A = *origin + t * *v;
+        if xyz.y < self.y0 || xyz.y > self.y1 || xyz.z < self.z0 || xyz.z > self.z1 { return 0.0; } 
+        let area: f32 = (self.y1 - self.y0) * (self.z1 - self.z0);
+        let distance_squared: f32 = t * t * v.length_squared();
+        let cosine: f32 = (v.dot(Vec3A::X) / v.length()).abs();
+        distance_squared / (cosine * area)
     }
     fn random(&self, origin: &Point3) -> Vec3A {
         Point3::new(
