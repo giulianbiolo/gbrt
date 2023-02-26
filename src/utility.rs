@@ -106,6 +106,7 @@ pub fn random_in_unit_disk() -> Vec3A {
     }
 }
 
+#[allow(dead_code)]
 pub fn random_unit_vector() -> Vec3A {
     let a: f32 = random_f32_range(0.0, 2.0 * PI);
     let z: f32 = random_f32_range(-1.0, 1.0);

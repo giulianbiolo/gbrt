@@ -4,7 +4,6 @@
 
 use std::sync::Arc;
 
-use likely_stable::unlikely;
 use dyn_clone::DynClone;
 
 use glam::Vec3A;
