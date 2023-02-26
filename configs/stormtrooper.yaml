@@ -29,7 +29,9 @@ world: [
       texType: "SolidColor",
       texture: { albedo: [1.0, 1.0, 1.0] },
       fuzz: 0.0, # The amount of opaqueness, just like in metals
-      reflectivity: 0.2 # How reflective you want your object to be, finetune this on each scene
+      roughness: 0.2,
+      reflectivity: 0.4 # For Plastic
+      # reflectivity: 0.05 # For GGX # How reflective you want your object to be, finetune this on each scene
     }
   },
   {

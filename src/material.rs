@@ -82,8 +82,10 @@ impl Metal {
 impl Material for Metal {
     fn scatter(&self, ray_in: &Ray, rec: &HitRecord, srec: &mut ScatterRecord) -> bool {
         // The scattered ray is the reflected ray plus a random vector in the unit sphere times the fuzz factor
-        let reflected: Vec3A = reflect(&ray_in.direction().normalize(), &rec.normal);
-        srec.specular_ray = Ray::new(rec.p, reflected + utility::random_in_unit_sphere() * self.fuzz);
+        srec.specular_ray = Ray::new(
+            rec.p,
+            (reflect(&ray_in.direction().normalize(), &rec.normal) + utility::random_in_unit_sphere() * self.fuzz).normalize()
+        );
         srec.is_specular = true;
         srec.attenuation = self.albedo.value(rec.u, rec.v, &rec.p);
         srec.pdf_ptr = None;
@@ -150,7 +152,7 @@ impl DiffuseLight {
 impl Material for DiffuseLight {
     fn scatter(&self, _: &Ray, _: &HitRecord, srec: &mut ScatterRecord) -> bool {
         srec.is_specular = false;
-        srec.attenuation = Color::new(0.0, 0.0, 0.0);
+        srec.attenuation = Color::ZERO;
         srec.pdf_ptr = None;
         false
     }
@@ -177,18 +179,63 @@ impl Material for Plastic {
         srec.attenuation = self.albedo.value(rec.u, rec.v, &rec.p);
         if utility::random_f32() < self.reflectivity {
             // Scatter direction will be the reflected ray ( Perfect Mirror )
-            let scattered_direction: Vec3A = reflect(&ray.direction(), &rec.normal) + utility::random_in_unit_sphere() * self.fuzz;
             srec.is_specular = true;
-            srec.specular_ray = Ray::new(rec.p, scattered_direction);
+            srec.specular_ray = Ray::new(rec.p, (reflect(&ray.direction(), &rec.normal) + utility::random_in_unit_sphere() * self.fuzz).normalize());
             srec.pdf_ptr = None;
             srec.specular_ray.direction().dot(rec.normal) > 0.0
             // true
         } else {
             // Scatter direction will be the normal plus a random vector in the unit sphere ( Standard Diffuse )
-            let mut scattered_direction = rec.normal + utility::random_unit_vector();
-            if unlikely(scattered_direction.length_squared() < utility::NEAR_ZERO) { scattered_direction = rec.normal; }
+            // let mut scattered_direction = (rec.normal + utility::random_unit_vector()).normalize();
+            // if unlikely(scattered_direction.length_squared() < utility::NEAR_ZERO) { scattered_direction = rec.normal; }
             srec.is_specular = false;
-            srec.pdf_ptr = Some(Arc::new(CosinePDF::new(&scattered_direction)));
+            srec.pdf_ptr = Some(Arc::new(CosinePDF::new(&rec.normal)));
+            true
+        }
+    }
+    fn scattering_pdf(&self, _: &Ray, rec: &HitRecord, scattered: &mut Ray) -> f32 {
+        if scattered.direction().dot(rec.normal) < 0.0 { 0.0 } else {
+            let cosine: f32 = rec.normal.dot(scattered.direction()) / scattered.direction().length();
+            if cosine < 0.0 { 0.0 } else { cosine / utility::PI }
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct GGXGlossy {
+    albedo: Box<dyn Texture>,
+    roughness: f32,
+    reflectivity: f32,
+}
+
+impl GGXGlossy {
+    #[allow(dead_code)]
+    pub fn new(albedo: Color, roughness: f32, reflectivity: f32) -> Self { Self { albedo: Box::new(SolidColor::new(albedo)), roughness: roughness.clamp(0.0, 1.0), reflectivity: reflectivity.clamp(0.0, 1.0) } }
+    pub fn new_texture(albedo: Box<dyn Texture>, roughness: f32, reflectivity: f32) -> Self { Self { albedo, roughness: roughness.clamp(0.0, 1.0), reflectivity: reflectivity.clamp(0.0, 1.0) } }
+}
+
+impl Material for GGXGlossy {
+    fn scatter(&self, ray_in: &Ray, rec: &HitRecord, srec: &mut ScatterRecord) -> bool {
+        srec.attenuation = self.albedo.value(rec.u, rec.v, &rec.p);
+        if utility::random_f32() < self.reflectivity {
+            let normal: Vec3A = rec.normal;
+            let reflected: Vec3A = reflect(&ray_in.direction(), &normal);
+            let roughness: f32 = self.roughness;
+            let roughness_squared: f32 = roughness * roughness;
+            let a: f32 = roughness_squared - 1.0;
+            let b: f32 = (normal.dot(reflected) * a + 1.0).sqrt();
+            let half_vector: Vec3A = (reflected + normal / b).normalize();
+            let scattered_direction: Vec3A = reflect(&ray_in.direction(), &half_vector).normalize();
+
+            srec.is_specular = true;
+            srec.specular_ray = Ray::new(rec.p, scattered_direction);
+            srec.pdf_ptr = None;
+            true
+        } else {
+            // Scatter direction will be the normal plus a random vector in the unit sphere ( Standard Diffuse )
+            // let scattered_direction = (rec.normal + utility::random_unit_vector()).normalize();
+            srec.is_specular = false;
+            srec.pdf_ptr = Some(Arc::new(CosinePDF::new(&rec.normal)));
             true
         }
     }

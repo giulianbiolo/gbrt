@@ -69,10 +69,12 @@ world: [
         center: [2.5, 5.0, 0.0],
         radius: 2.5,
         material: {
-          matType: "Metal",
+          matType: "GGX",
           texType: "SolidColor",
           texture: { albedo: [0.2, 0.9, 0.2] },
-          fuzz: 0.0
+          reflectivity: 0.8,
+          fuzz: 0.2,
+          roughness: 0.4, # For GGX material
         }
       }
     ]

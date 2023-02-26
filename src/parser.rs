@@ -16,7 +16,7 @@ use crate::texture::{Texture, SolidColor, ChessBoard, ImageTexture};
 use crate::rectangle::{XYRectangle, XZRectangle, YZRectangle};
 use crate::bbox::BBox;
 use crate::mesh::Mesh;
-use crate::material::{Material, Lambertian, Metal, Dielectric, Plastic};
+use crate::material::{Material, Lambertian, Metal, Dielectric, Plastic, GGXGlossy};
 use crate::camera::Camera;
 use crate::sphere_array::SphereArray;
 use crate::utility;
@@ -137,6 +137,12 @@ fn _parse_material(hashobj: &yaml_rust::yaml::Hash) -> Box<dyn Material + Send +
             let reflectivity = objmat[&yaml_rust::Yaml::String("reflectivity".to_string())].as_f64().unwrap();
             Box::new(Plastic::new_texture(_parse_texture(objmat), reflectivity as f32, fuzz as f32))
         },
+        "GGX" => {
+            // has an albedo, a roughness and a fuzz
+            let reflectivity = objmat[&yaml_rust::Yaml::String("reflectivity".to_string())].as_f64().unwrap();
+            let roughness = objmat[&yaml_rust::Yaml::String("roughness".to_string())].as_f64().unwrap();
+            Box::new(GGXGlossy::new_texture(_parse_texture(objmat), roughness as f32, reflectivity as f32))
+        }
         "DiffuseLight" => {
             // has just an emittance
             let intensity = objmat[&yaml_rust::Yaml::String("intensity".to_string())].as_f64().unwrap();
