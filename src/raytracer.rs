@@ -74,7 +74,8 @@ pub fn render_to_image_multithreaded(world: &HittableList, cam: Camera, filename
                 let u: f32 = (x as f32 + filter.sample(random_f32())) / (CONSTS.width as f32 - 1.0);
                 let v: f32 = (CONSTS.height as f32 - (y as f32 + filter.sample(random_f32()))) / (CONSTS.height as f32 - 1.0);
                 let r: Ray = cam.get_ray(u, v);
-                pixel_color += ray_color(&r, &*safe_world, &lights, &environment_map, 0);
+                let curr_color: Color = ray_color(&r, &*safe_world, &lights, &environment_map, 0);
+                if curr_color.is_finite() { pixel_color += curr_color; }
             }
             let rgb: Rgb<u8> = to_rgb(pixel_color, CONSTS.samples_per_pixel as f32);
             let mut img = safe_img.lock().unwrap();
