@@ -30,6 +30,8 @@ pub struct Constants {
     pub environment_distance: Option<f32>,
     pub environment_intensity: Option<f32>,
     pub filter: Option<String>,
+    pub sources_lambda: f32,
+    pub power_render_center: Vec3A,
 }
 
 impl Default for Constants {
@@ -45,6 +47,8 @@ impl Default for Constants {
             environment_distance: None,
             environment_intensity: None,
             filter: None,
+            sources_lambda: 299792458.0 / 2.45e9,
+            power_render_center: Vec3A::new(0.0, 0.0, 0.0),
         }
     }
 }
@@ -121,6 +125,16 @@ pub fn random_in_unit_sphere() -> Vec3A {
         if p.length_squared() < 1.0 { return p; }
     }
 }
+
+pub fn random_in_unit_sphere_uniform_distribution() -> Vec3A {
+    let phi: f32 = random_f32_range(0.0, 2.0 * PI);
+    let costheta: f32 = random_f32_range(-1.0, 1.0);
+    let u: f32 = random_f32_range(0.0, 1.0);
+    let theta: f32 = costheta.acos();
+    let r: f32 = u.powf(1.0 / 3.0);
+    Vec3A::new(r * theta.sin() * phi.cos(), r * theta.sin() * phi.sin(), r * theta.cos())
+}
+
 /*
 pub fn random_to_sphere(radius: f32, distance_squared: f32) -> Vec3A {
     let r1: f32 = random_f32();

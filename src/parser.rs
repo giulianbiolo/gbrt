@@ -56,7 +56,18 @@ pub fn parse_yaml_constants(filename: &str) -> utility::Constants {
             } else { None }
         };
         let aspect_ratio = width as f32 / height as f32;
-        utility::Constants { width, height, aspect_ratio, samples_per_pixel, max_depth, min_depth, environment_map, environment_distance, environment_intensity, filter }
+        let sources_lambda: f32 = {
+            if hashconsts.contains_key(&yaml_rust::Yaml::String("sourcesLambda".to_string())) {
+                hashconsts[&yaml_rust::Yaml::String("sourcesLambda".to_string())].as_f64().unwrap() as f32
+            } else { 299792458.0 / 2.45e9 }
+        };
+        let power_render_center: Vec3A = {
+            if hashconsts.contains_key(&yaml_rust::Yaml::String("powerRenderCenter".to_string())) {
+                let pow_center = hashconsts[&yaml_rust::Yaml::String("powerRenderCenter".to_string())].as_vec().unwrap();
+                Vec3A::new(pow_center[0].as_f64().unwrap() as f32, pow_center[1].as_f64().unwrap() as f32, pow_center[2].as_f64().unwrap() as f32)
+            } else { Vec3A::new(0.0, 0.0, 0.0) }
+        };
+        utility::Constants { width, height, aspect_ratio, samples_per_pixel, max_depth, min_depth, environment_map, environment_distance, environment_intensity, filter, sources_lambda, power_render_center }
     }
 }
 

@@ -1,0 +1,67 @@
+constants:
+  width: 300
+  height: 300
+  samplesPerPixel: 8
+  maxDepth: 5
+  minDepth: 2
+  sourcesLambda: 0.122364268571 # f = 2.45GHz
+  powerRenderCenter: [0.0, 15.0, 0.0] # -15;15|0;30|-15;15
+  gridSize: 50
+  gridTileSize: 0.1
+
+camera:
+  lookFrom: [0.0, 15.0, 14.0]
+  lookAt: [0.0, 3.0, 0.0]
+  vup: [0.0, 1.0, 0.0]
+  vfov: 90.0
+  aspectRatio: 1.0
+  aperture: 0.1
+  focusDistance: 10.0
+
+world: [
+  {
+    # A Ground Object
+    objType: "Sphere",
+    center: [0.0, -1000.0, 0.0],
+    radius: 1000.0,
+    material: {
+      matType: "Lambertian",
+      texType: "SolidColor",
+      texture: { albedo: [0.2, 0.2, 0.2] },
+      # scale: 2.0,
+    }
+  },
+  {
+    # A Light Object
+    objType: "Sphere",
+    center: [10.0, 5.0, -10.0],
+    radius: 5.0,
+    material: {
+      matType: "DiffuseLight",
+      texType: "SolidColor",
+      texture: { albedo: [1.0, 1.0, 1.0] }, # Property of SolidColor
+      intensity: 10.0 # Property of DiffuseLight
+    }
+  },
+  {
+    objType: "Sphere",
+    center: [-10.0, 5.0, -10.0],
+    radius: 5.0,
+    material: {
+      matType: "DiffuseLight",
+      texType: "SolidColor",
+      texture: { albedo: [1.0, 1.0, 1.0] },
+      intensity: 10.0
+    }
+  },
+  #{ # A Glass Sphere
+  #  objType: "Sphere",
+  #  center: [0.0, 5.0, 0.0],
+  #  radius: 5.0,
+  #  material: {
+  #    matType: "Lambertian",
+  #    texType: "SolidColor",
+  #    texture: { albedo: [1.0, 0.2, 0.2] },
+  #  }
+  #},
+]

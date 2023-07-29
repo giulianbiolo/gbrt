@@ -81,7 +81,7 @@ fn main() -> Result<(), std::fmt::Error> {
     );*/
 
     // Render the scene to an image
-    raytracer::render_to_image_multithreaded(&world, cam, "test.png");
+    raytracer::render_power_grid(&world, cam, "test.png");
     let end_time = std::time::Instant::now();
     println!("Elapsed time: {}ms", end_time.duration_since(start_time).as_millis());
     Ok(())
