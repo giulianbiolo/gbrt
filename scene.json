@@ -35,6 +35,14 @@
 			"widthSegments": 1,
 			"heightSegments": 1,
 			"depthSegments": 1
+		},
+		{
+			"uuid": "439c4517-bb48-4882-9ad1-1a788ef814bd",
+			"type": "PlaneGeometry",
+			"width": 1,
+			"height": 1,
+			"widthSegments": 1,
+			"heightSegments": 1
 		}],
 	"materials": [
 		{
@@ -83,6 +91,27 @@
 			"uuid": "6d3c9c1d-4ed1-420c-8a2c-1a348a03b436",
 			"type": "MeshStandardMaterial",
 			"color": 16777215,
+			"roughness": 1,
+			"metalness": 0,
+			"emissive": 0,
+			"envMapIntensity": 1,
+			"depthFunc": 3,
+			"depthTest": true,
+			"depthWrite": true,
+			"colorWrite": true,
+			"stencilWrite": false,
+			"stencilWriteMask": 255,
+			"stencilFunc": 519,
+			"stencilRef": 0,
+			"stencilFuncMask": 255,
+			"stencilFail": 7680,
+			"stencilZFail": 7680,
+			"stencilZPass": 7680
+		},
+		{
+			"uuid": "80b86685-28a1-4dac-b16c-1a51c165531d",
+			"type": "MeshStandardMaterial",
+			"color": 996848,
 			"roughness": 1,
 			"metalness": 0,
 			"emissive": 0,
@@ -181,6 +210,16 @@
 				"aspect": 1,
 				"filmGauge": 35,
 				"filmOffset": 0
+			},
+			{
+				"uuid": "0130834c-2f5c-4b46-9f26-6e05d2d58aaa",
+				"type": "Mesh",
+				"name": "Plane",
+				"layers": 1,
+				"matrix": [2.220446049250313e-16,1,-2.220446049250313e-16,0,0,2.220446049250313e-16,1,0,1,-2.220446049250313e-16,0,0,2.7384201637068384,1.3867102959797375,4.386553804494941,1],
+				"up": [0,1,0],
+				"geometry": "439c4517-bb48-4882-9ad1-1a788ef814bd",
+				"material": "80b86685-28a1-4dac-b16c-1a51c165531d"
 			}]
 	}
 }

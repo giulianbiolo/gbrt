@@ -1,83 +1,19 @@
-{
-  camera:
-    {
-      aperture: 0.1,
-      aspectRatio: 1.0,
-      focusDistance: 10.0,
-      lookAt: [0.0, 0.010471784116245792, 0.9999451693655121],
-      lookFrom: [1.8035326547812742, 3.6238160935563, 12.020000591065862],
-      vfov: 50.0,
-      vup: [0.0, 1.0, 0.0],
-    },
-  constants:
-    {
-      environmentIntensity: 0.25,
-      height: 800,
-      maxDepth: 5000,
-      minDepth: 5,
-      powerRenderCenter: [0.0, 0.0, 0.0],
-      samplesPerPixel: 512,
-      sourcesLambda: 0.122364268571,
-      width: 800,
-    },
-  world:
-    [
-      {
-        center: [2.368351756998791, 1.7418723590413667, 0.0],
-        material:
-          {
-            matType: Lambertian,
-            texType: SolidColor,
-            texture: { albedo: [1.0, 1.0, 1.0] },
-          },
-        objType: Sphere,
-        radius: 1.0,
-      },
-      {
-        depth: 1.0,
-        height: 1.0,
-        material:
-          {
-            matType: Lambertian,
-            texType: SolidColor,
-            texture:
-              {
-                albedo:
-                  [
-                    0.7843137254901961,
-                    0.03529411764705882,
-                    0.03529411764705882,
-                  ],
-              },
-          },
-        objType: Box,
-        position: [-0.42748900296857517, 1.0410471284957354, 4.175320464221209],
-        width: 1.0,
-      },
-      {
-        center: [0.4837451292470114, 3.8241014680202774, 3.089302459271968],
-        material:
-          {
-            intensity: 10.0,
-            matType: DiffuseLight,
-            texType: SolidColor,
-            texture: { albedo: [1.0, 1.0, 1.0] },
-          },
-        objType: Sphere,
-        radius: 1.0,
-      },
-      {
-        depth: 1.0,
-        height: 1.0,
-        material:
-          {
-            matType: Lambertian,
-            texType: SolidColor,
-            texture: { albedo: [1.0, 1.0, 1.0] },
-          },
-        objType: Box,
-        position: [4.325858339545577, 2.151009465091341, 0.0],
-        width: 1.0,
-      },
-    ],
-}
+{camera: {aperture: 0.1, aspectRatio: 1.0, focusDistance: 10.0, lookAt: [0.0, 0.010471784116245792,
+      0.9999451693655121], lookFrom: [1.8035326547812742, 3.6238160935563, 12.020000591065862],
+    vfov: 50.0, vup: [0.0, 1.0, 0.0]}, constants: {environmentIntensity: 0.25, height: 800,
+    maxDepth: 5000, minDepth: 5, powerRenderCenter: [0.0, 0.0, 0.0], samplesPerPixel: 32,
+    sourcesLambda: 0.122364268571, width: 800}, world: [{center: [2.368351756998791,
+        1.7418723590413667, 0.0], material: {matType: Lambertian, texType: SolidColor,
+        texture: {albedo: [1.0, 1.0, 1.0]}}, objType: Sphere, radius: 1.0}, {depth: 1.0,
+      height: 1.0, material: {matType: Lambertian, texType: SolidColor, texture: {
+          albedo: [0.7843137254901961, 0.03529411764705882, 0.03529411764705882]}},
+      objType: Box, position: [-0.42748900296857517, 1.0410471284957354, 4.175320464221209],
+      width: 1.0}, {center: [0.4837451292470114, 3.8241014680202774, 3.089302459271968],
+      material: {intensity: 10.0, matType: DiffuseLight, texType: SolidColor, texture: {
+          albedo: [1.0, 1.0, 1.0]}}, objType: Sphere, radius: 1.0}, {depth: 1.0, height: 1.0,
+      material: {matType: Lambertian, texType: SolidColor, texture: {albedo: [1.0,
+            1.0, 1.0]}}, objType: Box, position: [4.325858339545577, 2.151009465091341,
+        0.0], width: 1.0}, {height: 1.0, material: {matType: Lambertian, texType: SolidColor,
+        texture: {albedo: [0.058823529411764705, 0.011764705882352941, 0.0196078431372549,
+            0.058823529411764705, 0.0]}}, objType: YZRectangle, position: [2.7384201637068384,
+        1.3867102959797375, 4.386553804494941], width: 1.0}]}

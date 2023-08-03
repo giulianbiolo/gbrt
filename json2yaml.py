@@ -1,10 +1,9 @@
 '''This module loads a Three.JS JSON Scene file and converts it to my Scene description format file, which uses YAML, for my RayTracer.'''
 
-import sys
-import os
+import math
 import json
 import yaml
-
+import numpy as np
 
 
 def load_json_file(filename: str = "scene.json") -> dict:
@@ -12,11 +11,12 @@ def load_json_file(filename: str = "scene.json") -> dict:
     with open(filename, 'r', encoding="utf-8") as file:
         return json.load(file)
 
+
 def convert_json_to_yaml(json_dict: dict) -> str:
     '''Converts a JSON dictionary to a YAML string.'''
     if "object" not in json_dict or "type" not in json_dict["object"] or json_dict["object"]["type"] != "Scene":
         raise ValueError("JSON file is not a Three.JS JSON Scene file.")
-    
+
     # * First off, we write the default values inside of the YAML file.
     yaml_dict: dict = {
         "constants": {
@@ -61,18 +61,20 @@ def convert_json_to_yaml(json_dict: dict) -> str:
             new_obj["width"] = float(geometries[obj["geometry"]]["width"])
             new_obj["height"] = float(geometries[obj["geometry"]]["height"])
             # TODO: Check the following code...
-            # * If the rotation is 0 in each axis, then it's a XZ plane.
-            if obj["matrix"][0] - 1.0 <= 0.01 and obj["matrix"][5] - 1.0 <= 0.01 and obj["matrix"][10] - 1.0 <= 0.01:
-                new_obj["objType"] = "XZRectangle"
-            # * If the rotation is 90 in the X axis, then it's a YZ plane.
-            elif obj["matrix"][0] - 0.0 <= 0.01 and obj["matrix"][5] - 0.0 <= 0.01 and obj["matrix"][10] - 1.0 <= 0.01:
-                new_obj["objType"] = "YZRectangle"
-            # * If the rotation is 90 in the Y axis, then it's a XZ plane.
-            elif obj["matrix"][0] - 1.0 <= 0.01 and obj["matrix"][5] - 0.0 <= 0.01 and obj["matrix"][10] - 0.0 <= 0.01:
-                new_obj["objType"] = "XZRectangle"
-            # * If the rotation is 90 in the Z axis, then it's a XY plane.
-            elif obj["matrix"][0] - 0.0 <= 0.01 and obj["matrix"][5] - 1.0 <= 0.01 and obj["matrix"][10] - 0.0 <= 0.01:
+            # * If the rotation is 0 in each axis, then it's a XY plane.
+            matrix4x4 = np.array(obj["matrix"]).reshape(4, 4)
+            roll = (math.acos(matrix4x4[1][1]) * 57.2958) % 180.0
+            pitch = (math.acos(matrix4x4[0][0]) * 57.2958) % 180.0
+            if roll <= 0.01 and pitch <= 0.01:
                 new_obj["objType"] = "XYRectangle"
+            # * If the rotation is 90 in the X axis, then it's a YZ plane.
+            elif roll - 90.0 <= 0.01 and pitch <= 0.01:
+                new_obj["objType"] = "XZRectangle"
+            # * If the rotation is 90 in the Y axis, then it's a XZ plane.
+            elif roll <= 0.01 and pitch - 90.0 <= 0.01:
+                new_obj["objType"] = "YZRectangle"
+            elif roll - 90.0 <= 0.01 and pitch - 90.0 <= 0.01:
+                new_obj["objType"] = "YZRectangle"
             else:
                 raise ValueError("Plane has an invalid rotation.")
         elif new_obj["objType"] == "Box":
