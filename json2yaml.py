@@ -60,7 +60,6 @@ def convert_json_to_yaml(json_dict: dict) -> str:
             new_obj["position"] = obj["matrix"][12:15]
             new_obj["width"] = float(geometries[obj["geometry"]]["width"])
             new_obj["height"] = float(geometries[obj["geometry"]]["height"])
-            # TODO: Check the following code...
             # * If the rotation is 0 in each axis, then it's a XY plane.
             matrix4x4 = np.array(obj["matrix"]).reshape(4, 4)
             roll = (math.acos(matrix4x4[1][1]) * 57.2958) % 180.0
