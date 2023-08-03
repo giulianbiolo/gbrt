@@ -19,7 +19,7 @@ General
 * Written in Rust
 * Developed for any OS
 * Highly optimized using SSE and AVX intrinsics
-* Parsing scene description from a YAML file
+* Parsing scene description from a YAML file -> You can also use https://threejs.org/editor/ to create your scene, by exporting and using the json2yaml.py script!
 * Path Tracing with naive importance sampling (sampling both lights and material BSDF)
 
 Geometry
