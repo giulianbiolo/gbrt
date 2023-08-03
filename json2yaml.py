@@ -86,7 +86,6 @@ def convert_json_to_yaml(json_dict: dict) -> str:
             # ? PerspectiveCamera Parsing
             # we save this data inside of the camera object
             yaml_dict["camera"]["lookFrom"] = [float(v) for v in obj["matrix"][12:15]]
-            # TODO: Find the lookAt point in space which is positioned at the value t = focusDistance on the line vector the camera points to.
             # we find the vector the camera points to using the matrix
             yaml_dict["camera"]["lookAt"] = [float(v) for v in obj["matrix"][8:11]]
             yaml_dict["camera"]["vfov"] = float(obj["fov"])
