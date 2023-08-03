@@ -98,10 +98,11 @@ pub struct Dielectric {
     // The Dielectric material is a transparent material that refracts light.
     albedo: Box<dyn Texture>,
     refr_idx: f32,
+    opacity: f32,
 }
 impl Dielectric {
-    pub fn new(albedo: Color, refr_idx: f32) -> Dielectric { Dielectric { albedo: Box::new(SolidColor::new(albedo)), refr_idx: refr_idx.max(0.0) } }
-    pub fn new_texture(albedo: Box<dyn Texture>, refr_idx: f32) -> Dielectric { Dielectric { albedo, refr_idx: refr_idx.max(0.0) } }
+    pub fn new(albedo: Color, refr_idx: f32, opacity: f32) -> Dielectric { Dielectric { albedo: Box::new(SolidColor::new(albedo)), refr_idx: refr_idx.max(0.0), opacity: opacity.clamp(0.0, 1.0) } }
+    pub fn new_texture(albedo: Box<dyn Texture>, refr_idx: f32, opacity: f32) -> Dielectric { Dielectric { albedo, refr_idx: refr_idx.max(0.0), opacity: opacity.clamp(0.0, 1.0) } }
     fn reflectance(&self, cos: f32, ref_idx: f32) -> f32 {
         // Schlick's approximation for reflectance
         let r0: f32 = ((1.0 - ref_idx) / (1.0 + ref_idx)).powi(2);
@@ -120,11 +121,19 @@ impl Material for Dielectric {
         if refraction_rate * sin_theta > 1.0 || self.reflectance(cos_theta, refraction_rate) > utility::random_f32() {
             direction = reflect(&unit_direction, &rec.normal);
         } else { direction = refract(&unit_direction, &rec.normal, refraction_rate); }
-        srec.specular_ray = Ray::new(rec.p, direction);
-        srec.is_specular = true;
-        srec.attenuation = self.albedo.value(rec.u, rec.v, &rec.p);
-        srec.pdf_ptr = None;
-        true
+
+        if utility::random_f32() > self.opacity {
+            srec.specular_ray = Ray::new(rec.p, direction);
+            srec.is_specular = true;
+            srec.attenuation = self.albedo.value(rec.u, rec.v, &rec.p);
+            srec.pdf_ptr = None;
+            true
+        } else {
+            srec.is_specular = false;
+            srec.attenuation = self.albedo.value(rec.u, rec.v, &rec.p);
+            srec.pdf_ptr = Some(Arc::new(CosinePDF::new(&rec.normal)));
+            true
+        }
     }
     fn scattering_pdf(&self, _: &Ray, _: &HitRecord, _: &mut Ray) -> f32 { 1.0 }
 }
@@ -263,7 +272,7 @@ mod tests {
     }
     #[test]
     fn test_dielectric() -> Result<(), std::fmt::Error> {
-        let material: Dielectric = Dielectric::new(Vec3A::ONE, 1.5);
+        let material: Dielectric = Dielectric::new(Vec3A::ONE, 1.5, 0.0);
         assert_eq!(material.refr_idx, 1.5);
         Ok(())
     }

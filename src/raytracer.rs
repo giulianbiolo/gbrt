@@ -114,9 +114,9 @@ pub fn render_power_grid(world: &HittableList, _: Camera, _: &str) {
     println!("Lights: {}", lights.len());
     println!("Chosen Filter: {}", filter);
     // The power grid to be calculated will be a square of size 50x50 datapoints.
-    let pgsx: usize = 54; // Power Grid Size X [ Must be even and < 2^32 ]
-    let pgsy: usize = 24; // Power Grid Size Y [ Must be even and < 2^32 ]
-    let pgsz: usize = 54; // Power Grid Size Z [ Must be even and < 2^32 ]
+    let pgsx: usize = 150; // Power Grid Size X [ Must be even and < 2^32 ]
+    let pgsy: usize = 10; // Power Grid Size Y [ Must be even and < 2^32 ]
+    let pgsz: usize = 50; // Power Grid Size Z [ Must be even and < 2^32 ]
     let pgsx2: isize = pgsx as isize / 2; // Power Grid Size X / 2
     let pgsy2: isize = pgsy as isize / 2; // Power Grid Size Y / 2
     let pgsz2: isize = pgsz as isize / 2; // Power Grid Size Z / 2
@@ -181,7 +181,7 @@ pub fn render_power_grid(world: &HittableList, _: Camera, _: &str) {
     power_grid = power_grid_filtered;
 
     println!("Now building the decibels representation...");
-    let mut power_grid_decibel: Vec<Vec<Vec<f32>>> = vec![vec![vec![0.0; pgsz + 1]; pgsy + 1]; pgsx + 1];
+    let mut power_grid_decibel: Vec<Vec<Vec<f32>>> = vec![vec![vec![0.0; pgsx + 1]; pgsy + 1]; pgsz + 1];
     // let us create an image and save the power grid in it as values of gray
     //first of all we normalize the values in the grid between 0 and 1
     let mut max: f32 = 0.0;
@@ -316,7 +316,7 @@ pub fn init_scene() -> HittableList {
     world.push(Arc::new(Sphere::new(Point3::new(0.0, 4.0, 0.0), 0.5, Box::new(material_high), 0)));
     _add_random_world_spheres(&mut world).expect("Failed to add random world spheres");
 
-    let mat1: Dielectric = Dielectric::new(Vec3A::ONE, 1.5);
+    let mat1: Dielectric = Dielectric::new(Vec3A::ONE, 1.5, 0.0);
     world.push(Arc::new(Sphere::new(Point3::new(0.0, 1.0, 0.0), 1.0, Box::new(mat1), 0)));
     let mat2: Lambertian = Lambertian::new(Color::new(0.4, 0.2, 0.1));
     world.push(Arc::new(Sphere::new(Point3::new(-4.0, 1.0, 0.0), 1.0, Box::new(mat2), 0)));
@@ -331,7 +331,7 @@ pub fn init_random_scene() -> HittableList {
     let mut world: HittableList = HittableList::new();
     _add_random_world_spheres(&mut world).expect("Failed to add random world spheres");
 
-    let mat1: Dielectric = Dielectric::new(Vec3A::ONE, 1.5);
+    let mat1: Dielectric = Dielectric::new(Vec3A::ONE, 1.5, 0.0);
     world.push(Arc::new(Sphere::new(Point3::new(0.0, 1.0, 0.0), 1.0, Box::new(mat1), 0)));
     let mat2: Lambertian = Lambertian::new(Color::new(0.4, 0.2, 0.1));
     world.push(Arc::new(Sphere::new(Point3::new(-4.0, 1.0, 0.0), 1.0, Box::new(mat2), 0)));
@@ -364,7 +364,7 @@ fn _add_random_world_spheres(world: &mut HittableList) -> Result<(), std::io::Er
                     spheres.push(Sphere::new(center, 0.2, Box::new(sphere_material), 0));
                 } else {
                     // Glass
-                    let sphere_material: Dielectric = Dielectric::new(Vec3A::ONE, 1.5);
+                    let sphere_material: Dielectric = Dielectric::new(Vec3A::ONE, 1.5, 0.0);
                     spheres.push(Sphere::new(center, 0.2, Box::new(sphere_material), 0));
                 }
             }

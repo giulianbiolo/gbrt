@@ -2,14 +2,15 @@ constants:
   width: 800
   height: 800
   samplesPerPixel: 32
-  maxDepth: 5
-  minDepth: 2
+  maxDepth: 15
+  minDepth: 8
+  environmentIntensity: 0.0
   sourcesLambda: 0.122364268571 # f = 2.45GHz
-  powerRenderCenter: [-1.5, 2.5, -0.5] # -15;15|0;5|-15;15
+  powerRenderCenter: [-10.0, 2.5, -0.5] # -15;15|0;5|-15;15
 
 camera:
-  lookFrom: [-5.5, 12.0, 5.0]
-  lookAt: [-1.5, 3.0, -0.5]
+  lookFrom: [-8.0, 20.0, 5.0]
+  lookAt: [-5.0, 3.0, -0.5]
   vup: [0.0, 1.0, 0.0]
   vfov: 90.0
   aspectRatio: 1.0
@@ -20,20 +21,35 @@ world: [
   {
     # A Ground Object
     objType: "XZRectangle",
-    position: [0.0, 0.0, 0.0],
-    width: 20.0,
-    height: 20.0,
+    position: [-10.0, 0.0, -0.5],
+    width: 30.0,
+    height: 10.0,
     material: {
-      matType: "Lambertian",
+      matType: "Dielectric",
       texType: "SolidColor",
-      texture: { albedo: [0.2, 0.2, 0.2] },
-      # scale: 2.0,
+      texture: { albedo: [1.0, 1.0, 1.0] },
+      refractionIdx: 1.0,
+      opacity: 0.7
+    }
+  },
+  {
+    # A Roof Object
+    objType: "XZRectangle",
+    position: [-10.0, 10.0, -0.5],
+    width: 30.0,
+    height: 10.0,
+    material: {
+      matType: "Dielectric",
+      texType: "SolidColor",
+      texture: { albedo: [1.0, 1.0, 1.0] },
+      refractionIdx: 1.0,
+      opacity: 0.7
     }
   },
   {
     # A Light Object
     objType: "Sphere",
-    center: [0.0, 2.5, 0.0],
+    center: [0.0, 2.5, -2.0],
     radius: 0.4,
     material: {
       matType: "DiffuseLight",
@@ -44,112 +60,314 @@ world: [
   },
   { # Right Wall
     objType: "YZRectangle",
-    position: [3.5, 0.0, 0.0],
+    position: [3.5, 5.0, 0.0],
     width: 10.0,
     height: 9.0,
     material: {
-      matType: "Lambertian",
+      matType: "Dielectric",
       texType: "SolidColor",
-      texture: { albedo: [0.2, 0.2, 0.2] },
+      texture: { albedo: [1.0, 1.0, 1.0] },
+      refractionIdx: 1.0,
+      opacity: 0.7
     }
   },
   { # Left Wall
     objType: "YZRectangle",
-    position: [-3.5, 0.0, -1.0],
+    position: [-3.5, 5.0, -1.0],
     width: 10.0,
     height: 5.0,
     material: {
-      matType: "Lambertian",
+      matType: "Dielectric",
       texType: "SolidColor",
-      texture: { albedo: [0.2, 0.2, 0.2] },
+      texture: { albedo: [1.0, 1.0, 1.0] },
+      refractionIdx: 1.0,
+      opacity: 0.7
     }
   },
   { # Behind Wall
     objType: "XYRectangle",
-    position: [-1.5, 0.0, 4.5],
+    position: [-1.5, 5.0, 4.5],
     width: 10.0,
     height: 10.0,
     material: {
-      matType: "Lambertian",
+      matType: "Dielectric",
       texType: "SolidColor",
-      texture: { albedo: [0.2, 0.2, 0.2] },
+      texture: { albedo: [1.0, 1.0, 1.0] },
+      refractionIdx: 1.0,
+      opacity: 0.7
     }
   },
   { # Kitchen Left Wall
     objType: "YZRectangle",
-    position: [-6.5, 0.0, 3.0],
+    position: [-6.5, 5.0, 3.0],
     width: 10.0,
     height: 3.0,
     material: {
-      matType: "Lambertian",
+      matType: "Dielectric",
       texType: "SolidColor",
-      texture: { albedo: [0.2, 0.2, 0.2] },
+      texture: { albedo: [1.0, 1.0, 1.0] },
+      refractionIdx: 1.0,
+      opacity: 0.7
     }
   },
   { # Front Kitchen Wall
     objType: "XYRectangle",
-    position: [-5.0, 0.0, 1.5],
+    position: [-5.0, 5.0, 1.5],
     width: 3.0,
     height: 10.0,
     material: {
-      matType: "Lambertian",
+      matType: "Dielectric",
       texType: "SolidColor",
-      texture: { albedo: [0.2, 0.2, 0.2] },
+      texture: { albedo: [1.0, 1.0, 1.0] },
+      refractionIdx: 1.0,
+      opacity: 0.7
     }
   },
   { # Front Wall
     objType: "XYRectangle",
-    position: [1.0, 0.0, -4.5],
+    position: [1.0, 5.0, -4.5],
     width: 5.0,
     height: 10.0,
     material: {
-      matType: "Lambertian",
+      matType: "Dielectric",
       texType: "SolidColor",
-      texture: { albedo: [0.2, 0.2, 0.2] },
+      texture: { albedo: [1.0, 1.0, 1.0] },
+      refractionIdx: 1.0,
+      opacity: 0.7
     }
   },
   { # Corridoio Right Wall (Door)
     objType: "YZRectangle",
-    position: [-1.5, 0.0, -5.0],
+    position: [-1.5, 5.0, -5.0],
     width: 10.0,
     height: 1.0,
     material: {
-      matType: "Lambertian",
+      matType: "Dielectric",
       texType: "SolidColor",
-      texture: { albedo: [0.2, 0.2, 0.2] },
+      texture: { albedo: [1.0, 1.0, 1.0] },
+      refractionIdx: 1.0,
+      opacity: 0.7
     }
   },
   { # Corridoio Left Wall (Fine del corridoio)
     objType: "YZRectangle",
-    position: [-6.5, 0.0, -4.5],
+    position: [-18.5, 5.0, -4.5],
     width: 10.0,
     height: 2.0,
     material: {
-      matType: "Lambertian",
+      matType: "Dielectric",
       texType: "SolidColor",
-      texture: { albedo: [0.2, 0.2, 0.2] },
+      texture: { albedo: [1.0, 1.0, 1.0] },
+      refractionIdx: 1.0,
+      opacity: 0.7
     }
   },
   { # Corridoio Front Wall
     objType: "XYRectangle",
-    position: [-4.0, 0.0, -5.5],
-    width: 5.0,
+    position: [-10.0, 5.0, -5.5],
+    width: 17.0,
     height: 10.0,
     material: {
-      matType: "Lambertian",
+      matType: "Dielectric",
       texType: "SolidColor",
-      texture: { albedo: [0.2, 0.2, 0.2] },
+      texture: { albedo: [1.0, 1.0, 1.0] },
+      refractionIdx: 1.0,
+      opacity: 0.7
     }
   },
   { # Corridoio Behind Wall
     objType: "XYRectangle",
-    position: [-5.0, 0.0, -3.5],
+    position: [-5.0, 5.0, -3.5],
     width: 3.0,
     height: 10.0,
     material: {
-      matType: "Lambertian",
+      matType: "Dielectric",
       texType: "SolidColor",
-      texture: { albedo: [0.2, 0.2, 0.2] },
+      texture: { albedo: [1.0, 1.0, 1.0] },
+      refractionIdx: 1.0,
+      opacity: 0.7
     }
   },
+  { # Corridoio Behind Wall 2 [ Between Doors 1 and 2 ]
+    objType: "XYRectangle",
+    position: [-10.0, 5.0, -3.5],
+    width: 3.0,
+    height: 10.0,
+    material: {
+      matType: "Dielectric",
+      texType: "SolidColor",
+      texture: { albedo: [1.0, 1.0, 1.0] },
+      refractionIdx: 1.0,
+      opacity: 0.7
+    }
+  },
+  { # Bagno 1 Left Wall
+    objType: "YZRectangle",
+    position: [-8.5, 5.0, -1.0],
+    width: 10.0,
+    height: 5.0,
+    material: {
+      matType: "Dielectric",
+      texType: "SolidColor",
+      texture: { albedo: [1.0, 1.0, 1.0] },
+      refractionIdx: 1.0,
+      opacity: 0.7
+    }
+  },
+  { # Bagno 1 Behind Wall
+    objType: "XYRectangle",
+    position: [-7.5, 5.0, 1.5],
+    width: 2.0,
+    height: 10.0,
+    material: {
+      matType: "Dielectric",
+      texType: "SolidColor",
+      texture: { albedo: [1.0, 1.0, 1.0] },
+      refractionIdx: 1.0,
+      opacity: 0.7
+    }
+  },
+  { # Corridoio Behind Wall 3 [ Between Doors 2 and 3 ]
+    objType: "XYRectangle",
+    position: [-15.0, 5.0, -3.5],
+    width: 3.0,
+    height: 10.0,
+    material: {
+      matType: "Dielectric",
+      texType: "SolidColor",
+      texture: { albedo: [1.0, 1.0, 1.0] },
+      refractionIdx: 1.0,
+      opacity: 0.7
+    }
+  },
+  { # Bagno 2 Left Wall
+    objType: "YZRectangle",
+    position: [-13.5, 5.0, 0.5],
+    width: 10.0,
+    height: 8.0,
+    material: {
+      matType: "Dielectric",
+      texType: "SolidColor",
+      texture: { albedo: [1.0, 1.0, 1.0] },
+      refractionIdx: 1.0,
+      opacity: 0.7
+    }
+  },
+  { # Bagno 2 Right Wall Upper
+    objType: "YZRectangle",
+    position: [-11.5, 5.0, -1.5],
+    width: 10.0,
+    height: 4.0,
+    material: {
+      matType: "Dielectric",
+      texType: "SolidColor",
+      texture: { albedo: [1.0, 1.0, 1.0] },
+      refractionIdx: 1.0,
+      opacity: 0.7
+    }
+  },
+  { # Bagno 2 Right Wall Lower
+    objType: "YZRectangle",
+    position: [-9.5, 5.0, 2.5],
+    width: 10.0,
+    height: 4.0,
+    material: {
+      matType: "Dielectric",
+      texType: "SolidColor",
+      texture: { albedo: [1.0, 1.0, 1.0] },
+      refractionIdx: 1.0,
+      opacity: 0.7
+    }
+  },
+  { # Bagno 2 Front Wall
+    objType: "XYRectangle",
+    position: [-10.5, 5.0, 0.5],
+    width: 2.0,
+    height: 10.0,
+    material: {
+      matType: "Dielectric",
+      texType: "SolidColor",
+      texture: { albedo: [1.0, 1.0, 1.0] },
+      refractionIdx: 1.0,
+      opacity: 0.7
+    }
+  },
+  { # Bagno 2 Behind Wall
+    objType: "XYRectangle",
+    position: [-11.5, 5.0, 4.5],
+    width: 4.0,
+    height: 10.0,
+    material: {
+      matType: "Dielectric",
+      texType: "SolidColor",
+      texture: { albedo: [1.0, 1.0, 1.0] },
+      refractionIdx: 1.0,
+      opacity: 0.7
+    }
+  },
+  { # Stanza Grande Left Wall 1
+    objType: "YZRectangle",
+    position: [-18.5, 5.0, -1.5],
+    width: 10.0,
+    height: 4.0,
+    material: {
+      matType: "Dielectric",
+      texType: "SolidColor",
+      texture: { albedo: [1.0, 1.0, 1.0] },
+      refractionIdx: 1.0,
+      opacity: 0.7
+    }
+  },
+  { # Stanza Grande Right Wall
+    objType: "YZRectangle",
+    position: [-16.5, 5.0, 0.5],
+    width: 10.0,
+    height: 8.0,
+    material: {
+      matType: "Dielectric",
+      texType: "SolidColor",
+      texture: { albedo: [1.0, 1.0, 1.0] },
+      refractionIdx: 1.0,
+      opacity: 0.7
+    }
+  },
+  { # Stanza Grande Front Wall
+    objType: "XYRectangle",
+    position: [-21.0, 5.0, 0.5],
+    width: 5.0,
+    height: 10.0,
+    material: {
+      matType: "Dielectric",
+      texType: "SolidColor",
+      texture: { albedo: [1.0, 1.0, 1.0] },
+      refractionIdx: 1.0,
+      opacity: 0.7
+    }
+  },
+  { # Stanza Grande Behind Wall
+    objType: "XYRectangle",
+    position: [-20.0, 5.0, 4.5],
+    width: 7.0,
+    height: 10.0,
+    material: {
+      matType: "Dielectric",
+      texType: "SolidColor",
+      texture: { albedo: [1.0, 1.0, 1.0] },
+      refractionIdx: 1.0,
+      opacity: 0.7
+    }
+  },
+  { # Stanza Grande Left Wall
+    objType: "YZRectangle",
+    position: [-23.5, 5.0, 2.5],
+    width: 10.0,
+    height: 4.0,
+    material: {
+      matType: "Dielectric",
+      texType: "SolidColor",
+      texture: { albedo: [1.0, 1.0, 1.0] },
+      refractionIdx: 1.0,
+      opacity: 0.7
+    }
+  }
 ]
