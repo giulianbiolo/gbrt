@@ -122,6 +122,7 @@ impl Material for Dielectric {
             direction = reflect(&unit_direction, &rec.normal);
         } else { direction = refract(&unit_direction, &rec.normal, refraction_rate); }
 
+        // TODO: From here to the end of the function it's all experimental code...
         if utility::random_f32() > self.opacity {
             srec.specular_ray = Ray::new(rec.p, direction);
             srec.is_specular = true;

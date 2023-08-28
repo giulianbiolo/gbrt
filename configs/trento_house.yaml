@@ -1,9 +1,9 @@
 constants:
   width: 800
   height: 800
-  samplesPerPixel: 32
-  maxDepth: 15
-  minDepth: 8
+  samplesPerPixel: 2
+  maxDepth: 100 # 100
+  minDepth: 50  # 50
   environmentIntensity: 0.0
   sourcesLambda: 0.122364268571 # f = 2.45GHz
   powerRenderCenter: [-10.0, 2.5, -0.5] # -15;15|0;5|-15;15
@@ -25,11 +25,11 @@ world: [
     width: 30.0,
     height: 10.0,
     material: {
-      matType: "Dielectric",
+      matType: "Plastic",
       texType: "SolidColor",
       texture: { albedo: [1.0, 1.0, 1.0] },
-      refractionIdx: 1.0,
-      opacity: 0.7
+      reflectivity: 0.1,
+      fuzz: 0.4
     }
   },
   {
@@ -39,11 +39,11 @@ world: [
     width: 30.0,
     height: 10.0,
     material: {
-      matType: "Dielectric",
+      matType: "Plastic",
       texType: "SolidColor",
       texture: { albedo: [1.0, 1.0, 1.0] },
-      refractionIdx: 1.0,
-      opacity: 0.7
+      reflectivity: 0.1,
+      fuzz: 0.4
     }
   },
   {
@@ -64,11 +64,11 @@ world: [
     width: 10.0,
     height: 9.0,
     material: {
-      matType: "Dielectric",
+      matType: "Plastic",
       texType: "SolidColor",
       texture: { albedo: [1.0, 1.0, 1.0] },
-      refractionIdx: 1.0,
-      opacity: 0.7
+      reflectivity: 0.1,
+      fuzz: 0.4
     }
   },
   { # Left Wall
@@ -77,11 +77,11 @@ world: [
     width: 10.0,
     height: 5.0,
     material: {
-      matType: "Dielectric",
+      matType: "Plastic",
       texType: "SolidColor",
       texture: { albedo: [1.0, 1.0, 1.0] },
-      refractionIdx: 1.0,
-      opacity: 0.7
+      reflectivity: 0.1,
+      fuzz: 0.4
     }
   },
   { # Behind Wall
@@ -90,11 +90,11 @@ world: [
     width: 10.0,
     height: 10.0,
     material: {
-      matType: "Dielectric",
+      matType: "Plastic",
       texType: "SolidColor",
       texture: { albedo: [1.0, 1.0, 1.0] },
-      refractionIdx: 1.0,
-      opacity: 0.7
+      reflectivity: 0.1,
+      fuzz: 0.4
     }
   },
   { # Kitchen Left Wall
@@ -103,11 +103,11 @@ world: [
     width: 10.0,
     height: 3.0,
     material: {
-      matType: "Dielectric",
+      matType: "Plastic",
       texType: "SolidColor",
       texture: { albedo: [1.0, 1.0, 1.0] },
-      refractionIdx: 1.0,
-      opacity: 0.7
+      reflectivity: 0.1,
+      fuzz: 0.4
     }
   },
   { # Front Kitchen Wall
@@ -116,11 +116,11 @@ world: [
     width: 3.0,
     height: 10.0,
     material: {
-      matType: "Dielectric",
+      matType: "Plastic",
       texType: "SolidColor",
       texture: { albedo: [1.0, 1.0, 1.0] },
-      refractionIdx: 1.0,
-      opacity: 0.7
+      reflectivity: 0.1,
+      fuzz: 0.4
     }
   },
   { # Front Wall
@@ -129,11 +129,11 @@ world: [
     width: 5.0,
     height: 10.0,
     material: {
-      matType: "Dielectric",
+      matType: "Plastic",
       texType: "SolidColor",
       texture: { albedo: [1.0, 1.0, 1.0] },
-      refractionIdx: 1.0,
-      opacity: 0.7
+      reflectivity: 0.1,
+      fuzz: 0.4
     }
   },
   { # Corridoio Right Wall (Door)
@@ -142,11 +142,11 @@ world: [
     width: 10.0,
     height: 1.0,
     material: {
-      matType: "Dielectric",
+      matType: "Plastic",
       texType: "SolidColor",
       texture: { albedo: [1.0, 1.0, 1.0] },
-      refractionIdx: 1.0,
-      opacity: 0.7
+      reflectivity: 0.1,
+      fuzz: 0.4
     }
   },
   { # Corridoio Left Wall (Fine del corridoio)
@@ -155,11 +155,11 @@ world: [
     width: 10.0,
     height: 2.0,
     material: {
-      matType: "Dielectric",
+      matType: "Plastic",
       texType: "SolidColor",
       texture: { albedo: [1.0, 1.0, 1.0] },
-      refractionIdx: 1.0,
-      opacity: 0.7
+      reflectivity: 0.1,
+      fuzz: 0.4
     }
   },
   { # Corridoio Front Wall
@@ -168,24 +168,37 @@ world: [
     width: 17.0,
     height: 10.0,
     material: {
-      matType: "Dielectric",
+      matType: "Plastic",
       texType: "SolidColor",
       texture: { albedo: [1.0, 1.0, 1.0] },
-      refractionIdx: 1.0,
-      opacity: 0.7
+      reflectivity: 0.1,
+      fuzz: 0.4
     }
   },
-  { # Corridoio Behind Wall
+  { # Corridoio Behind Wall Bagno 1
     objType: "XYRectangle",
-    position: [-5.0, 5.0, -3.5],
-    width: 3.0,
+    position: [-3.75, 5.0, -3.5],
+    width: 0.5,
     height: 10.0,
     material: {
-      matType: "Dielectric",
+      matType: "Plastic",
       texType: "SolidColor",
       texture: { albedo: [1.0, 1.0, 1.0] },
-      refractionIdx: 1.0,
-      opacity: 0.7
+      reflectivity: 0.1,
+      fuzz: 0.4
+    }
+  },
+  { # Corridoio Behind Wall Bagno 1
+    objType: "XYRectangle",
+    position: [-7.25, 5.0, -3.5],
+    width: 2.5,
+    height: 10.0,
+    material: {
+      matType: "Plastic",
+      texType: "SolidColor",
+      texture: { albedo: [1.0, 1.0, 1.0] },
+      reflectivity: 0.1,
+      fuzz: 0.4
     }
   },
   { # Corridoio Behind Wall 2 [ Between Doors 1 and 2 ]
@@ -194,11 +207,11 @@ world: [
     width: 3.0,
     height: 10.0,
     material: {
-      matType: "Dielectric",
+      matType: "Plastic",
       texType: "SolidColor",
       texture: { albedo: [1.0, 1.0, 1.0] },
-      refractionIdx: 1.0,
-      opacity: 0.7
+      reflectivity: 0.1,
+      fuzz: 0.4
     }
   },
   { # Bagno 1 Left Wall
@@ -207,11 +220,11 @@ world: [
     width: 10.0,
     height: 5.0,
     material: {
-      matType: "Dielectric",
+      matType: "Plastic",
       texType: "SolidColor",
       texture: { albedo: [1.0, 1.0, 1.0] },
-      refractionIdx: 1.0,
-      opacity: 0.7
+      reflectivity: 0.1,
+      fuzz: 0.4
     }
   },
   { # Bagno 1 Behind Wall
@@ -220,11 +233,11 @@ world: [
     width: 2.0,
     height: 10.0,
     material: {
-      matType: "Dielectric",
+      matType: "Plastic",
       texType: "SolidColor",
       texture: { albedo: [1.0, 1.0, 1.0] },
-      refractionIdx: 1.0,
-      opacity: 0.7
+      reflectivity: 0.1,
+      fuzz: 0.4
     }
   },
   { # Corridoio Behind Wall 3 [ Between Doors 2 and 3 ]
@@ -233,11 +246,11 @@ world: [
     width: 3.0,
     height: 10.0,
     material: {
-      matType: "Dielectric",
+      matType: "Plastic",
       texType: "SolidColor",
       texture: { albedo: [1.0, 1.0, 1.0] },
-      refractionIdx: 1.0,
-      opacity: 0.7
+      reflectivity: 0.1,
+      fuzz: 0.4
     }
   },
   { # Bagno 2 Left Wall
@@ -246,11 +259,11 @@ world: [
     width: 10.0,
     height: 8.0,
     material: {
-      matType: "Dielectric",
+      matType: "Plastic",
       texType: "SolidColor",
       texture: { albedo: [1.0, 1.0, 1.0] },
-      refractionIdx: 1.0,
-      opacity: 0.7
+      reflectivity: 0.1,
+      fuzz: 0.4
     }
   },
   { # Bagno 2 Right Wall Upper
@@ -259,11 +272,11 @@ world: [
     width: 10.0,
     height: 4.0,
     material: {
-      matType: "Dielectric",
+      matType: "Plastic",
       texType: "SolidColor",
       texture: { albedo: [1.0, 1.0, 1.0] },
-      refractionIdx: 1.0,
-      opacity: 0.7
+      reflectivity: 0.1,
+      fuzz: 0.4
     }
   },
   { # Bagno 2 Right Wall Lower
@@ -272,11 +285,11 @@ world: [
     width: 10.0,
     height: 4.0,
     material: {
-      matType: "Dielectric",
+      matType: "Plastic",
       texType: "SolidColor",
       texture: { albedo: [1.0, 1.0, 1.0] },
-      refractionIdx: 1.0,
-      opacity: 0.7
+      reflectivity: 0.1,
+      fuzz: 0.4
     }
   },
   { # Bagno 2 Front Wall
@@ -285,11 +298,11 @@ world: [
     width: 2.0,
     height: 10.0,
     material: {
-      matType: "Dielectric",
+      matType: "Plastic",
       texType: "SolidColor",
       texture: { albedo: [1.0, 1.0, 1.0] },
-      refractionIdx: 1.0,
-      opacity: 0.7
+      reflectivity: 0.1,
+      fuzz: 0.4
     }
   },
   { # Bagno 2 Behind Wall
@@ -298,11 +311,11 @@ world: [
     width: 4.0,
     height: 10.0,
     material: {
-      matType: "Dielectric",
+      matType: "Plastic",
       texType: "SolidColor",
       texture: { albedo: [1.0, 1.0, 1.0] },
-      refractionIdx: 1.0,
-      opacity: 0.7
+      reflectivity: 0.1,
+      fuzz: 0.4
     }
   },
   { # Stanza Grande Left Wall 1
@@ -311,11 +324,11 @@ world: [
     width: 10.0,
     height: 4.0,
     material: {
-      matType: "Dielectric",
+      matType: "Plastic",
       texType: "SolidColor",
       texture: { albedo: [1.0, 1.0, 1.0] },
-      refractionIdx: 1.0,
-      opacity: 0.7
+      reflectivity: 0.1,
+      fuzz: 0.4
     }
   },
   { # Stanza Grande Right Wall
@@ -324,11 +337,11 @@ world: [
     width: 10.0,
     height: 8.0,
     material: {
-      matType: "Dielectric",
+      matType: "Plastic",
       texType: "SolidColor",
       texture: { albedo: [1.0, 1.0, 1.0] },
-      refractionIdx: 1.0,
-      opacity: 0.7
+      reflectivity: 0.1,
+      fuzz: 0.4
     }
   },
   { # Stanza Grande Front Wall
@@ -337,11 +350,11 @@ world: [
     width: 5.0,
     height: 10.0,
     material: {
-      matType: "Dielectric",
+      matType: "Plastic",
       texType: "SolidColor",
       texture: { albedo: [1.0, 1.0, 1.0] },
-      refractionIdx: 1.0,
-      opacity: 0.7
+      reflectivity: 0.1,
+      fuzz: 0.4
     }
   },
   { # Stanza Grande Behind Wall
@@ -350,11 +363,11 @@ world: [
     width: 7.0,
     height: 10.0,
     material: {
-      matType: "Dielectric",
+      matType: "Plastic",
       texType: "SolidColor",
       texture: { albedo: [1.0, 1.0, 1.0] },
-      refractionIdx: 1.0,
-      opacity: 0.7
+      reflectivity: 0.1,
+      fuzz: 0.4
     }
   },
   { # Stanza Grande Left Wall
@@ -363,11 +376,11 @@ world: [
     width: 10.0,
     height: 4.0,
     material: {
-      matType: "Dielectric",
+      matType: "Plastic",
       texType: "SolidColor",
       texture: { albedo: [1.0, 1.0, 1.0] },
-      refractionIdx: 1.0,
-      opacity: 0.7
+      reflectivity: 0.1,
+      fuzz: 0.4
     }
   }
 ]

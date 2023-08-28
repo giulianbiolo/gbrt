@@ -38,7 +38,16 @@ pub fn calculate_phase_and_power(path: &Vec<Vec3A>) -> (f32, f32) {
     phase += 2.0 * std::f32::consts::PI * dist / utility::CONSTS.sources_lambda; // lambda = c / freq -> lambda = c / 2.45GHz = 0.1223642686m
     phase %= 2.0 * std::f32::consts::PI; // phase is in [0, 2pi]
     // compute the power also dependent on distance and phase
-    let power: f32 = 1.0 / (4.0 * std::f32::consts::PI * dist * dist);
+    // let alpha: f32 = 0.02;
+    // We calculate power loss: take into account both isotropic loss (free space loss) and air loss
+    //let isotropic_power_loss: f32 = 1.0 * std::f32::consts::E.powf(-alpha * dist); // this is air loss
+    //let free_space_power_loss: f32 = ((4.0 * std::f32::consts::PI * dist) / utility::CONSTS.sources_lambda).powi(2); // this is free space loss
+    //let power: f32 = isotropic_power_loss * free_space_power_loss;
+    
+    let power: f32 = (utility::CONSTS.sources_lambda / (4.0 * std::f32::consts::PI * dist)).powi(2);
+    
+    //let power: f32 = 1.0 * std::f32::consts::E.powf(-alpha * dist);
+    // let power: f32 = 1.0 / (4.0 * std::f32::consts::PI * dist * dist);
     (phase, power)
 }
 
@@ -140,8 +149,8 @@ pub fn render_power_grid(world: &HittableList, _: Camera, _: &str) {
                     // we weight the curr_color by the power of the ray, which is 1 / (4 * pi * r^2), and the sign depends on the phase (either constructive or destructive)
                     let (phase, power) = calculate_phase_and_power(&path);
                     // println!("Phase: {}, Power: {}", phase, power);
-                    let curr_color: Color = curr_color * power * -phase.sin();
-                    if curr_color.is_finite() { totpow += curr_color.length_squared(); }
+                    let curr_color: Color = curr_color * power * -phase.sin(); // togliere -sin() phase se peggiora...
+                    if curr_color.is_finite() { totpow += curr_color.length(); }
                 }
                 // if totpow <= utility::NEAR_ZERO { totpow = utility::NEAR_ZERO; }
                 powergridplane[(p + pgsy2) as usize][(r + pgsx2) as usize] = totpow;
@@ -268,21 +277,45 @@ pub fn ray_color(r: &Ray, world: &HittableList, lights: &HittableList, envmap: &
             return emitted;
         }
         // We Russian Roulette some of the rays that are old enough
-        if depth > utility::CONSTS.min_depth && utility::random_f32() < srec.attenuation.max_element() {
+
+        //let pathlen: f32 = (path[path.len() - 1] - rec.p).length(); // new
+        //let isotropic_power_loss: Vec3A = srec.attenuation * std::f32::consts::E.powf(-0.2 * pathlen); // this is air loss
+        //let free_space_power_loss: f32 = ((4.0 * std::f32::consts::PI * pathlen) / utility::CONSTS.sources_lambda).powi(2); // this is free space loss
+        //let powerloss: Vec3A = isotropic_power_loss * free_space_power_loss; // this is the total power loss
+        
+        if depth > utility::CONSTS.min_depth && utility::random_f32() < srec.attenuation.max_element() { // srec.attenuation.max_element() {
             path.push(rec.p);
+            // srec.attenuation = powerloss; // new
             return emitted;
         }
         // If the material is specular, we can just return the color of the specular ray
         if srec.is_specular {
+            
+            //let pathlen: f32 = (path[path.len() - 1] - srec.specular_ray.origin()).length(); // new
+            //let isotropic_power_loss: Vec3A = srec.attenuation * std::f32::consts::E.powf(-0.2 * pathlen); // this is air loss
+            //let free_space_power_loss: f32 = ((4.0 * std::f32::consts::PI * pathlen) / utility::CONSTS.sources_lambda).powi(2); // this is free space loss
+            //srec.attenuation = isotropic_power_loss * free_space_power_loss; // this is the total power loss
+            
             path.push(srec.specular_ray.origin());
             return srec.attenuation * ray_color(&srec.specular_ray, world, lights, envmap, depth + 1, path);
         }
         // We are now in the realm of diffuse materials, we work with PDFs
         // Not using the PDF classes to improve performance, altough those classes are implemented in the pdf.rs file for reference
-        let mut scattered: Ray = Ray::new(rec.p, if utility::random_f32() < 0.5 {srec.pdf_ptr.clone().unwrap().generate()} else {lights.random(&rec.p).normalize()});
-        let pdf: f32 = 0.5 * srec.pdf_ptr.unwrap().value(&scattered.direction()) + 0.5 * lights.pdf_value(&rec.p, &scattered.direction());
+        // let mut scattered: Ray = Ray::new(rec.p, if utility::random_f32() < 0.5 {srec.pdf_ptr.clone().unwrap().generate()} else {lights.random(&rec.p).normalize()});
+        // let pdf: f32 = 0.5 * srec.pdf_ptr.unwrap().value(&scattered.direction()) + 0.5 * lights.pdf_value(&rec.p, &scattered.direction());
+        
+        // ? For the Power Grid Rendering use this!!!
+        let mut scattered: Ray = Ray::new(rec.p, srec.pdf_ptr.clone().unwrap().generate());
+        let pdf: f32 = srec.pdf_ptr.unwrap().value(&scattered.direction());
+        
         // Finally, we return the color of the scattered ray
         path.push(scattered.origin());
+
+        //let pathlen: f32 = (path[path.len() - 1] - scattered.origin()).length(); // new
+        //let isotropic_power_loss: Vec3A = srec.attenuation * std::f32::consts::E.powf(-0.2 * pathlen); // this is air loss
+        //let free_space_power_loss: f32 = ((4.0 * std::f32::consts::PI * pathlen) / utility::CONSTS.sources_lambda).powi(2); // this is free space loss
+        //srec.attenuation = isotropic_power_loss * free_space_power_loss; // this is the total power loss
+
         return emitted
         + srec.attenuation * rec.mat_ptr.scattering_pdf(r, &rec, &mut scattered)
         * ray_color(&scattered, world, lights, envmap, depth + 1, path) / pdf;
